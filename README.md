@@ -5,22 +5,23 @@ Plugin source, theme packs, review, registry validation and release archives liv
 desktop application reads [`registry.json`](registry.json); packages release independently of
 the desktop installer.
 
-| Directory | Purpose |
-| --- | --- |
-| `plugins/<id>/` | One installable plugin or theme pack, with manifest and README |
-| `registry.json` | Generated catalogue consumed by the app |
-| `scripts/validate.mjs` | Manifest, theme, path, catalogue and checksum validation |
-| `scripts/plugins/package.mjs` | Deterministic ZIP archives, no npm dependencies |
-| `tests/` | Validator regressions, including intentionally malformed manifests |
+| Directory                     | Purpose                                                                         |
+| ----------------------------- | ------------------------------------------------------------------------------- |
+| `plugins/<id>/`               | One installable plugin or theme pack, with manifest and README                  |
+| `registry.json`               | Generated catalogue consumed by the app                                         |
+| `scripts/validate.mjs`        | Manifest, theme, path, catalogue and checksum validation                        |
+| `scripts/plugins/package.mjs` | Deterministic ZIP archives, no npm dependencies                                 |
+| `tests/`                      | Validator regressions, including intentionally malformed manifests              |
+| `sdk/`                        | Dependency-free bidirectional RPC client, TypeScript declarations and API guide |
 
 ## Available packages
 
-| Package | Purpose | Runtime |
-| --- | --- | --- |
-| JSON Formatter | Format/minify JSON while preserving numeric precision and key order | Node 22+ |
-| Timestamp Converter | Unix seconds/milliseconds and local/UTC date conversion | Node 22+ |
-| UUID Generator | Cryptographically random UUID v4, batches of 1–100 | Node 22+ |
-| Studio Themes | Cobalt Dusk and Porcelain, two coordinated workbench themes | None |
+| Package             | Purpose                                                             | Runtime  |
+| ------------------- | ------------------------------------------------------------------- | -------- |
+| JSON Formatter      | Format/minify JSON while preserving numeric precision and key order | Node 22+ |
+| Timestamp Converter | Unix seconds/milliseconds and local/UTC date conversion             | Node 22+ |
+| UUID Generator      | Cryptographically random UUID v4, batches of 1–100                  | Node 22+ |
+| Studio Themes       | Cobalt Dusk and Porcelain, two coordinated workbench themes         | None     |
 
 These are independent packages, each installable from its folder or versioned ZIP. Tunnelde
 does not bundle Node and does not execute a system Node without explicit consent. A pure

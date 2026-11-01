@@ -9,9 +9,9 @@ Each directory is a separate installable plugin. Utility plugins require Node.js
 | `uuid`           | Cryptographically random UUID v4, batches of 1–100                                                    |
 | `studio-themes`  | Cobalt Dusk and Porcelain themes, supplied together by one data-only plugin                           |
 
-Run `node --test plugins/tests/official.test.mjs` to check the algorithms, real subprocess protocol, archive contents, and checksums. Run `node scripts/plugins/package.mjs` to produce deterministic ZIP archives, `index.json`, and `SHA256SUMS` under `artifacts/plugins`. An optional first argument changes the output directory.
+Run `npm run verify` to check the algorithms, real subprocess protocol, archive contents, checksums and generated registry. Run `npm run package` to produce deterministic ZIP archives, `index.json`, and `SHA256SUMS` under `artifacts/plugins`. `node scripts/plugins/package.mjs <output-directory>` changes the output directory.
 
-Every archive contains `tunnelde-plugin.json`, `README.md` and `LICENSE`; executable plugins also include `index.mjs`. You can also install the source directory directly. Release archives are separate from the desktop installer. The theme pack is published under `themes-v1.0.0`; the three initial tools remain under `plugins-v1.0.0`.
+Every archive contains `tunnelde-plugin.json`, `README.md` and `LICENSE`; executable plugins also include `index.mjs`. You can also install the source directory directly. Release archives are separate from the desktop installer. The initial tools and multi-theme pack are published from this repository under `plugins-v1.0.0`.
 
 ## Declarative tool views
 

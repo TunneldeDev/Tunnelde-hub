@@ -1,0 +1,413 @@
+{
+  "version": 1,
+  "methods": [
+    {
+      "name": "api.describe",
+      "permissions": [],
+      "params": "{}",
+      "description": "List the fixed versioned host API; every request still checks runtime authorization."
+    },
+    {
+      "name": "log",
+      "permissions": ["log"],
+      "params": "{message:string,level?:string}",
+      "description": "Write a bounded plugin-tagged log message."
+    },
+    {
+      "name": "app.info",
+      "permissions": ["app.read"],
+      "params": "{}",
+      "description": "Read application metadata, platform and preference schema; no credentials."
+    },
+    {
+      "name": "app.openExternal",
+      "permissions": ["app.openExternal"],
+      "params": "{url:string}",
+      "description": "Open an http/https URL with the system browser."
+    },
+    {
+      "name": "settings.get",
+      "permissions": ["settings.read"],
+      "params": "{}",
+      "description": "Read application preferences."
+    },
+    {
+      "name": "settings.update",
+      "permissions": ["settings.write"],
+      "params": "{patch:object}",
+      "description": "Update and sanitize preferences through the normal settings service."
+    },
+    {
+      "name": "hosts.snapshot",
+      "permissions": ["hosts.read"],
+      "params": "{}",
+      "description": "Read saved host and group metadata; authentication secrets are never returned."
+    },
+    {
+      "name": "hosts.create",
+      "permissions": ["hosts.write"],
+      "params": "{input:HostInput}",
+      "description": "Create a validated saved host."
+    },
+    {
+      "name": "hosts.update",
+      "permissions": ["hosts.write"],
+      "params": "{id:string,input:HostInput}",
+      "description": "Replace a saved host's validated metadata."
+    },
+    {
+      "name": "hosts.delete",
+      "permissions": ["hosts.write"],
+      "params": "{id:string}",
+      "description": "Delete a saved host and forget its stored credential."
+    },
+    {
+      "name": "hosts.markUsed",
+      "permissions": ["hosts.write"],
+      "params": "{id:string}",
+      "description": "Update a saved host's last-used time."
+    },
+    {
+      "name": "hosts.reorder",
+      "permissions": ["hosts.write"],
+      "params": "{ids:string[]}",
+      "description": "Persist the order of saved hosts; at most 500 IDs."
+    },
+    {
+      "name": "groups.create",
+      "permissions": ["hosts.write"],
+      "params": "{input:GroupInput}",
+      "description": "Create a validated host group."
+    },
+    {
+      "name": "groups.update",
+      "permissions": ["hosts.write"],
+      "params": "{id:string,input:GroupInput}",
+      "description": "Update a validated host group."
+    },
+    {
+      "name": "groups.delete",
+      "permissions": ["hosts.write"],
+      "params": "{id:string}",
+      "description": "Delete a host group through the normal group service."
+    },
+    {
+      "name": "sessions.list",
+      "permissions": ["sessions.read"],
+      "params": "{}",
+      "description": "List active SSH session metadata; no passwords or private keys."
+    },
+    {
+      "name": "sessions.connect",
+      "permissions": ["ssh.exec"],
+      "params": "{request:SshConnectRequest}",
+      "description": "Connect a saved host with normal host-key verification; never auto-trust a server."
+    },
+    {
+      "name": "sessions.disconnect",
+      "permissions": ["ssh.exec"],
+      "params": "{sessionId:string}",
+      "description": "Disconnect an active SSH session."
+    },
+    {
+      "name": "sessions.exec",
+      "permissions": ["ssh.exec"],
+      "params": "{sessionId:string,command:string,timeoutMs?:number}",
+      "description": "Execute in a separate SSH channel; return stdout/stderr/exitCode/signal. Timeout 100–60000ms, output at most 1MiB."
+    },
+    {
+      "name": "terminal.write",
+      "permissions": ["ssh.exec"],
+      "params": "{sessionId:string,data:string}",
+      "description": "Write plain UTF-8 terminal input, including remote shell commands; the host handles transport encoding."
+    },
+    {
+      "name": "terminal.resize",
+      "permissions": ["ssh.exec"],
+      "params": "{sessionId:string,cols:number,rows:number}",
+      "description": "Resize the remote terminal through the validated session service."
+    },
+    {
+      "name": "files.local.home",
+      "permissions": ["fs.read"],
+      "params": "{}",
+      "description": "Read the local home directory path."
+    },
+    {
+      "name": "files.local.list",
+      "permissions": ["fs.read"],
+      "params": "{path?:string}",
+      "description": "List a local directory."
+    },
+    {
+      "name": "files.local.readText",
+      "permissions": ["fs.read"],
+      "params": "{path:string}",
+      "description": "Read a UTF-8 local text file, at most 512KiB; reject binary data."
+    },
+    {
+      "name": "files.local.writeText",
+      "permissions": ["fs.write"],
+      "params": "{path:string,content:string}",
+      "description": "Replace an existing local UTF-8 file, at most 512KiB."
+    },
+    {
+      "name": "files.local.createFile",
+      "permissions": ["fs.write"],
+      "params": "{path:string}",
+      "description": "Create an empty local file without replacing an existing file."
+    },
+    {
+      "name": "files.local.mkdir",
+      "permissions": ["fs.write"],
+      "params": "{path:string}",
+      "description": "Create a local directory."
+    },
+    {
+      "name": "files.local.rename",
+      "permissions": ["fs.write"],
+      "params": "{from:string,to:string,overwrite?:boolean}",
+      "description": "Rename a local file or directory; overwriting is opt-in."
+    },
+    {
+      "name": "files.local.copy",
+      "permissions": ["fs.read", "fs.write"],
+      "params": "{from:string,to:string,overwrite?:boolean}",
+      "description": "Copy local files/directories through the existing copy service."
+    },
+    {
+      "name": "files.local.delete",
+      "permissions": ["fs.write"],
+      "params": "{path:string,isDir:boolean}",
+      "description": "Delete a local file or directory."
+    },
+    {
+      "name": "files.sftp.list",
+      "permissions": ["sftp.read"],
+      "params": "{sessionId:string,path?:string}",
+      "description": "List a remote directory using an active SSH session."
+    },
+    {
+      "name": "files.sftp.readText",
+      "permissions": ["sftp.read"],
+      "params": "{sessionId:string,path:string}",
+      "description": "Read remote UTF-8 text through the editor service; API response size limits apply."
+    },
+    {
+      "name": "files.sftp.writeText",
+      "permissions": ["sftp.write"],
+      "params": "{sessionId:string,path:string,content:string}",
+      "description": "Replace existing remote text through the editor service."
+    },
+    {
+      "name": "files.sftp.createFile",
+      "permissions": ["sftp.write"],
+      "params": "{sessionId:string,path:string}",
+      "description": "Create an empty remote file without replacing an existing file."
+    },
+    {
+      "name": "files.sftp.mkdir",
+      "permissions": ["sftp.write"],
+      "params": "{sessionId:string,path:string}",
+      "description": "Create a remote directory."
+    },
+    {
+      "name": "files.sftp.rename",
+      "permissions": ["sftp.write"],
+      "params": "{sessionId:string,from:string,to:string,overwrite?:boolean}",
+      "description": "Rename a remote file/directory; overwriting is opt-in."
+    },
+    {
+      "name": "files.sftp.copy",
+      "permissions": ["sftp.read", "sftp.write"],
+      "params": "{sessionId:string,from:string,to:string,overwrite?:boolean}",
+      "description": "Copy remote files/directories within a session."
+    },
+    {
+      "name": "files.sftp.delete",
+      "permissions": ["sftp.write"],
+      "params": "{sessionId:string,path:string,isDir:boolean}",
+      "description": "Delete a remote file or directory."
+    },
+    {
+      "name": "files.upload",
+      "permissions": ["fs.read", "sftp.write"],
+      "params": "{sessionId:string,localPath:string,remotePath:string,overwrite?:boolean}",
+      "description": "Copy a local file or directory to a remote path. Return transferId; cancellation, progress and file refresh use the normal transfer service. Revoking access or stopping this runtime cancels its active transfers."
+    },
+    {
+      "name": "files.download",
+      "permissions": ["sftp.read", "fs.write"],
+      "params": "{sessionId:string,remotePath:string,localPath:string,overwrite?:boolean}",
+      "description": "Copy a remote file or directory to a local path. Return transferId; never remove the source. Revoking access or stopping this runtime cancels its active transfers."
+    },
+    {
+      "name": "files.cancelTransfer",
+      "permissions": [],
+      "params": "{transferId:string}",
+      "description": "Cancel only a transfer owned by this plugin's current runtime. Return true if its active transfer was found; false for completed, missing or other owners' transfers."
+    },
+    {
+      "name": "files.transferStatus",
+      "permissions": [],
+      "params": "{transferId:string}",
+      "description": "Read progress or the final TransferEvent for this runtime's own transfer; return null for missing, other-owner or expired IDs. The latest 256 completed plugin transfers are retained in memory."
+    },
+    {
+      "name": "monitor.system",
+      "permissions": ["monitor.read"],
+      "params": "{}",
+      "description": "Read local CPU, memory, disk and network statistics."
+    },
+    {
+      "name": "monitor.stats",
+      "permissions": ["monitor.read"],
+      "params": "{sessionId:string}",
+      "description": "Sample remote system statistics."
+    },
+    {
+      "name": "monitor.processes",
+      "permissions": ["monitor.read"],
+      "params": "{sessionId:string}",
+      "description": "List remote processes."
+    },
+    {
+      "name": "monitor.kill",
+      "permissions": ["monitor.write"],
+      "params": "{sessionId:string,pid:number}",
+      "description": "Send TERM to a remote process; protected process validation still applies."
+    },
+    {
+      "name": "history.list",
+      "permissions": ["history.read"],
+      "params": "{hostId:string,limit?:number}",
+      "description": "Read saved command history, at most 500 rows."
+    },
+    {
+      "name": "history.record",
+      "permissions": ["history.write"],
+      "params": "{hostId:string,command:string}",
+      "description": "Record a command for an existing saved host."
+    },
+    {
+      "name": "history.delete",
+      "permissions": ["history.write"],
+      "params": "{id:number}",
+      "description": "Delete one command-history entry."
+    },
+    {
+      "name": "history.clear",
+      "permissions": ["history.write"],
+      "params": "{hostId:string}",
+      "description": "Clear a saved host's command history."
+    },
+    {
+      "name": "workspace.snapshot",
+      "permissions": ["workspace.read"],
+      "params": "{}",
+      "description": "Read the live tabs, panes, active group and split layout."
+    },
+    {
+      "name": "workspace.openPage",
+      "permissions": ["workspace.write"],
+      "params": "{kind:welcome|settings|about|updates|knownHosts}",
+      "description": "Open or focus an existing application page."
+    },
+    {
+      "name": "workspace.openHost",
+      "permissions": ["workspace.write", "hosts.read"],
+      "params": "{hostId:string}",
+      "description": "Open a saved host's details; never reveal an authentication secret."
+    },
+    {
+      "name": "workspace.openTerminal",
+      "permissions": ["workspace.write", "sessions.read"],
+      "params": "{sessionId:string}",
+      "description": "Open a terminal tab for an already-connected session."
+    },
+    {
+      "name": "workspace.openFiles",
+      "permissions": ["workspace.write", "sessions.read"],
+      "params": "{sessionId:string}",
+      "description": "Open a file browser for an already-connected session."
+    },
+    {
+      "name": "workspace.openSidebar",
+      "permissions": ["workspace.write"],
+      "params": "{view:hosts|plugins|knownHosts}",
+      "description": "Dock a list into the current workspace group."
+    },
+    {
+      "name": "workspace.activate",
+      "permissions": ["workspace.write"],
+      "params": "{tabId:string}",
+      "description": "Activate an existing tab and its group."
+    },
+    {
+      "name": "workspace.close",
+      "permissions": ["workspace.write"],
+      "params": "{tabId:string}",
+      "description": "Close a tab; dirty editors retain the normal user confirmation. Result reports pending confirmation."
+    },
+    {
+      "name": "workspace.split",
+      "permissions": ["workspace.write"],
+      "params": "{tabId:string,direction:row|column,position?:before|after,targetPaneId?:string}",
+      "description": "Move a tab into a split group."
+    },
+    {
+      "name": "workspace.move",
+      "permissions": ["workspace.write"],
+      "params": "{tabId:string,paneId:string,beforeTabId?:string|null}",
+      "description": "Move or reorder an existing tab."
+    },
+    {
+      "name": "workspace.returnSidebar",
+      "permissions": ["workspace.write"],
+      "params": "{view:hosts|plugins|knownHosts}",
+      "description": "Return a docked list to the sidebar."
+    },
+    {
+      "name": "clipboard.readText",
+      "permissions": ["clipboard.read"],
+      "params": "{}",
+      "description": "Read the system text clipboard."
+    },
+    {
+      "name": "clipboard.writeText",
+      "permissions": ["clipboard.write"],
+      "params": "{text:string}",
+      "description": "Replace the system text clipboard."
+    },
+    {
+      "name": "storage.get",
+      "permissions": [],
+      "params": "{key:string}",
+      "description": "Read plugin-scoped JSON data. Keys use 1–128 ASCII letters, digits, dot, hyphen or underscore."
+    },
+    {
+      "name": "storage.set",
+      "permissions": [],
+      "params": "{key:string,value:JSON}",
+      "description": "Persist plugin-scoped JSON data, at most 256KiB total per plugin."
+    },
+    {
+      "name": "storage.delete",
+      "permissions": [],
+      "params": "{key:string}",
+      "description": "Remove a key from plugin-scoped JSON data."
+    },
+    {
+      "name": "ui.showMessage",
+      "permissions": [],
+      "params": "{message:string,kind?:info|success|error}",
+      "description": "Show a bounded notification prefixed with the installed plugin's identity."
+    },
+    {
+      "name": "ui.confirm",
+      "permissions": [],
+      "params": "{message:string}",
+      "description": "Ask the user a plugin-identified confirmation; never replace an existing dialog."
+    }
+  ]
+}

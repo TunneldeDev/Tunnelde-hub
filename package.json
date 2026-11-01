@@ -5,7 +5,9 @@
   "type": "module",
   "license": "GPL-3.0-only",
   "description": "Independent plugin and theme marketplace for Tunnelde",
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "registry": "node scripts/validate.mjs --write",
     "registry:check": "node scripts/validate.mjs",
