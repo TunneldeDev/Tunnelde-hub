@@ -16,14 +16,17 @@ the desktop installer.
 
 ## Available packages
 
-| Package             | Purpose                                                              | Runtime                  |
-| ------------------- | -------------------------------------------------------------------- | ------------------------ |
-| JSON Formatter      | Format/minify JSON while preserving numeric precision and key order  | Node 22+                 |
-| Timestamp Converter | Unix seconds/milliseconds and local/UTC date conversion              | Node 22+                 |
-| UUID Generator      | Cryptographically random UUID v4, batches of 1–100                   | Node 22+                 |
-| Studio Themes       | Cobalt Dusk and Porcelain, two coordinated workbench themes          | None                     |
-| Tunnelde AI         | API/CLI chat, scoped reviewed tools, optional durable remote runners | Node 22+, Tunnelde 0.22+ |
-| Tunnelde MCP        | Local authenticated MCP endpoint and revocable scoped clients        | Node 22+, Tunnelde 0.22+ |
+| Package             | Purpose                                                             | Runtime                    |
+| ------------------- | ------------------------------------------------------------------- | -------------------------- |
+| JSON Formatter      | Format/minify JSON while preserving numeric precision and key order | Node 22+                   |
+| Timestamp Converter | Unix seconds/milliseconds and local/UTC date conversion             | Node 22+                   |
+| UUID Generator      | Cryptographically random UUID v4, batches of 1–100                  | Node 22+                   |
+| Studio Themes       | Cobalt Dusk and Porcelain, two coordinated workbench themes         | None                       |
+| Tunnelde AI         | API-only assistant with scoped tools and independent API review     | Node 22+, Tunnelde 0.22.2+ |
+| Codex               | Independent Codex app-server assistant and API reviewer             | Node 22+, Tunnelde 0.22.2+ |
+| Claude Code         | Independent Claude Code stream-json assistant and API reviewer      | Node 22+, Tunnelde 0.22.2+ |
+| Pi                  | Independent Pi RPC assistant and bundled permission extension       | Node 22+, Tunnelde 0.22.2+ |
+| Tunnelde MCP        | Local authenticated MCP endpoint and revocable scoped clients       | Node 22+, Tunnelde 0.22+   |
 
 These are independent packages, each installable from its folder or versioned ZIP. Tunnelde
 does not bundle Node and does not execute a system Node without explicit consent. A pure
@@ -57,6 +60,7 @@ manifest. The protocol and API are documented in the
 Node 22+ is required only for these development scripts. There is no `npm install` step:
 
 ```sh
+npm run agents:sync       # synchronize checked-in self-contained assistant runtimes
 npm run registry          # generate the reviewable catalogue and pinned checksums
 npm run check             # reject malformed manifests or registry drift
 npm test                  # utilities, AI/MCP host mocks, SDK transport, ZIPs and validation
@@ -72,7 +76,7 @@ before merging registry changes that advertise them. The initial release is `plu
 
 The repository layout and review workflow follow
 [myna-hub](https://github.com/quyansiyuanwang/myna-hub), adapted to Tunnelde's executable plugin
-and data-only theme manifest formats. Tunnelde AI and MCP are independent, explicitly installed Node plugins; neither changes a system service or installs an external coding CLI.
+and data-only theme manifest formats. Tunnelde AI, Codex, Claude Code, Pi and MCP are separate, explicitly installed Node plugins. The coding integrations are maintained by TunneldeDev, not published by the CLI vendors. They do not change system services or install external coding CLIs. Each has its own sidebar, configuration, conversations, secret namespace and lifecycle; no coding plugin depends on Tunnelde AI being installed. See [the 1.2 migration notes](docs/assistant-plugins-1.2.md) for existing CLI profiles and release verification.
 
 ## License
 

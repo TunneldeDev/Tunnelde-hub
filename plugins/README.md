@@ -1,15 +1,18 @@
 # Official plugins
 
-Each directory is a separate installable plugin. Utility plugins require Node.js 22 or later, have no npm dependencies and request no host permissions. AI and MCP plugins require Tunnelde 0.22.0 or later and explicit host permissions. The Studio Themes pack is pure color data and needs no Node or process.
+Each directory is a separate installable plugin. Utility plugins require Node.js 22 or later, have no npm dependencies and request no host permissions. Assistant plugins require Tunnelde 0.22.2 or later; MCP requires 0.22.0 or later and explicit host permissions. The Studio Themes pack is pure color data and needs no Node or process.
 
-| Package          | Tools                                                                                                 |
-| ---------------- | ----------------------------------------------------------------------------------------------------- |
-| `json-formatter` | Pretty print, minify, JSON errors with line/column/position; preserves original numbers and key order |
-| `timestamp`      | Unix seconds/milliseconds, date conversion with UTC/local time and explicit offsets, current time     |
-| `uuid`           | Cryptographically random UUID v4, batches of 1–100                                                    |
-| `studio-themes`  | Cobalt Dusk and Porcelain themes, supplied together by one data-only plugin                           |
-| `tunnelde-ai`    | Controlled chat, explicit provider/CLI configuration, scoped tools and optional remote runners        |
-| `tunnelde-mcp`   | Local authenticated MCP endpoint with per-client scopes, four modes and explicit token revocation     |
+| Package                | Tools                                                                                                 |
+| ---------------------- | ----------------------------------------------------------------------------------------------------- |
+| `json-formatter`       | Pretty print, minify, JSON errors with line/column/position; preserves original numbers and key order |
+| `timestamp`            | Unix seconds/milliseconds, date conversion with UTC/local time and explicit offsets, current time     |
+| `uuid`                 | Cryptographically random UUID v4, batches of 1–100                                                    |
+| `studio-themes`        | Cobalt Dusk and Porcelain themes, supplied together by one data-only plugin                           |
+| `tunnelde-ai`          | API-only assistant, explicit model configuration, scoped tools and optional remote runners            |
+| `tunnelde-codex`       | Independent Codex app-server assistant with optional API reviewer                                     |
+| `tunnelde-claude-code` | Independent Claude Code stream-json assistant with optional API reviewer                              |
+| `tunnelde-pi`          | Independent Pi RPC assistant and bundled permission extension                                         |
+| `tunnelde-mcp`         | Local authenticated MCP endpoint with per-client scopes, four modes and explicit token revocation     |
 
 Run `npm run verify` to check the algorithms, real subprocess protocol, archive contents, checksums and generated registry. Run `npm run package` to produce deterministic ZIP archives, `index.json`, and `SHA256SUMS` under `artifacts/plugins`. `node scripts/plugins/package.mjs <output-directory>` changes the output directory.
 
@@ -72,7 +75,10 @@ One controlled chat block may be returned per view:
 {
   title: "Assistant",
   blocks: [{
-    type: "chat", id: "assistant",
+    type: "chat", id: "assistant", title: "Codex",
+    profilePolicy: {primaryProtocols:["codex"],
+      reviewerProtocols:["openai-chat","openai-responses","anthropic","gemini"],
+      defaultProtocol:"codex"},
     commands: {send:"ai.send", stop:"ai.stop", configure:"ai.configure",
       session:"ai.session", approve:"ai.approve", recover:"ai.recover"},
     sessions: [{id:"conversation-1", title:"New conversation"}],
@@ -82,6 +88,15 @@ One controlled chat block may be returned per view:
   }]
 }
 ```
+
+The optional `title` identifies the assistant inside the controlled view. `profilePolicy`
+limits primary and independent reviewer profiles and provides the initial protocol. A coding
+plugin should declare exactly its own CLI as primary and API protocols as reviewers.
+Only primary profiles belong in `models`; API reviewer profiles must never be executable
+choices in a CLI plugin. Enforce the same policy while loading, saving, sending and
+starting a remote entry; rendering a filtered selector alone is insufficient. Profile policy
+is fixed by the package, never supplied as an authority by user configuration. Host storage
+and secrets are namespaced by manifest plugin ID, so do not read another plugin's state.
 
 All command IDs must be declared. The host invokes send with
 `{message,sessionId,runId,mode,modelId,_locale}` and expects an immediate acknowledgment

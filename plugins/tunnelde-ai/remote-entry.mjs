@@ -2,7 +2,8 @@ import { readFile } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
 import path from "node:path";
 import { start } from "./index.mjs";
-import { validateConfig } from "./lib/config.mjs";
+import { validateConfig, assertIdentity } from "./lib/config.mjs";
+import { PLUGIN_TITLE } from "./lib/identity.mjs";
 
 export async function startRemote(argv = process.argv.slice(2), options = {}) {
   const position = argv.indexOf("--config");
@@ -12,6 +13,7 @@ export async function startRemote(argv = process.argv.slice(2), options = {}) {
   if (Buffer.byteLength(text) > 200 * 1024) throw new Error("Remote configuration exceeds 200 KiB");
   const document = JSON.parse(text);
   if (document.version !== 1) throw new Error("Unsupported remote configuration version");
+  assertIdentity(document, { required: true });
   const config = validateConfig(document.config);
   if (config.profiles.some((profile) => profile.remote || profile.sessionId))
     throw new Error("Remote agents cannot recursively deploy or launch SSH CLI sessions");
@@ -35,7 +37,9 @@ export async function startRemote(argv = process.argv.slice(2), options = {}) {
         if (method === "secrets.get" && ephemeral.has(params.key)) return ephemeral.get(params.key);
         if (method === "storage.get" && params.key === "ai.config") {
           const saved = await host.call(method, params, callOptions);
+          if (saved) assertIdentity(saved);
           const current = saved?.config ?? saved ?? config;
+          validateConfig(current);
           return {
             config: current,
             keyIds: current.profiles
@@ -56,7 +60,7 @@ export async function startRemote(argv = process.argv.slice(2), options = {}) {
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   startRemote().catch((error) => {
-    process.stderr.write(`Tunnelde AI remote agent: ${error.message}\n`);
+    process.stderr.write(`${PLUGIN_TITLE} remote agent: ${error.message}\n`);
     process.exitCode = 1;
   });
 }

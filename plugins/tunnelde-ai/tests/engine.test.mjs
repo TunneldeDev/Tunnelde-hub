@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import { AiPlugin } from "../lib/engine.mjs";
 import { validateConfig } from "../lib/config.mjs";
 import { availableTools, invokeTool } from "../lib/tools.mjs";
+import { AiPlugin as PiPlugin } from "../../tunnelde-pi/lib/engine.mjs";
+import { validateConfig as validatePiConfig } from "../../tunnelde-pi/lib/config.mjs";
 
 const base = {
   profiles: [
@@ -48,10 +50,10 @@ function hostFixture() {
     },
   };
 }
-async function prepared(options) {
+async function prepared(options, Plugin = AiPlugin) {
   const host = hostFixture(),
-    engine = new AiPlugin(host, options);
-  await engine.command("ai.configure", { config: base });
+    engine = new Plugin(host, options);
+  if (Plugin === AiPlugin) await engine.command("ai.configure", { config: base });
   return { host, engine };
 }
 test("configuration never serializes credentials and blank keys preserve", async () => {
@@ -182,11 +184,14 @@ test("failed independent review passes false to host for human fallback", async 
   await engine.shutdown();
 });
 test("stopping cancels a pending inline approval without executing", async () => {
-  const { engine } = await prepared({
-    cli: async ({ approve }) => {
-      assert.equal(await approve({ tool: "write", title: "Write", detail: "file" }), false);
+  const { engine } = await prepared(
+    {
+      cli: async ({ approve }) => {
+        assert.equal(await approve({ tool: "write", title: "Write", detail: "file" }), false);
+      },
     },
-  });
+    PiPlugin,
+  );
   await engine.command("ai.configure", {
     config: {
       ...base,
@@ -236,7 +241,7 @@ test("config rejects insecure endpoints, duplicate profile IDs and implicit CLI 
     /unique/,
   );
   assert.throws(
-    () => validateConfig({ ...base, profiles: [{ id: "main", protocol: "pi" }] }),
+    () => validatePiConfig({ ...base, profiles: [{ id: "main", protocol: "pi" }] }),
     /executable/,
   );
 });

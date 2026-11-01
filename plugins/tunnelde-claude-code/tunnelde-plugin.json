@@ -1,0 +1,60 @@
+{
+  "id": "tunnelde-claude-code",
+  "name": "Claude Code",
+  "version": "1.2.0",
+  "apiVersion": 1,
+  "runtime": "node",
+  "main": "index.mjs",
+  "author": "TunneldeDev",
+  "readme": "README.md",
+  "engines": {
+    "node": ">=22",
+    "tunnelde": ">=0.22.2"
+  },
+  "description": "Independent Claude Code stream-json chat with explicit executable selection and API action review.",
+  "commands": [
+    {
+      "id": "ai.send",
+      "title": "Send Claude Code message"
+    },
+    {
+      "id": "ai.stop",
+      "title": "Stop Claude Code agent"
+    },
+    {
+      "id": "ai.configure",
+      "title": "Configure Claude Code providers"
+    },
+    {
+      "id": "ai.session",
+      "title": "Manage Claude Code conversation"
+    },
+    {
+      "id": "ai.approve",
+      "title": "Review Claude Code action"
+    },
+    {
+      "id": "ai.recover",
+      "title": "Inspect or recover Claude Code agent"
+    }
+  ],
+  "views": [
+    {
+      "id": "chat",
+      "title": "Claude Code",
+      "location": "sidebar",
+      "kind": "chat",
+      "icon": "sparkles"
+    }
+  ],
+  "permissions": [
+    "network",
+    "process.exec",
+    "ssh.exec",
+    "fs.read",
+    "fs.write",
+    "sftp.read",
+    "sftp.write",
+    "secrets"
+  ]
+}

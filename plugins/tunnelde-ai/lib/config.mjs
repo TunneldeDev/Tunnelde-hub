@@ -1,11 +1,13 @@
-export const PROTOCOLS = Object.freeze([
+import { PLUGIN_ID, PROFILE_POLICY } from "./identity.mjs";
+
+export const API_PROTOCOLS = Object.freeze([
   "openai-chat",
   "openai-responses",
   "anthropic",
   "gemini",
-  "codex",
-  "claude-code",
-  "pi",
+]);
+export const PROTOCOLS = Object.freeze([
+  ...new Set([...PROFILE_POLICY.primaryProtocols, ...PROFILE_POLICY.reviewerProtocols]),
 ]);
 export const MODES = Object.freeze(["ask", "approve", "full", "readOnly"]);
 export const CLI_PROTOCOLS = new Set(["codex", "claude-code", "pi"]);
@@ -16,6 +18,23 @@ export const DEFAULT_CONFIG = Object.freeze({
   mode: "ask",
   scope: { localRoots: [], sessionIds: [], remoteRoots: [] },
 });
+
+export function assertIdentity(document, { required = false } = {}) {
+  if ((required || document.pluginId != null) && document.pluginId !== PLUGIN_ID)
+    throw new Error(`Configuration belongs to a different plugin; expected ${PLUGIN_ID}`);
+  if (required || document.profilePolicy != null) {
+    const policy = document.profilePolicy;
+    if (
+      !policy ||
+      policy.defaultProtocol !== PROFILE_POLICY.defaultProtocol ||
+      !Array.isArray(policy.primaryProtocols) ||
+      !Array.isArray(policy.reviewerProtocols) ||
+      JSON.stringify(policy.primaryProtocols) !== JSON.stringify(PROFILE_POLICY.primaryProtocols) ||
+      JSON.stringify(policy.reviewerProtocols) !== JSON.stringify(PROFILE_POLICY.reviewerProtocols)
+    )
+      throw new Error("Configuration profile policy does not match this plugin package");
+  }
+}
 
 export function boundedString(value, label, max = 4096, required = true) {
   if (
@@ -109,14 +128,26 @@ export function validateConfig(input) {
     }
     return result;
   });
-  const activeProfileId = input.activeProfileId || profiles[0]?.id || "";
+  const activeProfileId =
+    input.activeProfileId ||
+    profiles.find((profile) => PROFILE_POLICY.primaryProtocols.includes(profile.protocol))?.id ||
+    "";
   if (activeProfileId && !seen.has(activeProfileId))
     throw new Error("Selected model profile does not exist");
+  if (
+    activeProfileId &&
+    !PROFILE_POLICY.primaryProtocols.includes(
+      profiles.find((profile) => profile.id === activeProfileId).protocol,
+    )
+  )
+    throw new Error("The selected primary profile is not supported by this plugin");
   const approverProfileId = input.approverProfileId || "";
   if (
     approverProfileId &&
     (!seen.has(approverProfileId) ||
-      CLI_PROTOCOLS.has(profiles.find((p) => p.id === approverProfileId).protocol))
+      !PROFILE_POLICY.reviewerProtocols.includes(
+        profiles.find((p) => p.id === approverProfileId).protocol,
+      ))
   )
     throw new Error("The independent reviewer must use an API profile");
   const mode = input.mode ?? "ask";

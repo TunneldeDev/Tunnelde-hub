@@ -4,6 +4,7 @@ import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { deflateRawSync } from "node:zlib";
 import { readdirSync, existsSync, readFileSync } from "node:fs";
+import { syncAgentPlugins } from "../sync-agent-plugins.mjs";
 
 const repository = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 export const OFFICIAL_PLUGIN_IDS = readdirSync(join(repository, "plugins"), {
@@ -12,9 +13,7 @@ export const OFFICIAL_PLUGIN_IDS = readdirSync(join(repository, "plugins"), {
   .filter(
     (entry) =>
       entry.isDirectory() &&
-      existsSync(
-        join(repository, "plugins", entry.name, "tunnelde-plugin.json"),
-      ),
+      existsSync(join(repository, "plugins", entry.name, "tunnelde-plugin.json")),
   )
   .map((entry) => entry.name)
   .sort();
@@ -23,18 +22,14 @@ export const OFFICIAL_NODE_PLUGIN_IDS = OFFICIAL_PLUGIN_IDS.filter(
 );
 
 function requireManifest(id) {
-  return readFileSync(
-    join(repository, "plugins", id, "tunnelde-plugin.json"),
-    "utf8",
-  );
+  return readFileSync(join(repository, "plugins", id, "tunnelde-plugin.json"), "utf8");
 }
 
 function crc32(bytes) {
   let crc = 0xffffffff;
   for (const byte of bytes) {
     crc ^= byte;
-    for (let bit = 0; bit < 8; bit++)
-      crc = (crc >>> 1) ^ (crc & 1 ? 0xedb88320 : 0);
+    for (let bit = 0; bit < 8; bit++) crc = (crc >>> 1) ^ (crc & 1 ? 0xedb88320 : 0);
   }
   return (crc ^ 0xffffffff) >>> 0;
 }
@@ -42,13 +37,10 @@ function crc32(bytes) {
 async function collect(directory, base = directory) {
   const entries = await readdir(directory, { withFileTypes: true });
   const files = [];
-  for (const entry of entries.sort((a, b) =>
-    a.name < b.name ? -1 : a.name > b.name ? 1 : 0,
-  )) {
+  for (const entry of entries.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0))) {
     if (entry.name.startsWith(".") || entry.name === "node_modules") continue;
     const path = join(directory, entry.name);
-    if (entry.isSymbolicLink())
-      throw new Error("Plugin package must not contain symbolic links");
+    if (entry.isSymbolicLink()) throw new Error("Plugin package must not contain symbolic links");
     if (entry.isDirectory()) files.push(...(await collect(path, base)));
     else if (entry.isFile())
       files.push({
@@ -114,14 +106,13 @@ export async function buildPluginArchive(directory) {
 export async function packageOfficialPlugins(
   outputDirectory = join(repository, "artifacts", "plugins"),
 ) {
+  await syncAgentPlugins();
   const output = resolve(outputDirectory);
   await mkdir(output, { recursive: true });
   const plugins = [];
   for (const id of OFFICIAL_PLUGIN_IDS) {
     const directory = join(repository, "plugins", id);
-    const manifest = JSON.parse(
-      await readFile(join(directory, "tunnelde-plugin.json"), "utf8"),
-    );
+    const manifest = JSON.parse(await readFile(join(directory, "tunnelde-plugin.json"), "utf8"));
     if (manifest.id !== id) throw new Error("Plugin id mismatch");
     const bytes = await buildPluginArchive(directory);
     const archive = `${id}-${manifest.version}.zip`;
@@ -147,36 +138,22 @@ export async function packageOfficialPlugins(
         runtime: plugin.manifest.runtime,
         apiVersion: plugin.manifest.apiVersion,
         engines: plugin.manifest.engines,
-        readme: await readFile(
-          join(repository, "plugins", plugin.id, "README.md"),
-          "utf8",
-        ),
+        readme: await readFile(join(repository, "plugins", plugin.id, "README.md"), "utf8"),
         url: `https://github.com/TunneldeDev/tunnelde-hub/releases/download/plugins-v${plugin.version}/${plugin.archive}`,
         sha256: plugin.sha256,
       })),
     ),
   };
-  await writeFile(
-    join(output, "marketplace.json"),
-    JSON.stringify(catalogue, null, 2) + "\n",
-  );
-  await writeFile(
-    join(output, "index.json"),
-    JSON.stringify(index, null, 2) + "\n",
-  );
+  await writeFile(join(output, "marketplace.json"), JSON.stringify(catalogue, null, 2) + "\n");
+  await writeFile(join(output, "index.json"), JSON.stringify(index, null, 2) + "\n");
   await writeFile(
     join(output, "SHA256SUMS"),
-    plugins.map((plugin) => `${plugin.sha256}  ${plugin.archive}`).join("\n") +
-      "\n",
+    plugins.map((plugin) => `${plugin.sha256}  ${plugin.archive}`).join("\n") + "\n",
   );
   return index;
 }
 
-if (
-  process.argv[1] &&
-  fileURLToPath(import.meta.url) === resolve(process.argv[1])
-) {
+if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) {
   const index = await packageOfficialPlugins(process.argv[2]);
-  for (const plugin of index.plugins)
-    console.log(`${plugin.archive}  ${plugin.sha256}`);
+  for (const plugin of index.plugins) console.log(`${plugin.archive}  ${plugin.sha256}`);
 }

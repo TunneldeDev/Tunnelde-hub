@@ -181,9 +181,18 @@ export interface PluginView {
   kind?: "blocks" | "chat";
   icon?: string;
 }
+export type ChatProtocol =
+  "openai-chat" | "openai-responses" | "anthropic" | "gemini" | "codex" | "claude-code" | "pi";
+export interface ChatProfilePolicy {
+  primaryProtocols: ChatProtocol[];
+  reviewerProtocols: ChatProtocol[];
+  defaultProtocol: ChatProtocol;
+}
 export interface PluginChatBlock {
   type: "chat";
   id: string;
+  title?: string;
+  profilePolicy?: ChatProfilePolicy;
   commands: {
     send: string;
     stop: string;

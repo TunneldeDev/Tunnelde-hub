@@ -8,6 +8,7 @@ import { createPlugin } from "../lib/sdk.mjs";
 import { startRemote } from "../remote-entry.mjs";
 import { AiPlugin } from "../lib/engine.mjs";
 import { validateConfig } from "../lib/config.mjs";
+import { PLUGIN_ID, PROFILE_POLICY } from "../lib/identity.mjs";
 
 test("remote helper picker configuration does not require a legacy runnerPath", () => {
   const profile = {
@@ -152,7 +153,10 @@ test("remote entry uses fallback configuration and ephemeral initialized secrets
       scope: { localRoots: [directory] },
     };
     const file = path.join(directory, "config.json");
-    await writeFile(file, JSON.stringify({ version: 1, config }));
+    await writeFile(
+      file,
+      JSON.stringify({ version: 1, pluginId: PLUGIN_ID, profilePolicy: PROFILE_POLICY, config }),
+    );
     const replies = new Map(),
       waits = new Map();
     let buffer = "";
@@ -298,6 +302,8 @@ test("remote send deploys only the selected runtime and relays pending approvals
     "/opt/node/bin/node",
   );
   const started = calls.find((item) => item.method === "runners.start");
+  assert.equal(started.params.config.pluginId, PLUGIN_ID);
+  assert.deepEqual(started.params.config.profilePolicy, PROFILE_POLICY);
   assert.deepEqual(started.params.config.config.scope.localRoots, ["/work"]);
   assert.equal(started.params.config.config.profiles[0].remote, undefined);
   assert.equal(started.params.secrets["provider.main"], "api-secret");
