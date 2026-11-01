@@ -1,0 +1,17 @@
+name: Submit a plugin or theme
+description: Propose a new Tunnelde package for review.
+body:
+  - type: input
+    id: source
+    attributes:
+      label: Source repository
+      description: Public source code and license.
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Functionality, runtime and permissions
+      description: Explain what the plugin does, which API permissions it needs, and external access.
+    validations:
+      required: true

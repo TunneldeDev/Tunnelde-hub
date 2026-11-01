@@ -1,0 +1,75 @@
+# Tunnelde Hub
+
+The independent community marketplace for [Tunnelde](https://github.com/TunneldeDev/Tunnelde).
+Plugin source, theme packs, review, registry validation and release archives live here. The
+desktop application reads [`registry.json`](registry.json); packages release independently of
+the desktop installer.
+
+| Directory | Purpose |
+| --- | --- |
+| `plugins/<id>/` | One installable plugin or theme pack, with manifest and README |
+| `registry.json` | Generated catalogue consumed by the app |
+| `scripts/validate.mjs` | Manifest, theme, path, catalogue and checksum validation |
+| `scripts/plugins/package.mjs` | Deterministic ZIP archives, no npm dependencies |
+| `tests/` | Validator regressions, including intentionally malformed manifests |
+
+## Available packages
+
+| Package | Purpose | Runtime |
+| --- | --- | --- |
+| JSON Formatter | Format/minify JSON while preserving numeric precision and key order | Node 22+ |
+| Timestamp Converter | Unix seconds/milliseconds and local/UTC date conversion | Node 22+ |
+| UUID Generator | Cryptographically random UUID v4, batches of 1–100 | Node 22+ |
+| Studio Themes | Cobalt Dusk and Porcelain, two coordinated workbench themes | None |
+
+These are independent packages, each installable from its folder or versioned ZIP. Tunnelde
+does not bundle Node and does not execute a system Node without explicit consent. A pure
+theme pack contains color data and never starts code. Executable plugins run with your local
+user permissions; API permissions are not an operating-system sandbox. Use restricted mode
+when testing unknown extensions or recovering from extension problems.
+
+## Install
+
+Open the Plugins activity in Tunnelde and select Marketplace. The official catalogue is:
+
+```
+https://raw.githubusercontent.com/TunneldeDev/tunnelde-hub/main/registry.json
+```
+
+Select a package, inspect its description and permissions, then install. Local installation
+also accepts a ZIP file or folder through the native picker or drag and drop. Downloaded
+packages are checked against the pinned SHA-256 before extraction. A checksum proves the
+bytes match this reviewed catalogue, not that a publisher is trustworthy.
+
+## Contribute
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). Each contribution is a pull request containing source,
+manifest and documentation. Catalogue entries are generated; do not invent a download hash
+or point to a moving branch archive. Themes can contribute one or many palettes in the same
+manifest. The protocol and API are documented in the
+[desktop developer guide](https://github.com/TunneldeDev/Tunnelde/blob/main/docs/plugins.md).
+
+## Maintain
+
+Node 22+ is required only for these development scripts. There is no `npm install` step:
+
+```sh
+npm run registry          # generate the reviewable catalogue and pinned checksums
+npm run check             # reject malformed manifests or registry drift
+npm test                  # algorithms, subprocess protocol, ZIPs and validator regressions
+npm run package           # artifacts/plugins/{archives,index.json,SHA256SUMS,marketplace.json}
+npm run audit             # download published packages and verify pinned checksums
+```
+
+Push/PR CI runs validation and tests on Node 22 and 24. Weekly audits verify published assets.
+The release workflow accepts a `plugins-v<version>` tag and publishes matching package versions;
+unchanged versions retain their existing immutable release URLs. Maintainers publish packages
+before merging registry changes that advertise them. The initial release is `plugins-v1.0.0`.
+
+The repository layout and review workflow follow
+[myna-hub](https://github.com/quyansiyuanwang/myna-hub), adapted to Tunnelde's executable plugin
+and data-only theme manifest formats. It does not install Myna skills or MCP bundles.
+
+## License
+
+GPL-3.0-only. See [LICENSE](LICENSE). Every distributable ZIP includes its applicable LICENSE.

@@ -1,0 +1,24 @@
+name: Release packages
+on:
+  push:
+    tags: ['plugins-v*']
+permissions:
+  contents: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm run verify
+      - run: npm run package
+      - name: Collect versioned assets
+        env:
+          TAG: ${{ github.ref_name }}
+        run: node scripts/release.mjs "$TAG"
+      - name: Publish immutable packages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" artifacts/release/* --verify-tag --title "Packages ${GITHUB_REF_NAME#plugins-v}" --notes "Independent Tunnelde plugins and themes. See registry.json and SHA256SUMS for pinned package identities and checksums."

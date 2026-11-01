@@ -1,0 +1,16 @@
+name: Report a package issue
+description: Report an installation, correctness, or security problem.
+body:
+  - type: input
+    id: package
+    attributes:
+      label: Plugin ID and version
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps, expected result and actual result
+      description: Include Tunnelde version and OS. Do not post passwords or private keys.
+    validations:
+      required: true

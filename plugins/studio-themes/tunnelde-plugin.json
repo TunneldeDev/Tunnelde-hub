@@ -1,0 +1,53 @@
+{
+  "id": "studio-themes",
+  "name": "Studio Themes",
+  "version": "1.0.0",
+  "apiVersion": 1,
+  "runtime": "theme",
+  "author": "TunneldeDev",
+  "readme": "README.md",
+  "description": "Cobalt Dusk and Porcelain: a coordinated dark and light theme for the entire workbench.",
+  "themes": [
+    {
+      "id": "cobalt-dusk",
+      "name": "Cobalt Dusk",
+      "appearance": "dark",
+      "accent": "#78aaff",
+      "colors": {
+        "background": "#101827",
+        "activityBar": "#0c1220",
+        "sidebar": "#131d2e",
+        "titleBar": "#101827",
+        "tabBar": "#0c1220",
+        "editor": "#172238",
+        "panel": "#131d2e",
+        "statusBar": "#0c1220",
+        "terminalBackground": "#101827",
+        "terminalForeground": "#d9e6ff",
+        "terminalCursor": "#78aaff"
+      }
+    },
+    {
+      "id": "porcelain",
+      "name": "Porcelain",
+      "appearance": "light",
+      "accent": "#4668b2",
+      "colors": {
+        "background": "#f8f7f3",
+        "activityBar": "#e8e8e2",
+        "sidebar": "#f0efe9",
+        "titleBar": "#f8f7f3",
+        "tabBar": "#e8e8e2",
+        "editor": "#ffffff",
+        "panel": "#f0efe9",
+        "statusBar": "#e8e8e2",
+        "terminalBackground": "#f8f7f3",
+        "terminalForeground": "#273040",
+        "terminalCursor": "#4668b2"
+      }
+    }
+  ],
+  "commands": [],
+  "views": [],
+  "permissions": []
+}

@@ -1,0 +1,18 @@
+{
+  "name": "tunnelde-hub",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "license": "GPL-3.0-only",
+  "description": "Independent plugin and theme marketplace for Tunnelde",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "registry": "node scripts/validate.mjs --write",
+    "registry:check": "node scripts/validate.mjs",
+    "check": "node scripts/validate.mjs",
+    "test": "node --test plugins/tests/official.test.mjs tests/*.test.mjs",
+    "package": "node scripts/plugins/package.mjs",
+    "audit": "node scripts/audit.mjs",
+    "verify": "npm run check && npm test"
+  }
+}
