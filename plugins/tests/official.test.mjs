@@ -19,6 +19,15 @@ import {
 } from "../../scripts/plugins/package.mjs";
 
 const root = fileURLToPath(new URL("../../", import.meta.url));
+// Host-connected plugins require the asynchronous host harness in their own tests.
+const permissionFreeNodePluginIds = [];
+for (const id of OFFICIAL_NODE_PLUGIN_IDS) {
+  const manifest = JSON.parse(
+    await readFile(join(root, "plugins", id, "tunnelde-plugin.json"), "utf8"),
+  );
+  if ((manifest.runtime ?? "node") === "node" && manifest.permissions.length === 0)
+    permissionFreeNodePluginIds.push(id);
+}
 
 test("JSON pretty/minify preserve numeric precision, duplicate keys and literal whitespace", () => {
   const source =
@@ -141,7 +150,7 @@ test("UUIDs are valid independent v4 values, with batch boundaries enforced", ()
 });
 
 test("each independent plugin responds using the real JSON-RPC stdin/stdout protocol", () => {
-  for (const id of OFFICIAL_NODE_PLUGIN_IDS) {
+  for (const id of permissionFreeNodePluginIds) {
     const command = id === "json-formatter" ? "pretty" : id === "timestamp" ? "decode" : "generate";
     const messages = [
       { jsonrpc: "2.0", id: 1, method: "initialize", params: { apiVersion: 1 } },
@@ -176,7 +185,7 @@ test("each independent plugin responds using the real JSON-RPC stdin/stdout prot
 });
 
 test("invalid JSON-RPC messages do not kill plugin processes", () => {
-  for (const id of OFFICIAL_NODE_PLUGIN_IDS) {
+  for (const id of permissionFreeNodePluginIds) {
     const input = "null\n{broken\n" + JSON.stringify({ id: 1, method: "initialize" }) + "\n";
     const child = spawnSync(process.execPath, [join(root, "plugins", id, "index.mjs")], {
       input,
@@ -250,11 +259,14 @@ test("official packages are deterministic independent ZIPs with verifiable hashe
         );
         assert.equal(files.size, 3);
       } else {
-        assert.deepEqual(manifest.engines, { node: ">=22" });
+        assert.equal(manifest.engines.node, ">=22");
         assert.ok(files.has(manifest.main));
-        assert.equal(files.size, 4);
+        assert.ok(files.size >= 4);
       }
-      assert.deepEqual(manifest.permissions, []);
+      const sourceManifest = JSON.parse(
+        await readFile(resolve(root, "plugins", entry.id, "tunnelde-plugin.json"), "utf8"),
+      );
+      assert.deepEqual(manifest.permissions, sourceManifest.permissions);
       assert.ok(files.has(manifest.readme));
       assert.ok(files.get("LICENSE").equals(await readFile(resolve(root, "LICENSE"))));
     }

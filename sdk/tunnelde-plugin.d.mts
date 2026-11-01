@@ -11,7 +11,7 @@ export interface Group {
   updatedAt: number;
 }
 
-export interface Host {
+export interface SavedHost {
   id: string;
   groupId: string | null;
   name: string;
@@ -93,7 +93,195 @@ export interface MethodDescription {
   params: string;
   description: string;
 }
+export type ToolMode = "ask" | "approve" | "full" | "readOnly";
+export type RemotePlatform = "posix" | "windows";
+export interface ToolScope {
+  sessionIds?: string[];
+  hostIds?: string[];
+  localRoots?: string[];
+  remoteRoots?: { sessionId: string; path: string }[];
+}
+export interface ToolInvocation {
+  method: string;
+  params: Record<string, unknown>;
+  mode: ToolMode;
+  scope: ToolScope;
+  /** Only a trusted plugin's independent reviewer may supply this decision. */
+  review?: { approved: boolean; reason: string };
+  clientId?: string;
+  requestId?: string;
+}
+export type TaskStatus =
+  "running" | "completed" | "cancelled" | "timedOut" | "failed" | "interrupted";
+export interface TaskSnapshot {
+  taskId: string;
+  status: TaskStatus;
+  exitCode: number | null;
+  error: string | null;
+  seq: number;
+}
+export interface TaskOutputEvent {
+  taskId: string;
+  seq: number;
+  stream: "stdout" | "stderr" | "status";
+  data: string;
+  status: TaskStatus;
+  exitCode: number | null;
+}
+export interface TaskOutput {
+  taskId: string;
+  events: TaskOutputEvent[];
+  nextSeq: number;
+  status: TaskStatus;
+  exitCode: number | null;
+  truncated: boolean;
+}
+export interface RunnerDeployment {
+  hostId: string;
+  directory: string;
+  platform: RemotePlatform;
+  executable: string;
+  runner: string;
+  entry: string;
+}
+export interface RunnerRecord {
+  runnerId: string;
+  deployment: RunnerDeployment;
+  stopPending: boolean;
+}
+export interface RunnerState {
+  status: "starting" | "running" | "stopping" | "stopped" | "failed" | "unresponsive";
+  error?: string | null;
+}
+export interface RunnerApproval {
+  type: "approval";
+  approvalId: string;
+  method: string;
+  params: Record<string, unknown>;
+}
+export interface RunnerPoll {
+  runnerId: string;
+  events: { seq: number; message: unknown }[];
+  nextSeq: number;
+  truncated: boolean;
+  state: RunnerState;
+  pendingApprovals: RunnerApproval[];
+}
+/** The host supplies plugin identity and generation; plugins cannot impersonate another runtime. */
+export interface PluginEvent<T = unknown> {
+  pluginId: string;
+  generation: number;
+  event: string;
+  payload: T;
+}
+export interface PluginView {
+  id: string;
+  title: string;
+  location?: "sidebar" | "workspace";
+  kind?: "blocks" | "chat";
+  icon?: string;
+}
+export interface PluginChatBlock {
+  type: "chat";
+  id: string;
+  commands: {
+    send: string;
+    stop: string;
+    configure?: string;
+    session?: string;
+    approve?: string;
+    recover?: string;
+  };
+  sessions?: { id: string; title: string }[];
+  activeSessionId?: string;
+  mode?: ToolMode;
+  models?: { id: string; label: string }[];
+  modelId?: string;
+  messages?: {
+    id: string;
+    role: "user" | "assistant" | "system" | "tool";
+    content: string;
+    status?: string;
+  }[];
+  run?: {
+    id: string;
+    status: "idle" | "running" | "waiting" | "done" | "cancelled" | "failed" | "interrupted";
+    seq: number;
+  } | null;
+  approvals?: {
+    id: string;
+    tool?: string;
+    title?: string;
+    detail?: string;
+    command?: string;
+    risk?: string;
+  }[];
+  tasks?: {
+    id: string;
+    title?: string;
+    status: "queued" | "running" | "done" | "failed" | "cancelled" | "interrupted";
+    output?: string;
+    recoverable?: boolean;
+  }[];
+  configured?: boolean;
+  notice?: string;
+  config?: Record<string, unknown>;
+}
 export interface HostMethodMap {
+  "events.publish": [{ event: string; payload: unknown }, null];
+  "secrets.get": [{ key: string }, string | null];
+  "secrets.set": [{ key: string; value: string }, null];
+  "secrets.delete": [{ key: string }, null];
+  "tasks.start": [
+    {
+      executable: string;
+      args?: string[];
+      cwd?: string;
+      sessionId?: string;
+      platform?: RemotePlatform;
+      timeoutMs?: number;
+    },
+    { taskId: string; status: "running" },
+  ];
+  "tasks.list": [Record<string, never>, TaskSnapshot[]];
+  "tasks.status": [{ taskId: string }, TaskSnapshot];
+  "tasks.readOutput": [{ taskId: string; afterSeq?: number }, TaskOutput];
+  "tasks.write": [{ taskId: string; data: string }, boolean];
+  "tasks.closeInput": [{ taskId: string }, boolean];
+  "tasks.cancel": [{ taskId: string }, boolean];
+  "tools.invoke": [ToolInvocation, unknown];
+  "tools.cancel": [{ requestId: string }, { cancelled: number }];
+  "tools.revokeClient": [{ clientId: string }, { cancelled: number }];
+  "runners.deploy": [
+    {
+      sessionId: string;
+      platform: RemotePlatform;
+      directory: string;
+      runnerPath: string;
+      executable: string;
+    },
+    { deployed: boolean; directory: string },
+  ];
+  "runners.start": [
+    {
+      sessionId: string;
+      directory: string;
+      config: Record<string, unknown>;
+      secrets?: Record<string, unknown>;
+    },
+    { runnerId: string; status: "starting" },
+  ];
+  "runners.list": [Record<string, never>, RunnerRecord[]];
+  "runners.send": [
+    { sessionId: string; runnerId: string; message: Record<string, unknown> },
+    { accepted: boolean },
+  ];
+  "runners.poll": [{ sessionId: string; runnerId: string; afterSeq?: number }, RunnerPoll];
+  "runners.status": [{ sessionId: string; runnerId: string }, RunnerState];
+  "runners.stop": [
+    { sessionId: string; runnerId: string },
+    { stopRequested: boolean; status: "stopping" },
+  ];
   "files.transferStatus": [{ transferId: string }, TransferEvent | null];
   "files.upload": [
     {
@@ -120,68 +308,38 @@ export interface HostMethodMap {
   "files.local.writeText": [{ path: string; content: string }, void];
   "files.local.createFile": [{ path: string }, void];
   "files.local.mkdir": [{ path: string }, void];
-  "files.local.rename": [
-    { from: string; to: string; overwrite?: boolean },
-    void,
-  ];
+  "files.local.rename": [{ from: string; to: string; overwrite?: boolean }, void];
   "files.local.copy": [{ from: string; to: string; overwrite?: boolean }, void];
   "files.local.delete": [{ path: string; isDir: boolean }, void];
   "files.sftp.list": [{ sessionId: string; path?: string }, Listing];
-  "files.sftp.readText": [
-    { sessionId: string; path: string },
-    { content: string; size: number },
-  ];
-  "files.sftp.writeText": [
-    { sessionId: string; path: string; content: string },
-    void,
-  ];
+  "files.sftp.readText": [{ sessionId: string; path: string }, { content: string; size: number }];
+  "files.sftp.writeText": [{ sessionId: string; path: string; content: string }, void];
   "files.sftp.createFile": [{ sessionId: string; path: string }, void];
   "files.sftp.mkdir": [{ sessionId: string; path: string }, void];
-  "files.sftp.rename": [
-    { sessionId: string; from: string; to: string; overwrite?: boolean },
-    void,
-  ];
-  "files.sftp.copy": [
-    { sessionId: string; from: string; to: string; overwrite?: boolean },
-    void,
-  ];
-  "files.sftp.delete": [
-    { sessionId: string; path: string; isDir: boolean },
-    void,
-  ];
+  "files.sftp.rename": [{ sessionId: string; from: string; to: string; overwrite?: boolean }, void];
+  "files.sftp.copy": [{ sessionId: string; from: string; to: string; overwrite?: boolean }, void];
+  "files.sftp.delete": [{ sessionId: string; path: string; isDir: boolean }, void];
   "monitor.system": [Record<string, never>, unknown];
   "monitor.stats": [{ sessionId: string }, unknown];
   "monitor.processes": [{ sessionId: string }, unknown];
   "monitor.kill": [{ sessionId: string; pid: number }, void];
   "history.list": [{ hostId: string; limit?: number }, unknown];
-  "history.record": [
-    { hostId: string; command: string },
-    Record<string, unknown> | null,
-  ];
+  "history.record": [{ hostId: string; command: string }, Record<string, unknown> | null];
   "history.delete": [{ id: number }, void];
   "history.clear": [{ hostId: string }, void];
 
-  "api.describe": [
-    Record<string, never>,
-    { version: number; methods: MethodDescription[] },
-  ];
+  "api.describe": [Record<string, never>, { version: number; methods: MethodDescription[] }];
   "app.info": [Record<string, never>, Record<string, unknown>];
   "app.openExternal": [{ url: string }, void];
   "settings.get": [Record<string, never>, Record<string, unknown>];
-  "settings.update": [
-    { patch: Record<string, unknown> },
-    Record<string, unknown>,
-  ];
-  "hosts.snapshot": [Record<string, never>, { hosts: Host[]; groups: Group[] }];
-  "hosts.create": [{ input: HostInput }, Host];
-  "hosts.update": [{ id: string; input: HostInput }, Host];
+  "settings.update": [{ patch: Record<string, unknown> }, Record<string, unknown>];
+  "hosts.snapshot": [Record<string, never>, { hosts: SavedHost[]; groups: Group[] }];
+  "hosts.create": [{ input: HostInput }, SavedHost];
+  "hosts.update": [{ id: string; input: HostInput }, SavedHost];
   "hosts.delete": [{ id: string }, void];
   "hosts.markUsed": [{ id: string }, void];
   "hosts.reorder": [{ ids: string[] }, void];
-  "groups.create": [
-    { input: { name: string; parentId?: string | null } },
-    Record<string, unknown>,
-  ];
+  "groups.create": [{ input: { name: string; parentId?: string | null } }, Record<string, unknown>];
   "groups.update": [
     { id: string; input: { name: string; parentId?: string | null } },
     Record<string, unknown>,
@@ -212,10 +370,7 @@ export interface HostMethodMap {
   "workspace.openHost": [{ hostId: string }, unknown];
   "workspace.openTerminal": [{ sessionId: string }, unknown];
   "workspace.openFiles": [{ sessionId: string }, unknown];
-  "workspace.openSidebar": [
-    { view: "hosts" | "knownHosts" | "plugins" },
-    unknown,
-  ];
+  "workspace.openSidebar": [{ view: "hosts" | "knownHosts" | "plugins" }, unknown];
   "workspace.activate": [{ tabId: string }, unknown];
   "workspace.close": [{ tabId: string }, unknown];
   "workspace.split": [
@@ -227,20 +382,11 @@ export interface HostMethodMap {
     },
     unknown,
   ];
-  "workspace.move": [
-    { tabId: string; paneId: string; beforeTabId?: string | null },
-    unknown,
-  ];
-  "workspace.returnSidebar": [
-    { view: "hosts" | "knownHosts" | "plugins" },
-    unknown,
-  ];
+  "workspace.move": [{ tabId: string; paneId: string; beforeTabId?: string | null }, unknown];
+  "workspace.returnSidebar": [{ view: "hosts" | "knownHosts" | "plugins" }, unknown];
   "clipboard.readText": [Record<string, never>, string];
   "clipboard.writeText": [{ text: string }, void];
-  "ui.showMessage": [
-    { message: string; kind?: "info" | "success" | "error" },
-    void,
-  ];
+  "ui.showMessage": [{ message: string; kind?: "info" | "success" | "error" }, void];
   "ui.confirm": [{ message: string }, boolean];
   log: [{ message: string; level?: string }, void];
 }
@@ -264,16 +410,8 @@ export interface PluginHandlers {
     params: { apiVersion: number; pluginId: string },
     host: Host,
   ): unknown | Promise<unknown>;
-  run?(
-    command: string,
-    input: Record<string, unknown>,
-    host: Host,
-  ): unknown | Promise<unknown>;
-  render?(
-    view: string,
-    locale: string | undefined,
-    host: Host,
-  ): unknown | Promise<unknown>;
+  run?(command: string, input: Record<string, unknown>, host: Host): unknown | Promise<unknown>;
+  render?(view: string, locale: string | undefined, host: Host): unknown | Promise<unknown>;
   shutdown?(host: Host): unknown | Promise<unknown>;
 }
 export function createPlugin(

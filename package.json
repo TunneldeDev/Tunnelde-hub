@@ -12,9 +12,10 @@
     "registry": "node scripts/validate.mjs --write",
     "registry:check": "node scripts/validate.mjs",
     "check": "node scripts/validate.mjs",
-    "test": "node --test plugins/tests/official.test.mjs tests/*.test.mjs",
+    "test": "node --test plugins/tests/official.test.mjs plugins/*/tests/*.test.mjs tests/*.test.mjs",
     "package": "node scripts/plugins/package.mjs",
     "audit": "node scripts/audit.mjs",
-    "verify": "npm run check && npm test"
+    "verify": "npm run check && npm test",
+    "sdk:sync": "node scripts/sync-sdk.mjs"
   }
 }

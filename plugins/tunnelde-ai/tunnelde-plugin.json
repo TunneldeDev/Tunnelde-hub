@@ -1,0 +1,60 @@
+{
+  "id": "tunnelde-ai",
+  "name": "Tunnelde AI",
+  "version": "1.1.0",
+  "apiVersion": 1,
+  "runtime": "node",
+  "main": "index.mjs",
+  "author": "TunneldeDev",
+  "readme": "README.md",
+  "engines": {
+    "node": ">=22",
+    "tunnelde": ">=0.22.0"
+  },
+  "description": "Scoped AI chat, reviewed workspace tools, structured coding CLI sessions and optional recoverable remote agents.",
+  "commands": [
+    {
+      "id": "ai.send",
+      "title": "Send AI message"
+    },
+    {
+      "id": "ai.stop",
+      "title": "Stop AI agent"
+    },
+    {
+      "id": "ai.configure",
+      "title": "Configure AI providers"
+    },
+    {
+      "id": "ai.session",
+      "title": "Manage AI conversation"
+    },
+    {
+      "id": "ai.approve",
+      "title": "Review AI action"
+    },
+    {
+      "id": "ai.recover",
+      "title": "Inspect or recover AI agent"
+    }
+  ],
+  "views": [
+    {
+      "id": "chat",
+      "title": "Tunnelde AI",
+      "location": "sidebar",
+      "kind": "chat",
+      "icon": "bot"
+    }
+  ],
+  "permissions": [
+    "network",
+    "process.exec",
+    "ssh.exec",
+    "fs.read",
+    "fs.write",
+    "sftp.read",
+    "sftp.write",
+    "secrets"
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "id": "tunnelde-mcp",
+  "name": "Tunnelde MCP",
+  "version": "1.1.0",
+  "apiVersion": 1,
+  "runtime": "node",
+  "main": "index.mjs",
+  "author": "TunneldeDev",
+  "readme": "README.md",
+  "engines": {
+    "node": ">=22",
+    "tunnelde": ">=0.22.0"
+  },
+  "description": "Scoped local MCP access to SSH sessions, files and background tasks, with four approval modes and revocable client tokens.",
+  "commands": [
+    {
+      "id": "start",
+      "title": "Start MCP listener"
+    },
+    {
+      "id": "stop",
+      "title": "Stop MCP listener"
+    },
+    {
+      "id": "client.create",
+      "title": "Create MCP client"
+    },
+    {
+      "id": "client.update",
+      "title": "Update MCP client scope"
+    },
+    {
+      "id": "client.revoke",
+      "title": "Revoke MCP client"
+    },
+    {
+      "id": "reviewer.save",
+      "title": "Configure independent reviewer"
+    },
+    {
+      "id": "reset",
+      "title": "Reset MCP settings"
+    }
+  ],
+  "views": [
+    {
+      "id": "main",
+      "title": "MCP Access"
+    }
+  ],
+  "permissions": [
+    "network",
+    "secrets",
+    "hosts.read",
+    "sessions.read",
+    "ssh.exec",
+    "process.exec",
+    "fs.read",
+    "fs.write",
+    "sftp.read",
+    "sftp.write"
+  ]
+}

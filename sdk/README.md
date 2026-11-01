@@ -27,7 +27,8 @@ Declare `hosts.read` in `tunnelde-plugin.json` before calling `hosts.snapshot`. 
 method is checked against the installed plugin's declarations, user grants, package
 fingerprint and current restricted-mode generation. `host.describe()` returns the live,
 versioned method catalogue, permissions, parameter names and descriptions. Unknown methods
-are rejected. There is no generic application-command invocation or credential-vault API.
+are rejected. There is no generic application-command invocation. The `secrets` permission
+allows access only to the plugin's own keyring namespace; SSH credentials remain private.
 
 `host.call(method, params, {signal, timeoutMs})` returns the host result, rejects on denial/error,
 and supports local cancellation. Cancellation stops waiting; it cannot undo an already
@@ -54,8 +55,7 @@ for (let attempt = 0; attempt < 120; attempt++) {
   const status = await host.call("files.transferStatus", { transferId });
   if (!status) throw new Error("Transfer status expired");
   if (status.status === "done") break;
-  if (status.status !== "running")
-    throw new Error(status.error ?? status.status);
+  if (status.status !== "running") throw new Error(status.error ?? status.status);
   if (attempt === 119) {
     await host.call("files.cancelTransfer", { transferId });
     throw new Error("Transfer did not finish in time");
@@ -78,3 +78,58 @@ Use the main application's [API guide](https://github.com/TunneldeDev/Tunnelde/b
 for the complete permission table, method parameters, limits, restricted-mode behavior and
 CLI recovery options. Plugin authors should handle denied permissions and interrupted calls
 without retrying writes automatically.
+
+## Events, processes and scoped tools
+
+`events.publish` sends `{event, payload}` to the application. The host wraps it in
+`{pluginId, generation, event, payload}` on `plugin://event`; consumers must check runtime
+generation and, for chat, view/session/run/sequence before applying updates. Never publish
+secrets. Store API keys with `secrets.set`, read with `secrets.get`, and delete with
+`secrets.delete`. A secret is at most 16 KiB. Blank password fields in a configuration
+editor should preserve saved secrets, rather than echo them in render payloads.
+
+`tasks.start` accepts an explicitly chosen executable, arguments and optional working
+directory. Local processes require `process.exec`; SSH processes require `ssh.exec` and
+an explicit `sessionId`, with `platform` controlling POSIX or PowerShell quoting. No runtime
+is discovered, downloaded or started implicitly. `tasks.readOutput` returns separate,
+sequenced stdout/stderr events; honor `nextSeq` and `truncated`. Use `tasks.write` and
+`tasks.closeInput` for stdin. `tasks.cancel` requests cancellation; inspect status before
+reporting completion. Default deadline is 30 minutes, maximum 24 hours. The host allows
+8 active tasks per plugin and bounds retained output. Direct SSH tasks depend on their
+SSH channel and are distinct from durable runners.
+
+AI and MCP clients should call `tools.invoke` with an allowlisted method, parameters,
+explicit `scope`, `mode`, `clientId` and unique `requestId`. `readOnly` rejects commands
+and mutations. `ask` asks the human before mutations; `approve` may accept a decision
+from a separately configured independent reviewer, falling back to the human. `full`
+skips action confirmation and must be explicitly selected by the user. Read operations
+still require host permissions and target scope. `tools.cancel` cancels a pending request;
+`tools.revokeClient` also cancels resources owned by that client. Completed writes cannot
+be rolled back. The reviewer decision is trusted plugin input: never copy it from model
+tool arguments. Scope checks constrain host tool calls, not arbitrary executable code.
+
+## Optional durable remote runners
+
+`runners.deploy` uploads a user-selected native helper and the current plugin to a fresh
+user directory after confirmation. Its `runnerPath` parameter is a **local helper binary**
+for the target platform; `executable` is the explicitly supplied **remote Node executable**.
+It does not install Node, a service or a system daemon. `runners.start` then starts a
+runner from that deployment and sends secrets over SSH stdin, never argv or config files.
+
+Remote runner work may continue after disconnecting or closing Tunnelde. Reconnect to
+the same saved host, use `runners.poll` with the last `nextSeq`, show pending approvals,
+and require explicit user action to resume interrupted model work. Approval replies are
+sent through `runners.send` with `{type:"approval", approvalId, approved}`. Never replay
+non-idempotent writes on reconnect. `runners.stop` reports a stop request; an unreachable
+runner remains pending in `runners.list` until stopping can be confirmed. Revocation
+requests stopping but cannot prove a disconnected remote process has ended.
+
+## Controlled workspace and chat views
+
+See [view contributions and chat events](../plugins/README.md#sidebar-and-chat-views).
+Views render application controls and safe Markdown; plugin HTML and scripts are not
+embedded. The SDK exports `PluginView`, `PluginChatBlock`, task, event, scope and runner
+types. Saved SSH metadata is `SavedHost`; `Host` is the host API transport.
+
+Run `npm run sdk:sync -- ../Tunnelde` to regenerate both catalogue files from the desktop
+Rust `METHODS` source. This does not change the registry or publish packages.
