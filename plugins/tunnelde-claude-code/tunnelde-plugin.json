@@ -1,7 +1,7 @@
 {
   "id": "tunnelde-claude-code",
   "name": "Claude Code",
-  "version": "1.3.1",
+  "version": "1.4.0",
   "apiVersion": 1,
   "runtime": "node",
   "main": "index.mjs",
@@ -9,7 +9,7 @@
   "readme": "README.md",
   "engines": {
     "node": ">=22",
-    "tunnelde": ">=0.25.1"
+    "tunnelde": ">=0.26.0"
   },
   "description": "Independent Claude Code stream-json chat with explicit executable selection and API action review.",
   "commands": [
@@ -40,6 +40,14 @@
     {
       "id": "ai.target",
       "title": "Select local or remote execution target"
+    },
+    {
+      "id": "ai.prepare",
+      "title": "Initialize selected agent"
+    },
+    {
+      "id": "ai.install",
+      "title": "Install and initialize remote agent"
     }
   ],
   "views": [

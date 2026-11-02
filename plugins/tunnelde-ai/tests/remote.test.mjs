@@ -1,4 +1,5 @@
 import test from "node:test";
+import { preparedRuntime } from "./prepared-fixture.mjs";
 import assert from "node:assert/strict";
 import { PassThrough } from "node:stream";
 import { mkdtemp, writeFile, rm } from "node:fs/promises";
@@ -294,6 +295,7 @@ test("remote send deploys only the selected runtime and relays pending approvals
       scope: { sessionIds: ["ssh"], remoteRoots: [{ sessionId: "ssh", path: "/work" }] },
     },
   });
+  await preparedRuntime(engine);
   await engine.command("ai.send", { message: "hello" });
   await [...engine.runs.values()][0].done;
   assert.equal(engine.block().run.status, "done");

@@ -106,6 +106,18 @@ approval commands receive `{requestId,decision:"allow"|"deny"}`. Recovery receiv
 `{taskId?,action:"inspect"|"resume"}`. Configuration receives `{config}`. Commands may
 return `{block}` to update the view.
 
+Tunnelde 0.26.0 adds optional `commands.prepare` and `commands.install` and a
+`readiness` object: `{status:"required"|"checking"|"ready"|"error",profileId,targetKey,detail?}`.
+If prepare is declared, Send/Enter remain unavailable until readiness is ready for the
+selected profile and target. `targetKey` is the JSON string of
+`[kind || "local", sessionId || "", hostId || "", cwd || "", runtime || "", executable || ""]`
+from `execution`. Prepare/install receive `{sessionId,modelId}` and should acknowledge
+immediately with a checking block, then publish a final snapshot. Stop must cancel a
+pending preparation and its owned tasks. Enforce readiness again before accepting a
+user turn; UI gating alone is insufficient. Do not persist readiness as a trusted flag
+or issue a paid model prompt during preflight. Source upload/installation and existing
+user Node execution require explicit consent.
+
 Publish `event:"chat"` with `{viewId,sessionId,runId,seq,type,...}`. Sequence numbers must
 increase per run. Supported types are `delta` (`messageId,delta`), `snapshot` (`block`),
 `approval` (`approval`), `task` (`task`), `done` (`status:"done"|"cancelled"`) and `error`

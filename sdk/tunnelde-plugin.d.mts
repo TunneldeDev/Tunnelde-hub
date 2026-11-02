@@ -221,6 +221,8 @@ export interface PluginChatBlock {
     approve?: string;
     recover?: string;
     target?: string;
+    prepare?: string;
+    install?: string;
   };
   sessions?: ChatSession[];
   activeSessionId?: string;
@@ -265,6 +267,12 @@ export interface PluginChatBlock {
   notice?: string;
   config?: Record<string, unknown>;
   execution?: ChatExecution | null;
+  readiness?: {
+    status: "required" | "checking" | "ready" | "error";
+    profileId: string;
+    targetKey: string;
+    detail?: string;
+  };
 }
 export interface HostMethodMap {
   "workspace.showQuickAccess": [{ query?: string }, unknown];

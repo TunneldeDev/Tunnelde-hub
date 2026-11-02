@@ -1,7 +1,7 @@
 # Codex
 
 An independent Tunnelde assistant maintained by TunneldeDev. This community integration is not published by OpenAI.
-Requires Tunnelde 0.25.1+ and an explicitly approved local Node 22+ plugin runtime.
+Requires Tunnelde 0.26.0+ and an explicitly approved local Node 22+ plugin runtime.
 Install from Marketplace, this folder or its ZIP and open its own sidebar.
 Each assistant has independent settings, secrets, conversations and lifecycle.
 
@@ -25,9 +25,17 @@ The selected account's home is the default workspace. Optional workspace setting
 host scope list is needed. Coding plugins default to the corresponding remote command
 instead of reusing a local Windows executable path.
 
-Opening the view or selecting a target does not start the agent or discover user Node.
-Send starts work. Coding agents must already be installed and authenticated on the
-execution machine. Nothing installs Node, coding CLIs or system services automatically.
+Opening the view or selecting a target does not start an agent or discover user Node.
+Before the first message on a machine, **Initialize** replaces Send. Initialization asks
+for consent, checks the selected runtime and the agent's native structured protocol,
+and sends no model prompt. Errors appear beside the composer and keep your draft.
+You can cancel initialization. Changing the provider, executable, workspace or machine
+requires another check; readiness is not persisted across plugin restarts.
+
+On supported SSH hosts, **Install and initialize** offers an explicit approved private
+installation. Local agents must be installed with their official installer, authenticated,
+and selected in Execution settings. Nothing installs or starts a CLI implicitly.
+See [initialization and installation](https://github.com/TunneldeDev/tunnelde-hub/blob/main/docs/assistant-plugins-1.4.md).
 
 ## Remote execution
 

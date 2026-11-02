@@ -31,6 +31,7 @@ test(
       seq = 0,
       requests = 0,
       status = "running",
+      exitCode,
       exited;
     const secret = "test-remote-key-never-write-to-disk";
     const server = createServer(async (request, response) => {
@@ -119,7 +120,9 @@ test(
           assert.equal(params.sessionId, "ssh");
           assert.equal(params.executable, process.execPath);
           assert.ok(!JSON.stringify(params).includes(secret));
-          child = spawn(params.executable, params.args.map(localPath), {
+          status = "running";
+          exitCode = undefined;
+          child = spawn(params.executable, params.args.includes("--eval") ? params.args : params.args.map(localPath), {
             cwd: localPath(params.cwd),
             windowsHide: true,
             stdio: ["pipe", "pipe", "pipe"],
@@ -131,8 +134,9 @@ test(
               queue.push({ seq: ++seq, stream, data: chunk }),
             );
           }
-          child.on("exit", () => {
-            status = "exited";
+          child.on("exit", (code) => {
+            exitCode = code;
+            status = code === 0 ? "completed" : "exited";
           });
           return { taskId: "remote-task" };
         }
@@ -142,9 +146,10 @@ test(
         }
         if (method === "tasks.readOutput")
           return { events: queue.splice(0), truncated: false };
-        if (method === "tasks.status") return { status };
+        if (method === "tasks.status") return { status, exitCode };
         if (method === "tasks.cancel") {
           child.kill();
+          await exited;
           return true;
         }
         throw new Error(`Unexpected ${method}`);
@@ -176,6 +181,12 @@ test(
         targetId: "ssh",
         runtime: process.execPath,
       });
+      await engine.command("ai.prepare", {});
+      await engine.preparationPromise;
+      assert.equal(engine.block().readiness.status, "ready", engine.block().readiness.detail);
+      assert.equal(requests, 0, "Initialization must not contact a paid provider");
+      assert.equal(engine.block().messages.length, 0);
+      assert.equal(calls.filter((item) => item.method === "secrets.get").length, 0);
       const result = await engine.send({
         message: "List the selected workspace",
       });

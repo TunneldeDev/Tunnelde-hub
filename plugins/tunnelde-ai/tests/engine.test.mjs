@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { AiPlugin } from "../lib/engine.mjs";
 import { validateConfig } from "../lib/config.mjs";
 import { availableTools, invokeTool, hostToolCall } from "../lib/tools.mjs";
+import { preparedRuntime } from "./prepared-fixture.mjs";
 import { AiPlugin as PiPlugin } from "../../tunnelde-pi/lib/engine.mjs";
 import { validateConfig as validatePiConfig } from "../../tunnelde-pi/lib/config.mjs";
 
@@ -368,6 +369,7 @@ test("stopping cancels a pending inline approval without executing", async () =>
       ],
     },
   });
+  await preparedRuntime(engine);
   await engine.command("ai.send", { message: "hello" });
   while (!engine.approvals.size) await new Promise((r) => setImmediate(r));
   await engine.command("ai.stop", {});

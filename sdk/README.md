@@ -147,5 +147,12 @@ Use `ChatSession.untitled` to distinguish a localized placeholder from a custom 
 clear a background item's busy state when the matching run finishes. `ChatExecution`
 and structured message activity describe the selected target and collapsible tool work.
 
+Tunnelde 0.26.0 adds optional chat preparation/install commands and per-target
+`readiness`. See the [chat schema](../plugins/README.md#sidebar-and-chat-views) and
+[assistant initialization guide](../docs/assistant-plugins-1.4.md). A declared preparation
+command replaces Send until the selected profile and target are ready. Initialization
+must acknowledge promptly and support cancellation; the host refreshes checking views
+as a fallback when a completion event is lost.
+
 Run `npm run sdk:sync -- ../Tunnelde` to regenerate both catalogue files from the desktop
 Rust `METHODS` source. This does not change the registry or publish packages.
