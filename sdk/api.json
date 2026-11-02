@@ -397,6 +397,14 @@
       "description": "List a remote directory using an active SSH session."
     },
     {
+      "name": "files.sftp.resolveDirectory",
+      "permissions": [
+        "sftp.read"
+      ],
+      "params": "{sessionId:string,path?:string}",
+      "description": "Resolve the SSH account home and an optional working directory through SFTP without listing entries or executing a shell. Return {home,path}. Supports ~ and relative paths."
+    },
+    {
       "name": "files.sftp.readText",
       "permissions": [
         "sftp.read"
@@ -629,6 +637,30 @@
       ],
       "params": "{tabId:string,paneId:string,beforeTabId?:string|null}",
       "description": "Move or reorder an existing tab."
+    },
+    {
+      "name": "workspace.showQuickAccess",
+      "permissions": [
+        "workspace.write"
+      ],
+      "params": "{query?:string}",
+      "description": "Open Quick Access with an optional query. Never execute a command automatically."
+    },
+    {
+      "name": "workspace.setPaneLocked",
+      "permissions": [
+        "workspace.write"
+      ],
+      "params": "{paneId:string,locked:boolean}",
+      "description": "Set the destination lock on an existing pane."
+    },
+    {
+      "name": "workspace.resizeSplit",
+      "permissions": [
+        "workspace.write"
+      ],
+      "params": "{splitId:string,ratio:number}",
+      "description": "Resize an existing split with a ratio between 0.1 and 0.9."
     },
     {
       "name": "workspace.returnSidebar",

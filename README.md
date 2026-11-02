@@ -16,17 +16,17 @@ the desktop installer.
 
 ## Available packages
 
-| Package             | Purpose                                                             | Runtime                    |
-| ------------------- | ------------------------------------------------------------------- | -------------------------- |
-| JSON Formatter      | Format/minify JSON while preserving numeric precision and key order | Node 22+                   |
-| Timestamp Converter | Unix seconds/milliseconds and local/UTC date conversion             | Node 22+                   |
-| UUID Generator      | Cryptographically random UUID v4, batches of 1–100                  | Node 22+                   |
-| Studio Themes       | Cobalt Dusk and Porcelain, two coordinated workbench themes         | None                       |
-| Tunnelde AI         | API-only assistant with scoped tools and independent API review     | Node 22+, Tunnelde 0.22.2+ |
-| Codex               | Independent Codex app-server assistant and API reviewer             | Node 22+, Tunnelde 0.22.2+ |
-| Claude Code         | Independent Claude Code stream-json assistant and API reviewer      | Node 22+, Tunnelde 0.22.2+ |
-| Pi                  | Independent Pi RPC assistant and bundled permission extension       | Node 22+, Tunnelde 0.22.2+ |
-| Tunnelde MCP        | Local authenticated MCP endpoint and revocable scoped clients       | Node 22+, Tunnelde 0.22+   |
+| Package             | Purpose                                                             | Runtime                  |
+| ------------------- | ------------------------------------------------------------------- | ------------------------ |
+| JSON Formatter      | Format/minify JSON while preserving numeric precision and key order | Node 22+                 |
+| Timestamp Converter | Unix seconds/milliseconds and local/UTC date conversion             | Node 22+                 |
+| UUID Generator      | Cryptographically random UUID v4, batches of 1–100                  | Node 22+                 |
+| Studio Themes       | Cobalt Dusk and Porcelain, two coordinated workbench themes         | None                     |
+| Tunnelde AI         | API assistant running locally or on a selected SSH host             | Node 22+, Tunnelde 0.25+ |
+| Codex               | Independent Codex app-server assistant, local or SSH                | Node 22+, Tunnelde 0.25+ |
+| Claude Code         | Independent Claude Code stream-json assistant, local or SSH         | Node 22+, Tunnelde 0.25+ |
+| Pi                  | Independent Pi RPC assistant and permission extension, local or SSH | Node 22+, Tunnelde 0.25+ |
+| Tunnelde MCP        | Local authenticated MCP endpoint and revocable scoped clients       | Node 22+, Tunnelde 0.22+ |
 
 These are independent packages, each installable from its folder or versioned ZIP. Tunnelde
 does not bundle Node and does not execute a system Node without explicit consent. A pure
@@ -46,6 +46,24 @@ Select a package, inspect its description and permissions, then install. Local i
 also accepts a ZIP file or folder through the native picker or drag and drop. Downloaded
 packages are checked against the pinned SHA-256 before extraction. A checksum proves the
 bytes match this reviewed catalogue, not that a publisher is trustworthy.
+
+## Use an assistant
+
+Install each assistant separately and approve a local plugin Node runtime. Open its
+sidebar and choose **Execution location** in the composer: **Local** or an already
+connected SSH host. Models and execution machines have separate selectors. A remote
+workspace defaults to that account's home directory; no session ID needs to be copied.
+
+Codex, Claude Code and Pi start their corresponding installed CLI on the chosen machine
+using native structured protocols over stdin/stdout, carried over SSH for remote runs.
+The CLI must already be installed and authenticated there. Pi asks before uploading its
+permission extension. Tunnelde AI uses API providers; running it remotely also requires
+explicit selection of remote Node and approval to upload its runtime source. Nothing
+installs Node, coding agents or system services automatically.
+
+See [assistant setup and migration](docs/assistant-plugins-1.3.md) for permissions,
+runtime consent, remote files, compatibility and verification limits. Packages 1.3+
+require desktop 0.25+; upgrading only the desktop does not update installed plugins.
 
 ## Contribute
 
@@ -76,7 +94,7 @@ before merging registry changes that advertise them. The initial release is `plu
 
 The repository layout and review workflow follow
 [myna-hub](https://github.com/quyansiyuanwang/myna-hub), adapted to Tunnelde's executable plugin
-and data-only theme manifest formats. Tunnelde AI, Codex, Claude Code, Pi and MCP are separate, explicitly installed Node plugins. The coding integrations are maintained by TunneldeDev, not published by the CLI vendors. They do not change system services or install external coding CLIs. Each has its own sidebar, configuration, conversations, secret namespace and lifecycle; no coding plugin depends on Tunnelde AI being installed. See [the 1.2 migration notes](docs/assistant-plugins-1.2.md) for existing CLI profiles and release verification.
+and data-only theme manifest formats. Tunnelde AI, Codex, Claude Code, Pi and MCP are separate, explicitly installed Node plugins. The coding integrations are maintained by TunneldeDev, not published by the CLI vendors. Each has its own sidebar, configuration, conversations, secret namespace and lifecycle; no coding plugin depends on Tunnelde AI being installed. The [1.2 migration notes](docs/assistant-plugins-1.2.md) remain available for users moving from the earlier aggregated assistant.
 
 ## License
 

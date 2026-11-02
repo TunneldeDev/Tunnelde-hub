@@ -237,6 +237,9 @@ export interface PluginChatBlock {
   config?: Record<string, unknown>;
 }
 export interface HostMethodMap {
+  "workspace.showQuickAccess": [{ query?: string }, unknown];
+  "workspace.setPaneLocked": [{ paneId: string; locked: boolean }, unknown];
+  "workspace.resizeSplit": [{ splitId: string; ratio: number }, unknown];
   "events.publish": [{ event: string; payload: unknown }, null];
   "secrets.get": [{ key: string }, string | null];
   "secrets.set": [{ key: string; value: string }, null];
@@ -321,6 +324,10 @@ export interface HostMethodMap {
   "files.local.copy": [{ from: string; to: string; overwrite?: boolean }, void];
   "files.local.delete": [{ path: string; isDir: boolean }, void];
   "files.sftp.list": [{ sessionId: string; path?: string }, Listing];
+  "files.sftp.resolveDirectory": [
+    { sessionId: string; path?: string },
+    { home: string; path: string },
+  ];
   "files.sftp.readText": [{ sessionId: string; path: string }, { content: string; size: number }];
   "files.sftp.writeText": [{ sessionId: string; path: string; content: string }, void];
   "files.sftp.createFile": [{ sessionId: string; path: string }, void];

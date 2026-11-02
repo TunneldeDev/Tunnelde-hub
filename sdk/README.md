@@ -42,6 +42,12 @@ The [API catalogue](api.md) documents all methods and their required permissions
 [`api.json`](api.json) is a machine-readable snapshot of `host.describe()`. The host's
 live description is authoritative. `terminal.write` takes ordinary UTF-8 text, not base64.
 
+On Tunnelde 0.25+, `files.sftp.resolveDirectory({sessionId, path?})` returns
+`{home, path}` using SFTP canonicalization and directory metadata. It accepts omitted
+paths, `~` and relative directories and requires `sftp.read`. Use it for explicit target
+selection instead of shelling out or listing the whole home directory. Pass the resolved
+absolute workspace into subsequent scoped tool calls.
+
 Uploads and downloads return immediately with a transfer ID. Poll the owning runtime's
 status before running dependent commands; a failed transfer must stop the task:
 
@@ -55,7 +61,8 @@ for (let attempt = 0; attempt < 120; attempt++) {
   const status = await host.call("files.transferStatus", { transferId });
   if (!status) throw new Error("Transfer status expired");
   if (status.status === "done") break;
-  if (status.status !== "running") throw new Error(status.error ?? status.status);
+  if (status.status !== "running")
+    throw new Error(status.error ?? status.status);
   if (attempt === 119) {
     await host.call("files.cancelTransfer", { transferId });
     throw new Error("Transfer did not finish in time");

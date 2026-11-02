@@ -1,6 +1,6 @@
 # Host API v1
 
-Generated from the host method catalogue for Tunnelde 0.22.0. All calls require an approved executable plugin, including calls without domain permissions. `host.describe()` reports the running version. Regenerate with `npm run sdk:sync -- ../Tunnelde`.
+Generated from the host method catalogue for Tunnelde 0.25.0. All calls require an approved executable plugin, including calls without domain permissions. `host.describe()` reports the running version. Regenerate with `npm run sdk:sync -- ../Tunnelde`.
 
 | Method | Permissions | Parameters | Behavior |
 | --- | --- | --- | --- |
@@ -56,6 +56,7 @@ Generated from the host method catalogue for Tunnelde 0.22.0. All calls require 
 | `files.local.copy` | `fs.read`, `fs.write` | `{from:string,to:string,overwrite?:boolean}` | Copy local files/directories through the existing copy service. |
 | `files.local.delete` | `fs.write` | `{path:string,isDir:boolean}` | Delete a local file or directory. |
 | `files.sftp.list` | `sftp.read` | `{sessionId:string,path?:string}` | List a remote directory using an active SSH session. |
+| `files.sftp.resolveDirectory` | `sftp.read` | `{sessionId:string,path?:string}` | Resolve the SSH account home and an optional working directory through SFTP without listing entries or executing a shell. Return {home,path}. Supports ~ and relative paths. |
 | `files.sftp.readText` | `sftp.read` | `{sessionId:string,path:string}` | Read remote UTF-8 text through the editor service; API response size limits apply. |
 | `files.sftp.writeText` | `sftp.write` | `{sessionId:string,path:string,content:string}` | Replace existing remote text through the editor service. |
 | `files.sftp.createFile` | `sftp.write` | `{sessionId:string,path:string}` | Create an empty remote file without replacing an existing file. |
@@ -85,6 +86,9 @@ Generated from the host method catalogue for Tunnelde 0.22.0. All calls require 
 | `workspace.close` | `workspace.write` | `{tabId:string}` | Close a tab; dirty editors retain the normal user confirmation. Result reports pending confirmation. |
 | `workspace.split` | `workspace.write` | `{tabId:string,direction:row\|column,position?:before\|after,targetPaneId?:string}` | Move a tab into a split group. |
 | `workspace.move` | `workspace.write` | `{tabId:string,paneId:string,beforeTabId?:string\|null}` | Move or reorder an existing tab. |
+| `workspace.showQuickAccess` | `workspace.write` | `{query?:string}` | Open Quick Access with an optional query. Never execute a command automatically. |
+| `workspace.setPaneLocked` | `workspace.write` | `{paneId:string,locked:boolean}` | Set the destination lock on an existing pane. |
+| `workspace.resizeSplit` | `workspace.write` | `{splitId:string,ratio:number}` | Resize an existing split with a ratio between 0.1 and 0.9. |
 | `workspace.returnSidebar` | `workspace.write` | `{view:hosts\|plugins\|knownHosts}` | Return a docked list to the sidebar. |
 | `clipboard.readText` | `clipboard.read` | `{}` | Read the system text clipboard. |
 | `clipboard.writeText` | `clipboard.write` | `{text:string}` | Replace the system text clipboard. |

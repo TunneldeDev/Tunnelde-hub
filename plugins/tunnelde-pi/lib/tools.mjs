@@ -1,4 +1,6 @@
 import { boundedString } from "./config.mjs";
+import { randomUUID } from "node:crypto";
+import { resolvePath, workspaceContext } from "./targets.mjs";
 
 const schema = (properties, required = []) => ({
   type: "object",
@@ -11,8 +13,27 @@ const string = { type: "string" },
 const location = { path: string, sessionId: string };
 export const TOOLS = Object.freeze([
   {
+    name: "workspace_context",
+    description:
+      "Read the actual selected execution target, working directory and authorized roots. Use this instead of guessing paths or session IDs.",
+    parameters: schema({}),
+  },
+  {
+    name: "list_sessions",
+    description:
+      "List currently connected SSH sessions within the selected authorization scope.",
+    parameters: schema({}),
+  },
+  {
+    name: "list_hosts",
+    description:
+      "List saved host metadata in the selected scope, without credentials.",
+    parameters: schema({}),
+  },
+  {
     name: "list_directory",
-    description: "List a directory inside the explicitly authorized local or SSH scope.",
+    description:
+      "List a directory inside the explicitly authorized local or SSH scope.",
     parameters: schema(location, ["path"]),
   },
   {
@@ -24,7 +45,10 @@ export const TOOLS = Object.freeze([
     name: "write_file",
     description:
       "Replace an existing UTF-8 text file. Read it first and include its sha256 as expectedHash to protect concurrent edits.",
-    parameters: schema({ ...location, content: string, expectedHash: string }, ["path", "content"]),
+    parameters: schema({ ...location, content: string, expectedHash: string }, [
+      "path",
+      "content",
+    ]),
   },
   {
     name: "create_file",
@@ -39,10 +63,10 @@ export const TOOLS = Object.freeze([
   {
     name: "rename_file",
     description: "Rename a file or directory; overwrite defaults to false.",
-    parameters: schema({ from: string, to: string, sessionId: string, overwrite: boolean }, [
-      "from",
-      "to",
-    ]),
+    parameters: schema(
+      { from: string, to: string, sessionId: string, overwrite: boolean },
+      ["from", "to"],
+    ),
   },
   {
     name: "delete_file",
@@ -65,15 +89,66 @@ export const TOOLS = Object.freeze([
   },
 ]);
 
-const READ_TOOLS = new Set(["list_directory", "read_file"]);
+const READ_TOOLS = new Set([
+  "workspace_context",
+  "list_sessions",
+  "list_hosts",
+  "list_directory",
+  "read_file",
+]);
 export function availableTools(mode) {
-  return mode === "readOnly" ? TOOLS.filter((tool) => READ_TOOLS.has(tool.name)) : [...TOOLS];
+  return mode === "readOnly"
+    ? TOOLS.filter((tool) => READ_TOOLS.has(tool.name))
+    : [...TOOLS];
 }
 
-export function toolInvocation(name, input = {}) {
-  if (!TOOLS.some((tool) => tool.name === name)) throw new Error(`Unsupported tool: ${name}`);
+export function toolInvocation(name, input = {}, execution) {
+  if (!TOOLS.some((tool) => tool.name === name))
+    throw new Error(`Unsupported tool: ${name}`);
   if (!input || typeof input !== "object" || Array.isArray(input))
     throw new Error("Tool input must be an object");
+  input = { ...input };
+  if (
+    execution &&
+    !["workspace_context", "list_sessions", "list_hosts"].includes(name)
+  ) {
+    if (input.sessionId && input.sessionId !== execution.sessionId)
+      throw new Error(
+        "The requested SSH session is outside the selected execution target",
+      );
+    if (execution.kind === "remote") input.sessionId = execution.sessionId;
+    for (const key of name === "rename_file"
+      ? ["from", "to"]
+      : name === "run_command"
+        ? ["cwd"]
+        : ["path"]) {
+      if (!input[key] && key !== "cwd" && name !== "list_directory")
+        throw new Error(`Missing ${key}`);
+      input[key] = resolvePath(
+        input[key] || (key === "cwd" || name === "list_directory" ? "." : ""),
+        execution,
+      );
+    }
+    if (
+      name === "run_command" &&
+      !input.sessionId &&
+      !input.executable &&
+      input.command
+    ) {
+      input.executable =
+        execution.platform === "windows"
+          ? process.env.ComSpec || "C:\\Windows\\System32\\cmd.exe"
+          : "/bin/sh";
+      input.args =
+        execution.platform === "windows"
+          ? ["/d", "/s", "/c", input.command]
+          : ["-c", input.command];
+    }
+  }
+  if (name === "workspace_context")
+    return { method: "workspace_context", params: {} };
+  if (name === "list_sessions") return { method: "sessions.list", params: {} };
+  if (name === "list_hosts") return { method: "hosts.snapshot", params: {} };
   const sessionId = input.sessionId
     ? boundedString(input.sessionId, "SSH session ID", 128)
     : undefined;
@@ -89,7 +164,12 @@ export function toolInvocation(name, input = {}) {
         method: "sessions.exec",
         params: {
           sessionId,
-          command: boundedString(input.command, "shell command", 64 * 1024),
+          command:
+            execution && input.cwd
+              ? execution.platform === "windows"
+                ? `Set-Location -LiteralPath '${input.cwd.replaceAll("'", "''")}'; ${boundedString(input.command, "shell command", 64 * 1024)}`
+                : `cd '${input.cwd.replaceAll("'", "'\"'\"'")}' && ${boundedString(input.command, "shell command", 64 * 1024)}`
+              : boundedString(input.command, "shell command", 64 * 1024),
           timeoutMs,
         },
       };
@@ -99,7 +179,9 @@ export function toolInvocation(name, input = {}) {
       method: "tasks.start",
       params: {
         executable: boundedString(input.executable, "executable"),
-        args: (input.args ?? []).map((arg) => boundedString(arg, "argument", 16384, false)),
+        args: (input.args ?? []).map((arg) =>
+          boundedString(arg, "argument", 16384, false),
+        ),
         cwd: boundedString(input.cwd, "working directory"),
         timeoutMs,
       },
@@ -125,7 +207,12 @@ export function toolInvocation(name, input = {}) {
     delete_file: "delete",
   };
   if (name === "write_file") {
-    params.content = boundedString(input.content, "file content", 96 * 1024, false);
+    params.content = boundedString(
+      input.content,
+      "file content",
+      96 * 1024,
+      false,
+    );
     if (input.expectedHash != null) {
       if (!/^[a-f0-9]{64}$/i.test(input.expectedHash))
         throw new Error("Invalid expected file hash");
@@ -138,15 +225,48 @@ export function toolInvocation(name, input = {}) {
 
 export const isReadTool = (name) => READ_TOOLS.has(name);
 
+/** Stop the native approval/action as well as the local RPC wait. */
+export async function hostToolCall(host, params, signal) {
+  signal?.throwIfAborted();
+  const requestId = randomUUID();
+  const cancel = () => {
+    void host.call("tools.cancel", { requestId }).catch(() => {});
+  };
+  signal?.addEventListener("abort", cancel, { once: true });
+  try {
+    return await host.call(
+      "tools.invoke",
+      { ...params, requestId },
+      { signal, timeoutMs: 120000 },
+    );
+  } catch (error) {
+    cancel();
+    throw error;
+  } finally {
+    signal?.removeEventListener("abort", cancel);
+  }
+}
+
 /** All model-selected actions go through the host's independent scope gate. */
 export async function invokeTool(host, config, tool, review, signal) {
   if (config.mode === "readOnly" && !isReadTool(tool.name))
     throw new Error("ReadOnly mode forbids shell commands and mutations");
-  const invocation = toolInvocation(tool.name, tool.arguments);
-  const result = await host.call(
-    "tools.invoke",
-    { ...invocation, mode: config.mode, scope: config.scope, ...(review ? { review } : {}) },
-    { signal, timeoutMs: 120000 },
+  const invocation = toolInvocation(
+    tool.name,
+    tool.arguments,
+    config.execution,
+  );
+  if (invocation.method === "workspace_context")
+    return workspaceContext(config);
+  const result = await hostToolCall(
+    host,
+    {
+      ...invocation,
+      mode: config.mode,
+      scope: config.scope,
+      ...(review ? { review } : {}),
+    },
+    signal,
   );
   if (invocation.method !== "tasks.start") return result;
   const taskId = typeof result === "string" ? result : result?.taskId;
@@ -156,15 +276,22 @@ export async function invokeTool(host, config, tool, review, signal) {
   try {
     while (true) {
       signal?.throwIfAborted();
-      const batch = await host.call("tasks.readOutput", { taskId, afterSeq }, { signal });
-      if (batch?.truncated) throw new Error("Command output exceeded the recoverable task buffer");
+      const batch = await host.call(
+        "tasks.readOutput",
+        { taskId, afterSeq },
+        { signal },
+      );
+      if (batch?.truncated)
+        throw new Error("Command output exceeded the recoverable task buffer");
       for (const event of batch?.events ?? []) {
         afterSeq = Math.max(afterSeq, event.seq ?? 0);
         output += event.data ?? "";
-        if (Buffer.byteLength(output) > 64 * 1024) throw new Error("Command output exceeds 64 KiB");
+        if (Buffer.byteLength(output) > 64 * 1024)
+          throw new Error("Command output exceeds 64 KiB");
       }
       const status = await host.call("tasks.status", { taskId }, { signal });
-      if (status && !["running", "starting"].includes(status.status)) return { ...status, output };
+      if (status && !["running", "starting"].includes(status.status))
+        return { ...status, output };
       await delay(100, signal);
     }
   } catch (error) {

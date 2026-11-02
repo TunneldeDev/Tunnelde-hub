@@ -1,25 +1,60 @@
 # Pi
 
-An independent Tunnelde plugin maintained by TunneldeDev. This is a community integration, not a Pi vendor-published plugin. Requires Tunnelde 0.22.2+ and an explicitly chosen Node 22+ runtime.
-
-Install this source folder or its versioned ZIP, enable **Pi**, and open the Pi sidebar activity. No Tunnelde AI, Codex, or Claude Code installation is needed. The package is self-contained. Its `tunnelde-pi` identity owns independent configuration, secret-store entries, conversations, approvals and remote runner records; it can be installed, disabled, stopped, or uninstalled separately.
+An independent Tunnelde assistant maintained by TunneldeDev. This community integration is not published by Pi's vendor.
+Requires Tunnelde 0.25.0+ and an explicitly approved local Node 22+ plugin runtime.
+Install from Marketplace, this folder or its ZIP and open its own sidebar.
+Each assistant has independent settings, secrets, conversations and lifecycle.
 
 ## Configure and run
 
-Choose an existing Pi executable, working directory, and authorized workspace roots. The plugin uses Pi RPC and includes its permission extension. Optional model and provider names are passed explicitly to Pi; Pi manages its own authentication. No automatic discovery, installation, or startup of Node or vendor CLIs happens when installing, opening, or configuring the view. Work starts on an explicit message.
+This package uses the actual installed `pi --mode rpc` binary with its bundled permission extension.
 
-Only Pi is offered as a primary protocol. An optional independent reviewer can use OpenAI Chat Completions, OpenAI Responses, Anthropic Messages, or Gemini. API reviewer profiles never appear as executable Pi models. Keys remain in this package's host secret store; other plugins' settings, conversations and secrets are not imported.
+Pi manages authentication on the selected machine. Optional model and provider overrides are separate from execution location.
 
-## Approval modes
+Choose **Local** or a connected SSH host in the composer's **Execution location** menu.
+The selected account's home is the default workspace. Optional workspace settings accept
+`~`, relative paths and a coding agent executable override. No session ID or manual
+host scope list is needed. Coding plugins default to the corresponding remote command
+instead of reusing a local Windows executable path.
 
-`ask` requests human approval through Pi's bundled permission extension. `approve` uses an independent API reviewer and falls back to a human for missing, failed, malformed, or rejected review. `full` intentionally permits supported CLI actions without per-action review. **`readOnly` execution is refused:** a restricted tool list is not an operating-system read sandbox. Use API-only Tunnelde AI for read-only API work. The permission extension canonicalizes paths and rejects symbolic-link escapes; it is not a replacement for operating-system isolation.
+Opening the view or selecting a target does not start the agent or discover user Node.
+Send starts work. Coding agents must already be installed and authenticated on the
+execution machine. Nothing installs Node, coding CLIs or system services automatically.
 
-## Remote agents
+## Remote execution
 
-Remote profiles require explicit SSH and scope selection, an existing remote Node executable, deployment directory, and a matching local supervisor helper. Deployment into a new directory requires the host's approval. `remote-entry.mjs`, the permission extension and the entire runtime are bundled. The remote entry enforces this package's fixed Pi primary/API-reviewer policy and refuses another plugin identity.
+Remote Pi asks before uploading its bundled permission extension into a new `.tunnelde-pi-permissions-*` directory. It forwards permission decisions through Pi RPC over SSH. No generic ACP server, public agent port or Tunnelde native supervisor helper is needed. Pi must have its own runtime dependencies installed on that machine.
 
-An explicitly deployed agent can remain under its native remote supervisor after the application closes. Inspect after reconnection and resume only explicitly. Use the run's Stop action for shutdown; disabling the local plugin alone does not stop a durable remote supervisor. Older deployments without package identity require a new conversation for redeployment.
+Successful source/extension uploads are retained for reuse while their fingerprint and
+host match. Only newly created plugin-owned directories are written. Failed deployments
+only attempt cleanup of entries created by that attempt.
 
-## Maintenance
+Targets are saved per conversation. Switching a populated conversation's machine or
+workspace creates another conversation and preserves the previous one. Disconnected
+targets fail visibly and never fall back to local execution. Ordinary runs require the
+SSH connection. Advanced persistent profiles remain in collapsed configuration with
+separate recovery rules; disabling a local plugin alone does not stop a durable remote
+supervisor. See [setup and migration](https://github.com/TunneldeDev/tunnelde-hub/blob/main/docs/assistant-plugins-1.3.md).
 
-Run `npm run agents:sync` after changing shared runtime source in `plugins/tunnelde-ai/lib` or the common entry points. Checked-in copies support installation from an isolated folder or ZIP. `npm run verify` uses deterministic mocked transports; it does not discover or launch the user's Pi installation or contact paid APIs.
+## Permissions
+
+**Ask for approval** prompts before mutations or commands. **Approve for me** uses a
+separate API reviewer, falling back to a human on missing, malformed, failed or negative
+review. **Full Access** intentionally permits supported unrestricted actions.
+
+ReadOnly execution is refused: a filtered Pi tool list is not the required verified OS read sandbox. Use Tunnelde AI's scoped read-only API tools instead.
+
+Scope checks and permission prompts do not replace OS isolation. Executable plugins
+run with the user's permissions. API reviewer profiles cannot act as the primary
+coding assistant. Credentials and conversations are not imported from other plugins.
+
+## Compatibility and maintenance
+
+See the [1.2 migration guide](https://github.com/TunneldeDev/tunnelde-hub/blob/main/docs/assistant-plugins-1.2.md) for users moving from
+old aggregated CLI profiles. Existing interrupted conversations remain inspectable.
+
+Shared source lives in `plugins/tunnelde-ai`. After changing common entry points or
+`lib/`, run `npm run agents:sync`, `npm run registry`, `npm run verify` and
+`npm run package`. Checked-in copies keep folders and ZIPs independently installable.
+Tests use isolated API servers and simulated CLI/SSH transports; they do not authenticate
+the user's coding agents or contact paid providers.

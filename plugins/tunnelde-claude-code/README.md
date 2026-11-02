@@ -1,25 +1,60 @@
 # Claude Code
 
-An independent Tunnelde plugin maintained by TunneldeDev. This is a community integration, not an Anthropic-published plugin. Requires Tunnelde 0.22.2+ and an explicitly selected Node 22+ runtime.
-
-Install this folder or its versioned ZIP, enable **Claude Code**, and open its own sidebar activity. It does not depend on Tunnelde AI, Codex, or Pi. Each ZIP includes its complete runtime. The `tunnelde-claude-code` identity owns separate settings, secrets, conversations, approval queues and remote runners; installation, enable/disable, and uninstall are independent.
+An independent Tunnelde assistant maintained by TunneldeDev. This community integration is not published by Anthropic.
+Requires Tunnelde 0.25.0+ and an explicitly approved local Node 22+ plugin runtime.
+Install from Marketplace, this folder or its ZIP and open its own sidebar.
+Each assistant has independent settings, secrets, conversations and lifecycle.
 
 ## Configure and run
 
-Explicitly choose an already installed Claude Code executable, its working directory, and authorized workspace roots. The plugin uses bidirectional stream-json; model identifiers are optional CLI overrides. CLI authentication is managed by Claude Code. Viewing, configuring, or installing this plugin never scans for or starts user Node/CLI executables. Sending a message explicitly starts work.
+This package uses the actual installed `claude` binary using bidirectional stream-json and initialization/permission control messages.
 
-Claude Code is the only primary protocol. Optional independent review uses an API profile: OpenAI Chat Completions, OpenAI Responses, Anthropic Messages, or Gemini. Reviewer profiles are not executable models. API keys live in this plugin's host secret store, and no settings or secrets are silently imported from other assistants.
+Claude Code manages authentication on the selected machine. A default Claude Code profile is provided. Optional model overrides are separate from execution location.
 
-## Approval modes
+Choose **Local** or a connected SSH host in the composer's **Execution location** menu.
+The selected account's home is the default workspace. Optional workspace settings accept
+`~`, relative paths and a coding agent executable override. No session ID or manual
+host scope list is needed. Coding plugins default to the corresponding remote command
+instead of reusing a local Windows executable path.
 
-`ask` prompts for CLI permission requests. `approve` uses a separate API reviewer, falling back to a human decision for missing, failed, malformed, or negative review. `full` enables the CLI's supported unrestricted permission mode and must be chosen intentionally. **`readOnly` execution is refused:** a filtered Claude Code tool list cannot establish an operating-system read sandbox. Use the separate API-only Tunnelde AI plugin for read-only API tools. Workspace scopes and approval controls are not operating-system isolation.
+Opening the view or selecting a target does not start the agent or discover user Node.
+Send starts work. Coding agents must already be installed and authenticated on the
+execution machine. Nothing installs Node, coding CLIs or system services automatically.
 
-## Remote agents
+## Remote execution
 
-Optional remote deployment requires an explicit SSH session, remote workspace roots, remote Node executable, agent directory, and matching local native supervisor helper. The host asks before first deployment into a directory. The archive includes `remote-entry.mjs` and all runtime modules; the entry validates the fixed `tunnelde-claude-code` identity and its Claude Code/API-reviewer policy. A configuration cannot turn this package into Codex or Pi.
+Remote structured stdin/stdout travels through SSH. No Tunnelde runtime upload, generic ACP server, public agent port or native supervisor helper is needed for ordinary remote runs.
 
-Durable remote agents may continue under their supervisor after Tunnelde closes. Inspect after reconnecting and resume explicitly; use the run's Stop action to stop a remote agent. Disabling a local plugin is not remote shutdown. Pre-1.2 remote deployments without identity remain inspectable but need a new conversation for redeployment.
+Successful source/extension uploads are retained for reuse while their fingerprint and
+host match. Only newly created plugin-owned directories are written. Failed deployments
+only attempt cleanup of entries created by that attempt.
 
-## Maintenance
+Targets are saved per conversation. Switching a populated conversation's machine or
+workspace creates another conversation and preserves the previous one. Disconnected
+targets fail visibly and never fall back to local execution. Ordinary runs require the
+SSH connection. Advanced persistent profiles remain in collapsed configuration with
+separate recovery rules; disabling a local plugin alone does not stop a durable remote
+supervisor. See [setup and migration](https://github.com/TunneldeDev/tunnelde-hub/blob/main/docs/assistant-plugins-1.3.md).
 
-Runtime source is shared with `plugins/tunnelde-ai/lib` and common entry points; `npm run agents:sync` updates checked-in self-contained copies. `npm run verify` tests configuration, permissions, isolation, packaging and remote identity using mocks, without contacting paid APIs or launching an installed Claude Code executable.
+## Permissions
+
+**Ask for approval** prompts before mutations or commands. **Approve for me** uses a
+separate API reviewer, falling back to a human on missing, malformed, failed or negative
+review. **Full Access** intentionally permits supported unrestricted actions.
+
+ReadOnly execution is refused: filtering Claude Code tools does not establish the required verified OS read sandbox. Use Tunnelde AI's scoped read-only API tools instead.
+
+Scope checks and permission prompts do not replace OS isolation. Executable plugins
+run with the user's permissions. API reviewer profiles cannot act as the primary
+coding assistant. Credentials and conversations are not imported from other plugins.
+
+## Compatibility and maintenance
+
+See the [1.2 migration guide](https://github.com/TunneldeDev/tunnelde-hub/blob/main/docs/assistant-plugins-1.2.md) for users moving from
+old aggregated CLI profiles. Existing interrupted conversations remain inspectable.
+
+Shared source lives in `plugins/tunnelde-ai`. After changing common entry points or
+`lib/`, run `npm run agents:sync`, `npm run registry`, `npm run verify` and
+`npm run package`. Checked-in copies keep folders and ZIPs independently installable.
+Tests use isolated API servers and simulated CLI/SSH transports; they do not authenticate
+the user's coding agents or contact paid providers.

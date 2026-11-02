@@ -5,7 +5,10 @@ import path from "node:path";
 import os from "node:os";
 import { pathToFileURL } from "node:url";
 import { inflateRawSync } from "node:zlib";
-import { AGENT_PACKAGES, syncAgentPlugins } from "../scripts/sync-agent-plugins.mjs";
+import {
+  AGENT_PACKAGES,
+  syncAgentPlugins,
+} from "../scripts/sync-agent-plugins.mjs";
 import { buildPluginArchive } from "../scripts/plugins/package.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
@@ -17,7 +20,8 @@ function fixture(pluginId, state = stores()) {
     async call(method, params) {
       state.calls.push({ pluginId, method, params: structuredClone(params) });
       const key = `${pluginId}:${params.key}`;
-      if (method === "storage.get") return structuredClone(state.storage.get(key) ?? null);
+      if (method === "storage.get")
+        return structuredClone(state.storage.get(key) ?? null);
       if (method === "storage.set") {
         state.storage.set(key, structuredClone(params.value));
         return null;
@@ -38,8 +42,20 @@ function fixture(pluginId, state = stores()) {
 }
 const profile = (protocol) =>
   protocol === "codex" || protocol === "claude-code" || protocol === "pi"
-    ? { id: "main", name: "Main", protocol, executable: "/explicit/vendor-cli", cwd: "/work" }
-    : { id: "main", name: "Main", protocol, model: "model", baseUrl: "https://example.com/v1" };
+    ? {
+        id: "main",
+        name: "Main",
+        protocol,
+        executable: "/explicit/vendor-cli",
+        cwd: "/work",
+      }
+    : {
+        id: "main",
+        name: "Main",
+        protocol,
+        model: "model",
+        baseUrl: "https://example.com/v1",
+      };
 const reviewer = {
   id: "reviewer",
   name: "Reviewer",
@@ -56,7 +72,11 @@ const configFor = (agent) => ({
   scope: { localRoots: ["/work"], sessionIds: [], remoteRoots: [] },
 });
 const engineFor = async (agent) =>
-  (await import(pathToFileURL(path.join(root, "plugins", agent.id, "lib/engine.mjs")))).AiPlugin;
+  (
+    await import(
+      pathToFileURL(path.join(root, "plugins", agent.id, "lib/engine.mjs"))
+    )
+  ).AiPlugin;
 
 test("independent package runtime sources remain synchronized", async () => {
   assert.deepEqual(await syncAgentPlugins(), []);
@@ -70,32 +90,50 @@ for (const agent of AGENT_PACKAGES) {
     const initial = await engine.render();
     assert.equal(initial.title, agent.title);
     assert.equal(initial.blocks[0].title, agent.title);
-    assert.equal(initial.blocks[0].profilePolicy.defaultProtocol, agent.defaultProtocol);
+    assert.equal(
+      initial.blocks[0].profilePolicy.defaultProtocol,
+      agent.defaultProtocol,
+    );
     await engine.configure({ config: configFor(agent) });
     const block = engine.block();
-    assert.deepEqual(block.profilePolicy.primaryProtocols, agent.primaryProtocols);
+    assert.deepEqual(
+      block.profilePolicy.primaryProtocols,
+      agent.primaryProtocols,
+    );
     assert.deepEqual(block.profilePolicy.reviewerProtocols, apis);
     assert.deepEqual(
       block.models.map((item) => item.id),
       agent.id === "tunnelde-ai" ? ["main", "reviewer"] : ["main"],
     );
     if (agent.id !== "tunnelde-ai") {
-      await assert.rejects(engine.send({ message: "invalid", modelId: "reviewer" }), /only review/);
       await assert.rejects(
-        engine.configure({ config: { ...configFor(agent), activeProfileId: "reviewer" } }),
+        engine.send({ message: "invalid", modelId: "reviewer" }),
+        /only review/,
+      );
+      await assert.rejects(
+        engine.configure({
+          config: { ...configFor(agent), activeProfileId: "reviewer" },
+        }),
         /primary profile/,
       );
     }
     const alien = agent.defaultProtocol === "codex" ? "pi" : "codex";
     await assert.rejects(
-      engine.configure({ config: { ...configFor(agent), profiles: [profile(alien)] } }),
+      engine.configure({
+        config: { ...configFor(agent), profiles: [profile(alien)] },
+      }),
       /Unsupported provider/,
     );
     const saved = host.state.storage.get(`${agent.id}:ai.config`);
     assert.equal(saved.pluginId, agent.id);
-    assert.deepEqual(saved.profilePolicy.primaryProtocols, agent.primaryProtocols);
+    assert.deepEqual(
+      saved.profilePolicy.primaryProtocols,
+      agent.primaryProtocols,
+    );
     assert.ok(!JSON.stringify(saved).includes("explicit-review-secret"));
-    assert.ok(!host.state.calls.some((call) => /tasks\.|runners\./.test(call.method)));
+    assert.ok(
+      !host.state.calls.some((call) => /tasks\.|runners\./.test(call.method)),
+    );
     await engine.shutdown();
   });
 
@@ -121,8 +159,13 @@ for (const agent of AGENT_PACKAGES) {
     const engine = new Engine(host);
     await engine.command("ai.configure", { config: configFor(agent) });
     engine.config.profiles[0].protocol = invalid;
-    await assert.rejects(engine.send({ message: "tampered" }), /Unsupported provider/);
-    assert.ok(!host.state.calls.some((call) => /tasks\.|runners\./.test(call.method)));
+    await assert.rejects(
+      engine.send({ message: "tampered" }),
+      /Unsupported provider/,
+    );
+    assert.ok(
+      !host.state.calls.some((call) => /tasks\.|runners\./.test(call.method)),
+    );
     await engine.shutdown();
   });
 }
@@ -144,9 +187,18 @@ test("each assistant owns its configuration, secrets and conversations across sh
   for (const item of instances) {
     const restored = new item.Engine(item.host);
     await restored.initialize();
-    assert.equal(restored.block().sessions[0].title, `${item.agent.title} private conversation`);
-    assert.equal(restored.config.profiles[0].protocol, item.agent.defaultProtocol);
-    assert.equal(state.secrets.get(`${item.agent.id}:provider.reviewer`), "explicit-review-secret");
+    assert.equal(
+      restored.block().sessions[0].title,
+      `${item.agent.title} private conversation`,
+    );
+    assert.equal(
+      restored.config.profiles[0].protocol,
+      item.agent.defaultProtocol,
+    );
+    assert.equal(
+      state.secrets.get(`${item.agent.id}:provider.reviewer`),
+      "explicit-review-secret",
+    );
     await restored.shutdown();
     if (item !== instances[1]) await item.engine.shutdown();
   }
@@ -177,13 +229,25 @@ test("API assistant preserves old CLI settings and conversations until an explic
   );
   assert.equal(engine.block().sessions[0].title, "Prior work");
   assert.deepEqual(host.state.storage.get(`${agent.id}:ai.config`), legacy);
-  assert.equal(host.state.storage.has(`${agent.id}:ai.legacy-config.v1`), false);
+  assert.equal(
+    host.state.storage.has(`${agent.id}:ai.legacy-config.v1`),
+    false,
+  );
   await engine.configure({
-    config: { ...configFor(agent), profiles: [profile("openai-chat")], approverProfileId: "" },
+    config: {
+      ...configFor(agent),
+      profiles: [profile("openai-chat")],
+      approverProfileId: "",
+    },
   });
-  assert.deepEqual(host.state.storage.get(`${agent.id}:ai.legacy-config.v1`), legacy);
+  assert.deepEqual(
+    host.state.storage.get(`${agent.id}:ai.legacy-config.v1`),
+    legacy,
+  );
   assert.ok(!host.state.secrets.has("tunnelde-codex:provider.reviewer"));
-  assert.ok(!host.state.calls.some((call) => /tasks\.|runners\./.test(call.method)));
+  assert.ok(
+    !host.state.calls.some((call) => /tasks\.|runners\./.test(call.method)),
+  );
   await engine.shutdown();
 });
 
@@ -193,7 +257,9 @@ function unpack(bytes) {
     const size = bytes.readUInt32LE(offset + 18),
       length = bytes.readUInt16LE(offset + 26),
       extra = bytes.readUInt16LE(offset + 28);
-    const name = bytes.subarray(offset + 30, offset + 30 + length).toString("utf8"),
+    const name = bytes
+        .subarray(offset + 30, offset + 30 + length)
+        .toString("utf8"),
       start = offset + 30 + length + extra;
     files.set(name, inflateRawSync(bytes.subarray(start, start + size)));
     offset = start + size;
@@ -202,21 +268,28 @@ function unpack(bytes) {
 }
 
 test("standalone archives contain complete runtimes and preserve identity without sibling plugin dependencies", async () => {
-  const directory = await mkdtemp(path.join(os.tmpdir(), "tunnelde-independent-plugins-"));
+  const directory = await mkdtemp(
+    path.join(os.tmpdir(), "tunnelde-independent-plugins-"),
+  );
   try {
     for (const agent of AGENT_PACKAGES) {
-      const files = unpack(await buildPluginArchive(path.join(root, "plugins", agent.id)));
+      const files = unpack(
+        await buildPluginArchive(path.join(root, "plugins", agent.id)),
+      );
       const manifest = JSON.parse(files.get("tunnelde-plugin.json"));
       assert.equal(manifest.id, agent.id);
       assert.equal(manifest.name, agent.title);
-      assert.equal(manifest.version, "1.2.0");
-      assert.equal(manifest.engines.tunnelde, ">=0.22.2");
+      assert.equal(manifest.version, "1.3.0");
+      assert.equal(manifest.engines.tunnelde, ">=0.25.0");
       assert.equal(manifest.views[0].title, agent.title);
       for (const required of [
         "README.md",
         "LICENSE",
         "index.mjs",
         "remote-entry.mjs",
+        "stdio-entry.mjs",
+        "lib/targets.mjs",
+        "lib/remote-stdio.mjs",
         "lib/engine.mjs",
         "lib/config.mjs",
         "lib/identity.mjs",
@@ -228,7 +301,9 @@ test("standalone archives contain complete runtimes and preserve identity withou
         await mkdir(path.dirname(path.join(target, name)), { recursive: true });
         await writeFile(path.join(target, name), data);
       }
-      const { AiPlugin } = await import(pathToFileURL(path.join(target, "lib/engine.mjs")));
+      const { AiPlugin } = await import(
+        pathToFileURL(path.join(target, "lib/engine.mjs"))
+      );
       await import(pathToFileURL(path.join(target, "index.mjs")));
       await import(pathToFileURL(path.join(target, "remote-entry.mjs")));
       const engine = new AiPlugin(fixture(agent.id));
@@ -241,7 +316,9 @@ test("standalone archives contain complete runtimes and preserve identity withou
 });
 
 test("remote entry refuses a different package identity or a broadened protocol policy before transport startup", async () => {
-  const directory = await mkdtemp(path.join(os.tmpdir(), "tunnelde-agent-policy-"));
+  const directory = await mkdtemp(
+    path.join(os.tmpdir(), "tunnelde-agent-policy-"),
+  );
   try {
     for (const agent of AGENT_PACKAGES) {
       const { startRemote } = await import(
@@ -261,7 +338,10 @@ test("remote entry refuses a different package identity or a broadened protocol 
       await writeFile(file, JSON.stringify(document));
       await assert.rejects(startRemote(["--config", file]), /different plugin/);
       document.pluginId = agent.id;
-      document.profilePolicy.primaryProtocols = [...agent.primaryProtocols, "unsupported-protocol"];
+      document.profilePolicy.primaryProtocols = [
+        ...agent.primaryProtocols,
+        "unsupported-protocol",
+      ];
       await writeFile(file, JSON.stringify(document));
       await assert.rejects(startRemote(["--config", file]), /profile policy/);
     }

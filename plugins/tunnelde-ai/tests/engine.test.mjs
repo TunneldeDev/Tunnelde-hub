@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { AiPlugin } from "../lib/engine.mjs";
 import { validateConfig } from "../lib/config.mjs";
-import { availableTools, invokeTool } from "../lib/tools.mjs";
+import { availableTools, invokeTool, hostToolCall } from "../lib/tools.mjs";
 import { AiPlugin as PiPlugin } from "../../tunnelde-pi/lib/engine.mjs";
 import { validateConfig as validatePiConfig } from "../../tunnelde-pi/lib/config.mjs";
 
@@ -30,7 +30,8 @@ function hostFixture() {
     calls,
     async call(method, params) {
       calls.push({ method, params: structuredClone(params) });
-      if (method === "storage.get") return structuredClone(data.get(params.key) ?? null);
+      if (method === "storage.get")
+        return structuredClone(data.get(params.key) ?? null);
       if (method === "storage.set") {
         data.set(params.key, structuredClone(params.value));
         return null;
@@ -45,7 +46,10 @@ function hostFixture() {
         return null;
       }
       if (method === "events.publish") return true;
-      if (method === "tools.invoke") return { content: "file", sha256: "a".repeat(64) };
+      if (method === "files.local.home") return "/work";
+      if (method === "sessions.list") return [];
+      if (method === "tools.invoke")
+        return { content: "file", sha256: "a".repeat(64) };
       throw new Error(`Unexpected host method ${method}`);
     },
   };
@@ -53,13 +57,17 @@ function hostFixture() {
 async function prepared(options, Plugin = AiPlugin) {
   const host = hostFixture(),
     engine = new Plugin(host, options);
-  if (Plugin === AiPlugin) await engine.command("ai.configure", { config: base });
+  if (Plugin === AiPlugin)
+    await engine.command("ai.configure", { config: base });
   return { host, engine };
 }
 test("configuration never serializes credentials and blank keys preserve", async () => {
   const { host, engine } = await prepared();
   await engine.command("ai.configure", {
-    config: { ...base, profiles: [{ ...base.profiles[0], apiKey: "super-secret-key" }] },
+    config: {
+      ...base,
+      profiles: [{ ...base.profiles[0], apiKey: "super-secret-key" }],
+    },
   });
   await engine.command("ai.configure", {
     config: { ...base, profiles: [{ ...base.profiles[0], apiKey: "" }] },
@@ -69,7 +77,10 @@ test("configuration never serializes credentials and blank keys preserve", async
   assert.ok(!JSON.stringify(engine.block()).includes("super-secret-key"));
   assert.equal(engine.block().config.profiles[0].hasApiKey, true);
   await engine.command("ai.configure", {
-    config: { ...base, profiles: [{ ...base.profiles[0], baseUrl: "https://other.example/v1" }] },
+    config: {
+      ...base,
+      profiles: [{ ...base.profiles[0], baseUrl: "https://other.example/v1" }],
+    },
   });
   assert.equal(host.secrets.has("provider.main"), false);
 });
@@ -80,6 +91,66 @@ test("render/import/configuration never launches a process", async () => {
   assert.equal(
     host.calls.some((item) => /tasks.start|runners.start/.test(item.method)),
     false,
+  );
+});
+
+test("reasoning is separate from the reply, bounded, streamed and persisted", async () => {
+  const { host, engine } = await prepared({
+    completion: async ({ onReasoning, onDelta }) => {
+      onReasoning("Checking the selected machine");
+      onDelta("Final answer");
+      return { text: "Final answer", calls: [] };
+    },
+  });
+  const result = await engine.command("ai.send", { message: "inspect" });
+  await engine.runs.get(result.block.activeSessionId).done;
+  const reply = engine
+    .block()
+    .messages.find((item) => item.role === "assistant");
+  assert.equal(reply.content, "Final answer");
+  assert.equal(reply.activity[0].kind, "reasoning");
+  assert.equal(reply.activity[0].status, "done");
+  assert.ok(
+    host.calls.some(
+      (item) =>
+        item.method === "events.publish" &&
+        item.params.payload.type === "activity",
+    ),
+  );
+  await engine.shutdown();
+});
+
+test("aborting a tool cancels the host approval with the same request ID", async () => {
+  const controller = new AbortController();
+  const calls = [];
+  const host = {
+    call(method, params, options) {
+      calls.push({ method, params });
+      if (method === "tools.invoke")
+        return new Promise((_, reject) =>
+          options.signal.addEventListener(
+            "abort",
+            () => reject(new Error("cancelled")),
+            { once: true },
+          ),
+        );
+      return Promise.resolve(true);
+    },
+  };
+  const operation = hostToolCall(
+    host,
+    { method: "files.local.readText", params: { path: "/work/a" } },
+    controller.signal,
+  );
+  controller.abort();
+  await assert.rejects(operation, /cancelled/);
+  const requestId = calls.find((item) => item.method === "tools.invoke").params
+    .requestId;
+  assert.ok(
+    calls.some(
+      (item) =>
+        item.method === "tools.cancel" && item.params.requestId === requestId,
+    ),
   );
 });
 test("send returns immediately, honors run IDs, streams and persists final result", async () => {
@@ -93,7 +164,10 @@ test("send returns immediately, honors run IDs, streams and persists final resul
       return { text: "你好", calls: [] };
     },
   });
-  const result = await engine.command("ai.send", { message: "hello", runId: "client-run" });
+  const result = await engine.command("ai.send", {
+    message: "hello",
+    runId: "client-run",
+  });
   assert.equal(result.runId, "client-run");
   assert.equal(result.block.run.status, "running");
   const done = engine.runs.get(result.block.activeSessionId).done;
@@ -120,13 +194,22 @@ test("tool loop keeps gate mode and includes read hash for concurrent write prot
         text: "",
         calls:
           turn === 1
-            ? [{ id: "read", name: "read_file", arguments: { path: "/work/a" } }]
+            ? [
+                {
+                  id: "read",
+                  name: "read_file",
+                  arguments: { path: "/work/a" },
+                },
+              ]
             : turn === 2
               ? [
                   {
                     id: "write",
                     name: "write_file",
-                    arguments: { path: "/work/a", content: " keep whitespace \n" },
+                    arguments: {
+                      path: "/work/a",
+                      content: " keep whitespace \n",
+                    },
                   },
                 ]
               : [],
@@ -145,11 +228,21 @@ test("tool loop keeps gate mode and includes read hash for concurrent write prot
 test("readOnly model cannot invoke write or shell even if it fabricates calls", async () => {
   assert.deepEqual(
     availableTools("readOnly").map((item) => item.name),
-    ["list_directory", "read_file"],
+    [
+      "workspace_context",
+      "list_sessions",
+      "list_hosts",
+      "list_directory",
+      "read_file",
+    ],
   );
   const host = hostFixture();
   await assert.rejects(
-    invokeTool(host, { ...base, mode: "readOnly" }, { name: "run_command", arguments: {} }),
+    invokeTool(
+      host,
+      { ...base, mode: "readOnly" },
+      { name: "run_command", arguments: {} },
+    ),
     /ReadOnly/,
   );
   assert.equal(host.calls.length, 0);
@@ -163,7 +256,13 @@ test("failed independent review passes false to host for human fallback", async 
         text: "",
         calls:
           ++turn === 1
-            ? [{ id: "write", name: "create_file", arguments: { path: "/work/a" } }]
+            ? [
+                {
+                  id: "write",
+                  name: "create_file",
+                  arguments: { path: "/work/a" },
+                },
+              ]
             : [],
       };
     },
@@ -173,7 +272,10 @@ test("failed independent review passes false to host for human fallback", async 
       ...base,
       mode: "approve",
       approverProfileId: "reviewer",
-      profiles: [...base.profiles, { ...base.profiles[0], id: "reviewer", model: "review-model" }],
+      profiles: [
+        ...base.profiles,
+        { ...base.profiles[0], id: "reviewer", model: "review-model" },
+      ],
     },
   });
   await engine.command("ai.send", { message: "create" });
@@ -187,7 +289,10 @@ test("stopping cancels a pending inline approval without executing", async () =>
   const { engine } = await prepared(
     {
       cli: async ({ approve }) => {
-        assert.equal(await approve({ tool: "write", title: "Write", detail: "file" }), false);
+        assert.equal(
+          await approve({ tool: "write", title: "Write", detail: "file" }),
+          false,
+        );
       },
     },
     PiPlugin,
@@ -195,7 +300,9 @@ test("stopping cancels a pending inline approval without executing", async () =>
   await engine.command("ai.configure", {
     config: {
       ...base,
-      profiles: [{ id: "main", protocol: "pi", executable: "/bin/pi", cwd: "/work" }],
+      profiles: [
+        { id: "main", protocol: "pi", executable: "/bin/pi", cwd: "/work" },
+      ],
     },
   });
   await engine.command("ai.send", { message: "hello" });
@@ -225,7 +332,9 @@ test("saved running sessions become interrupted and inspect never replays tools"
   assert.equal(engine.block().run.status, "interrupted");
   assert.equal(engine.block().tasks[0].recoverable, true);
   await engine.command("ai.recover", { action: "inspect" });
-  assert.ok(!host.calls.some((item) => /tools.invoke|tasks.start/.test(item.method)));
+  assert.ok(
+    !host.calls.some((item) => /tools.invoke|tasks.start/.test(item.method)),
+  );
 });
 test("config rejects insecure endpoints, duplicate profile IDs and implicit CLI executable", () => {
   assert.throws(
@@ -237,11 +346,16 @@ test("config rejects insecure endpoints, duplicate profile IDs and implicit CLI 
     /Plain HTTP/,
   );
   assert.throws(
-    () => validateConfig({ ...base, profiles: [...base.profiles, ...base.profiles] }),
+    () =>
+      validateConfig({
+        ...base,
+        profiles: [...base.profiles, ...base.profiles],
+      }),
     /unique/,
   );
   assert.throws(
-    () => validatePiConfig({ ...base, profiles: [{ id: "main", protocol: "pi" }] }),
+    () =>
+      validatePiConfig({ ...base, profiles: [{ id: "main", protocol: "pi" }] }),
     /executable/,
   );
 });

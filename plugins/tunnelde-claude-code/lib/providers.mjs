@@ -30,7 +30,8 @@ export async function* parseSse(body, signal) {
       const { value, done } = await reader.read();
       if (value) {
         total += value.byteLength;
-        if (total > MAX_RESPONSE) throw new Error("Model response exceeds 4 MiB");
+        if (total > MAX_RESPONSE)
+          throw new Error("Model response exceeds 4 MiB");
         buffer += decoder.decode(value, { stream: true });
       }
       if (done) buffer += decoder.decode();
@@ -38,7 +39,8 @@ export async function* parseSse(body, signal) {
       while ((boundary = /\r?\n\r?\n/.exec(buffer))) {
         const frame = buffer.slice(0, boundary.index);
         buffer = buffer.slice(boundary.index + boundary[0].length);
-        if (Buffer.byteLength(frame) > MAX_EVENT) throw new Error("Model event exceeds 1 MiB");
+        if (Buffer.byteLength(frame) > MAX_EVENT)
+          throw new Error("Model event exceeds 1 MiB");
         const lines = frame.split(/\r?\n/);
         const data = lines
           .filter((line) => line.startsWith("data:"))
@@ -51,9 +53,11 @@ export async function* parseSse(body, signal) {
             .trim() ?? "message";
         if (data) yield { event, data };
       }
-      if (Buffer.byteLength(buffer) > MAX_EVENT) throw new Error("Model event exceeds 1 MiB");
+      if (Buffer.byteLength(buffer) > MAX_EVENT)
+        throw new Error("Model event exceeds 1 MiB");
       if (done) {
-        if (buffer.trim()) throw new Error("Model stream ended in an incomplete SSE frame");
+        if (buffer.trim())
+          throw new Error("Model stream ended in an incomplete SSE frame");
         break;
       }
     }
@@ -81,7 +85,10 @@ function openaiMessages(messages) {
             tool_calls: message.toolCalls.map((tool) => ({
               id: tool.id,
               type: "function",
-              function: { name: tool.name, arguments: JSON.stringify(tool.arguments) },
+              function: {
+                name: tool.name,
+                arguments: JSON.stringify(tool.arguments),
+              },
             })),
           }
         : {}),
@@ -98,7 +105,8 @@ function responsesInput(messages) {
         output: message.content,
       });
     else {
-      if (message.content) result.push({ role: message.role, content: message.content });
+      if (message.content)
+        result.push({ role: message.role, content: message.content });
       for (const tool of message.toolCalls ?? [])
         result.push({
           type: "function_call",
@@ -163,7 +171,13 @@ function geminiContents(messages) {
           ...(message.content ? [{ text: message.content }] : []),
           ...(message.toolCalls ?? []).map(
             (tool) =>
-              tool.raw ?? { functionCall: { id: tool.id, name: tool.name, args: tool.arguments } },
+              tool.raw ?? {
+                functionCall: {
+                  id: tool.id,
+                  name: tool.name,
+                  args: tool.arguments,
+                },
+              },
           ),
         ],
       });
@@ -174,7 +188,10 @@ function geminiContents(messages) {
 export function buildProviderRequest(profile, apiKey, messages, tools = []) {
   const base = endpoint(profile.baseUrl);
   const common = { model: profile.model, stream: true };
-  const headers = { "content-type": "application/json", accept: "text/event-stream" };
+  const headers = {
+    "content-type": "application/json",
+    accept: "text/event-stream",
+  };
   const system = messages
     .filter((message) => message.role === "system")
     .map((message) => message.content)
@@ -182,13 +199,20 @@ export function buildProviderRequest(profile, apiKey, messages, tools = []) {
   let url, body;
   switch (profile.protocol) {
     case "openai-chat":
-      url = base.endsWith("/chat/completions") ? base : `${base}/chat/completions`;
+      url = base.endsWith("/chat/completions")
+        ? base
+        : `${base}/chat/completions`;
       if (apiKey) headers.authorization = `Bearer ${apiKey}`;
       body = {
         ...common,
         messages: openaiMessages(messages),
         ...(tools.length
-          ? { tools: tools.map((tool) => ({ type: "function", function: tool })) }
+          ? {
+              tools: tools.map((tool) => ({
+                type: "function",
+                function: tool,
+              })),
+            }
           : {}),
       };
       break;
@@ -200,7 +224,13 @@ export function buildProviderRequest(profile, apiKey, messages, tools = []) {
         store: false,
         input: responsesInput(messages),
         ...(tools.length
-          ? { tools: tools.map((tool) => ({ type: "function", ...tool, strict: false })) }
+          ? {
+              tools: tools.map((tool) => ({
+                type: "function",
+                ...tool,
+                strict: false,
+              })),
+            }
           : {}),
       };
       break;
@@ -234,11 +264,13 @@ export function buildProviderRequest(profile, apiKey, messages, tools = []) {
           ? {
               tools: [
                 {
-                  functionDeclarations: tools.map(({ name, description, parameters }) => ({
-                    name,
-                    description,
-                    parametersJsonSchema: parameters,
-                  })),
+                  functionDeclarations: tools.map(
+                    ({ name, description, parameters }) => ({
+                      name,
+                      description,
+                      parametersJsonSchema: parameters,
+                    }),
+                  ),
                 },
               ],
             }
@@ -258,10 +290,14 @@ export async function streamCompletion({
   tools = [],
   signal,
   onDelta = () => {},
+  onReasoning = () => {},
   fetchImpl = fetch,
 }) {
   const request = buildProviderRequest(profile, apiKey, messages, tools);
-  const combined = AbortSignal.any([...(signal ? [signal] : []), AbortSignal.timeout(300_000)]);
+  const combined = AbortSignal.any([
+    ...(signal ? [signal] : []),
+    AbortSignal.timeout(300_000),
+  ]);
   const response = await fetchImpl(request.url, {
     method: "POST",
     headers: request.headers,
@@ -282,7 +318,8 @@ export async function streamCompletion({
   const append = (delta) => {
     if (typeof delta !== "string" || !delta) return;
     text += delta;
-    if (Buffer.byteLength(text) > 1024 * 1024) throw new Error("Assistant output exceeds 1 MiB");
+    if (Buffer.byteLength(text) > 1024 * 1024)
+      throw new Error("Assistant output exceeds 1 MiB");
     onDelta(delta);
   };
   for await (const frame of parseSse(response.body, combined)) {
@@ -295,11 +332,18 @@ export async function streamCompletion({
       throw new Error("Model service reported a stream error");
     switch (profile.protocol) {
       case "openai-chat": {
-        const choice = data.choices?.find((item) => item.index === 0) ?? data.choices?.[0];
+        const choice =
+          data.choices?.find((item) => item.index === 0) ?? data.choices?.[0];
         append(choice?.delta?.content);
+        if (typeof choice?.delta?.reasoning_content === "string")
+          onReasoning(choice.delta.reasoning_content);
         for (const delta of choice?.delta?.tool_calls ?? []) {
           const key = delta.index ?? 0;
-          const call = calls.get(key) ?? { id: delta.id || randomUUID(), name: "", input: "" };
+          const call = calls.get(key) ?? {
+            id: delta.id || randomUUID(),
+            name: "",
+            input: "",
+          };
           if (delta.id) call.id = delta.id;
           if (delta.function?.name) call.name += delta.function.name;
           call.input += delta.function?.arguments ?? "";
@@ -308,8 +352,14 @@ export async function streamCompletion({
           calls.set(key, call);
         }
         if (choice?.finish_reason) {
-          if (!["stop", "tool_calls", "function_call"].includes(choice.finish_reason))
-            throw new Error(`Model turn did not finish: ${choice.finish_reason}`);
+          if (
+            !["stop", "tool_calls", "function_call"].includes(
+              choice.finish_reason,
+            )
+          )
+            throw new Error(
+              `Model turn did not finish: ${choice.finish_reason}`,
+            );
           complete = true;
         }
         usage = data.usage ?? usage;
@@ -317,7 +367,12 @@ export async function streamCompletion({
       }
       case "openai-responses": {
         if (data.type === "response.output_text.delta") append(data.delta);
-        if (data.type === "response.output_item.added" && data.item?.type === "function_call")
+        if (data.type === "response.reasoning_summary_text.delta")
+          onReasoning(data.delta);
+        if (
+          data.type === "response.output_item.added" &&
+          data.item?.type === "function_call"
+        )
           calls.set(data.output_index, {
             id: data.item.call_id,
             name: data.item.name,
@@ -325,7 +380,10 @@ export async function streamCompletion({
           });
         if (data.type === "response.function_call_arguments.delta") {
           const call = calls.get(data.output_index);
-          if (!call) throw new Error("Function arguments arrived before the call definition");
+          if (!call)
+            throw new Error(
+              "Function arguments arrived before the call definition",
+            );
           call.input += data.delta ?? "";
           if (call.input.length > MAX_ARGUMENTS)
             throw new Error("Tool arguments exceed the supported size");
@@ -349,7 +407,10 @@ export async function streamCompletion({
         break;
       }
       case "anthropic": {
-        if (data.type === "content_block_start" && data.content_block?.type === "tool_use")
+        if (
+          data.type === "content_block_start" &&
+          data.content_block?.type === "tool_use"
+        )
           calls.set(data.index, {
             id: data.content_block.id,
             name: data.content_block.name,
@@ -358,9 +419,12 @@ export async function streamCompletion({
           });
         if (data.type === "content_block_delta") {
           if (data.delta?.type === "text_delta") append(data.delta.text);
+          if (data.delta?.type === "thinking_delta")
+            onReasoning(data.delta.thinking);
           if (data.delta?.type === "input_json_delta") {
             const call = calls.get(data.index);
-            if (!call) throw new Error("Tool input arrived before the tool definition");
+            if (!call)
+              throw new Error("Tool input arrived before the tool definition");
             call.input += data.delta.partial_json;
             if (call.input.length > MAX_ARGUMENTS)
               throw new Error("Tool arguments exceed the supported size");
@@ -376,28 +440,39 @@ export async function streamCompletion({
         break;
       }
       case "gemini": {
-        if (data.promptFeedback?.blockReason) throw new Error("Gemini blocked the request");
+        if (data.promptFeedback?.blockReason)
+          throw new Error("Gemini blocked the request");
         const candidate = data.candidates?.[0];
         for (const part of candidate?.content?.parts ?? []) {
           if (!part.thought) append(part.text);
+          else if (typeof part.text === "string") onReasoning(part.text);
           if (part.functionCall) {
             const { name, args, id } = part.functionCall;
             const callId = id || randomUUID();
-            calls.set(callId, { id: callId, name, input: JSON.stringify(args ?? {}), raw: part });
+            calls.set(callId, {
+              id: callId,
+              name,
+              input: JSON.stringify(args ?? {}),
+              raw: part,
+            });
           }
         }
         if (candidate?.finishReason) {
           if (candidate.finishReason !== "STOP")
-            throw new Error(`Gemini turn did not finish: ${candidate.finishReason}`);
+            throw new Error(
+              `Gemini turn did not finish: ${candidate.finishReason}`,
+            );
           complete = true;
         }
         usage = data.usageMetadata ?? usage;
         break;
       }
     }
-    if (calls.size > 32) throw new Error("Too many tool calls in one model turn");
+    if (calls.size > 32)
+      throw new Error("Too many tool calls in one model turn");
   }
-  if (!complete) throw new Error("Model stream disconnected before the turn completed");
+  if (!complete)
+    throw new Error("Model stream disconnected before the turn completed");
   return {
     text,
     calls: [...calls.values()].map((call) => ({

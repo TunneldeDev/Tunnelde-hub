@@ -1,35 +1,60 @@
 # Tunnelde AI
 
-An independent API-only Tunnelde assistant maintained by TunneldeDev. Requires Tunnelde 0.22.2+ and an explicitly selected Node 22+ runtime. Install this folder or its versioned ZIP and open its own sidebar activity. This package does not aggregate coding CLIs: install the separate **Codex**, **Claude Code**, or **Pi** plugin for those integrations. Each package can be installed, enabled, disabled and uninstalled independently.
+An independent Tunnelde assistant maintained by TunneldeDev.
+Requires Tunnelde 0.25.0+ and an explicitly approved local Node 22+ plugin runtime.
+Install from Marketplace, this folder or its ZIP and open its own sidebar.
+Each assistant has independent settings, secrets, conversations and lifecycle.
 
-## Providers and configuration
+## Configure and run
 
-Choose OpenAI-compatible Chat Completions, OpenAI Responses, Anthropic Messages, or Gemini streaming generation and enter the exact model identifier supported by your account. Compatible local HTTP servers are allowed only on loopback; other endpoints require HTTPS. Redirects are rejected. API keys use this plugin's host secret store; a blank key field keeps an existing credential, and changing endpoint origin clears it unless a replacement key is provided.
+This package uses API streaming in an independent process.
 
-Tunnelde AI accepts only API protocols for both primary assistants and optional independent reviewers. Configuration, storage loading, send selection and remote entry all enforce the package policy. Opening or configuring the view never starts a coding CLI or discovers/installs Node. Credentials and conversations are scoped to `tunnelde-ai` and are never silently imported into another plugin.
+Configure Chat Completions, Responses, Anthropic Messages or Gemini with the exact model ID and API key. HTTPS is required except for loopback HTTP servers; redirects are rejected. A blank key field keeps the existing key, and changing endpoint origin clears it unless replaced.
 
-## Authorization
+Choose **Local** or a connected SSH host in the composer's **Execution location** menu.
+The selected account's home is the default workspace. Optional workspace settings accept
+`~`, relative paths and a coding agent executable override. No session ID or manual
+host scope list is needed. Coding plugins default to the corresponding remote command
+instead of reusing a local Windows executable path.
 
-`ask` allows API read tools and asks before changes or commands. `approve` asks a separately configured API reviewer; missing, malformed, failed or negative review falls back to a human decision. `full` permits supported tools inside the configured scope without individual approval. `readOnly` exposes only directory listing and file reading and rejects commands and writes at the host gate.
+Opening the view or selecting a target does not start the agent or discover user Node.
+Send starts work. Coding agents must already be installed and authenticated on the
+execution machine. Nothing installs Node, coding CLIs or system services automatically.
 
-API tools pass through the host authorization and canonical-path scope gate. Read responses carry hashes; writes reuse them to reject concurrent modifications. Host permissions are not an operating-system sandbox; use a dedicated account or OS isolation when strict process isolation is required. The Node runtime itself runs with the user's permissions.
+## Remote execution
 
-## Upgrade from 1.1
+Remote execution requires explicit selection of an existing Node 22+ runtime, followed by approval to upload plugin source into a new `.tunnelde-tunnelde-ai-*` directory. Configuration, history and keys travel in memory over encrypted SSH stdin; they are not embedded in uploaded source or command arguments. Provider requests originate on the selected machine, so loopback URLs refer to that machine.
 
-Version 1.1 offered CLI profiles inside Tunnelde AI. Version 1.2 preserves the original stored configuration and conversation history, displays an upgrade notice, and offers only API profiles in this plugin. It never starts an old CLI profile. Install the matching independent plugin and configure its executable and workspace explicitly.
+Successful source/extension uploads are retained for reuse while their fingerprint and
+host match. Only newly created plugin-owned directories are written. Failed deployments
+only attempt cleanup of entries created by that attempt.
 
-The original `ai.config` remains untouched during discovery/render. Before the first explicit save of new API settings, it is backed up to `ai.legacy-config.v1` in this plugin's storage. Existing CLI credentials remain in the original plugin namespace and are not copied across plugins. A conflicting previous backup causes an explicit error rather than overwriting another backup. Existing interrupted conversations remain inspectable; use a new conversation when deploying a new remote runtime.
+Targets are saved per conversation. Switching a populated conversation's machine or
+workspace creates another conversation and preserves the previous one. Disconnected
+targets fail visibly and never fall back to local execution. Ordinary runs require the
+SSH connection. Advanced persistent profiles remain in collapsed configuration with
+separate recovery rules; disabling a local plugin alone does not stop a durable remote
+supervisor. See [setup and migration](https://github.com/TunneldeDev/tunnelde-hub/blob/main/docs/assistant-plugins-1.3.md).
 
-## Remote persistence
+## Permissions
 
-Optional `profile.remote` is `{sessionId,platform,directory,executable}`. Its executable is an explicitly chosen remote Node runtime. `helperBinary` selects the local native supervisor helper; legacy `runnerPath` remains accepted as a local helper path. The host asks before deploying into a new remote directory. Nothing installs Node or changes system services.
+**Ask for approval** prompts before mutations or commands. **Approve for me** uses a
+separate API reviewer, falling back to a human on missing, malformed, failed or negative
+review. **Full Access** intentionally permits supported unrestricted actions.
 
-Deployment configuration is `{version:1,pluginId:"tunnelde-ai",profilePolicy,config:{profiles,activeProfileId,approverProfileId,mode,scope}}`. The fixed policy allows API protocols only. The supervisor invokes the bundled `remote-entry.mjs --config /absolute/config.json`; the entry refuses a different identity or widened policy. An ephemeral secret map is passed during initialization; keys are not written into conversation state or deployment configuration. Optional `secretEnv` maps profile IDs to explicit environment-variable names. A remote workspace becomes that agent's local scope and recursive deployment is refused.
+ReadOnly exposes read/discovery API tools and rejects commands or writes. Read hashes protect later writes against concurrent changes.
 
-An explicitly deployed agent can survive Tunnelde closing under its native supervisor. Inspect after reconnection before explicitly resuming. Closing/disabling a local plugin does not imply remote shutdown: use the run's Stop action. Pending approvals remain queued until reconnection. Recovery never automatically replays completed mutations. Legacy remote agents without package identity can be inspected but require a new conversation for a new deployment.
+Scope checks and permission prompts do not replace OS isolation. Executable plugins
+run with the user's permissions. API reviewer profiles cannot act as the primary
+coding assistant. Credentials and conversations are not imported from other plugins.
 
-## Limits and maintenance
+## Compatibility and maintenance
 
-At most two runs execute concurrently, one per conversation; 12 conversations and 24 model tool turns per run are retained. Streams, arguments and outputs are bounded. Incomplete model streams never execute proposed tools. History is compacted by complete user turns for host storage limits. MCP server configuration is not implemented by this package.
+See the [1.2 migration guide](https://github.com/TunneldeDev/tunnelde-hub/blob/main/docs/assistant-plugins-1.2.md) for users moving from
+old aggregated CLI profiles. Existing interrupted conversations remain inspectable.
 
-Shared runtime source lives here. After changing `index.mjs`, `remote-entry.mjs` or `lib/`, run `npm run agents:sync` to update the separate packages' checked-in runtime copies. Every source folder and ZIP remains self-contained. Run `npm run verify`; mocked API, CLI, remote, policy and archive tests never contact paid services, authenticate real coding CLIs or deploy SSH agents.
+Shared source lives in `plugins/tunnelde-ai`. After changing common entry points or
+`lib/`, run `npm run agents:sync`, `npm run registry`, `npm run verify` and
+`npm run package`. Checked-in copies keep folders and ZIPs independently installable.
+Tests use isolated API servers and simulated CLI/SSH transports; they do not authenticate
+the user's coding agents or contact paid providers.

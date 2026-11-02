@@ -1,5 +1,8 @@
 # Independent assistant plugins, version 1.2.0
 
+Historical migration notes. For desktop 0.25+ and plugin 1.3+, use the
+[current local/remote setup guide](assistant-plugins-1.3.md).
+
 Requires Tunnelde 0.22.2 or later. Integrations are maintained by TunneldeDev and are not vendor-published plugins.
 
 | Manifest ID            | Sidebar title | Primary protocols                                                     | Independent reviewer |
