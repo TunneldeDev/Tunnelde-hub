@@ -188,6 +188,26 @@ export interface ChatProfilePolicy {
   reviewerProtocols: ChatProtocol[];
   defaultProtocol: ChatProtocol;
 }
+export interface ChatSession {
+  id: string;
+  title: string;
+  untitled?: boolean;
+  updatedAt?: number;
+  running?: boolean;
+  runId?: string;
+}
+export interface ChatExecution {
+  kind: "local" | "remote";
+  sessionId?: string;
+  hostId?: string;
+  title: string;
+  address?: string;
+  cwd: string;
+  home: string;
+  platform: "windows" | "posix";
+  executable?: string;
+  runtime?: string;
+}
 export interface PluginChatBlock {
   type: "chat";
   id: string;
@@ -200,8 +220,9 @@ export interface PluginChatBlock {
     session?: string;
     approve?: string;
     recover?: string;
+    target?: string;
   };
-  sessions?: { id: string; title: string }[];
+  sessions?: ChatSession[];
   activeSessionId?: string;
   mode?: ToolMode;
   models?: { id: string; label: string }[];
@@ -211,6 +232,14 @@ export interface PluginChatBlock {
     role: "user" | "assistant" | "system" | "tool";
     content: string;
     status?: string;
+    name?: string;
+    activity?: {
+      id: string;
+      kind: "reasoning" | "tool" | "commentary";
+      title: string;
+      content: string;
+      status?: string;
+    }[];
   }[];
   run?: {
     id: string;
@@ -235,6 +264,7 @@ export interface PluginChatBlock {
   configured?: boolean;
   notice?: string;
   config?: Record<string, unknown>;
+  execution?: ChatExecution | null;
 }
 export interface HostMethodMap {
   "workspace.showQuickAccess": [{ query?: string }, unknown];

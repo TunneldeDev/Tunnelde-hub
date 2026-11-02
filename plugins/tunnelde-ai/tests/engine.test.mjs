@@ -61,6 +61,69 @@ async function prepared(options, Plugin = AiPlugin) {
     await engine.command("ai.configure", { config: base });
   return { host, engine };
 }
+
+test("history actions rename and delete nonactive sessions without switching the running conversation", async () => {
+  const { host, engine } = await prepared();
+  const other = engine.newSession();
+  const active = engine.newSession();
+  active.run = { id: "active-run", status: "running", seq: 0 };
+  engine.runs.set(active.id, {});
+  const renamed = await engine.command("ai.session", {
+    action: "rename", sessionId: other.id, title: "  Project notes  ",
+  });
+  assert.equal(renamed.block.activeSessionId, active.id);
+  assert.equal(other.title, "Project notes");
+  assert.equal(other.untitled, false);
+  assert.equal(renamed.block.sessions.find((item) => item.id === active.id).running, true);
+  await assert.rejects(engine.command("ai.session", {
+    action: "delete", sessionId: active.id,
+  }), /Stop this agent/);
+  await engine.command("ai.session", { action: "delete", sessionId: other.id });
+  assert.equal(engine.activeSessionId, active.id);
+  assert.equal(engine.session(other.id), null);
+  assert.equal(host.data.get("ai.sessions").activeSessionId, active.id);
+  engine.runs.clear();
+  await engine.shutdown();
+});
+
+test("untitled metadata survives saving, while explicitly named placeholders remain custom titles", async () => {
+  const { host, engine } = await prepared({
+    completion: async () => ({ text: "Ready", calls: [] }),
+  });
+  const session = engine.newSession();
+  assert.equal(session.title, "");
+  assert.equal(engine.block().sessions[0].untitled, true);
+  await engine.command("ai.session", { action: "rename", sessionId: session.id, title: "New conversation" });
+  const result = await engine.command("ai.send", { sessionId: session.id, message: "Keep my title" });
+  await engine.runs.get(result.block.activeSessionId).done;
+  assert.equal(session.title, "New conversation");
+  await engine.shutdown();
+  const restored = new AiPlugin(host);
+  await restored.initialize();
+  assert.equal(restored.session().title, "New conversation");
+  assert.equal(restored.session().untitled, false);
+  await restored.shutdown();
+});
+
+test("legacy placeholders are localized only for conversations without user messages", async () => {
+  const { host, engine } = await prepared();
+  const placeholder = engine.newSession();
+  const named = engine.newSession();
+  placeholder.title = named.title = "New conversation";
+  delete placeholder.untitled;
+  delete named.untitled;
+  named.history = [{ id: "user-one", role: "user", content: "New conversation" }];
+  await engine.persist();
+  const restored = new AiPlugin(host);
+  await restored.initialize();
+  assert.equal(restored.session(placeholder.id).untitled, true);
+  assert.equal(restored.session(named.id).untitled, false);
+  const titleBefore = restored.session(named.id).title;
+  await assert.rejects(restored.command("ai.session", { action: "rename", sessionId: named.id, title: "  " }), /Invalid conversation title/);
+  assert.equal(restored.session(named.id).title, titleBefore);
+  await engine.shutdown();
+  await restored.shutdown();
+});
 test("configuration never serializes credentials and blank keys preserve", async () => {
   const { host, engine } = await prepared();
   await engine.command("ai.configure", {

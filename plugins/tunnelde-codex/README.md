@@ -1,9 +1,17 @@
 # Codex
 
 An independent Tunnelde assistant maintained by TunneldeDev. This community integration is not published by OpenAI.
-Requires Tunnelde 0.25.0+ and an explicitly approved local Node 22+ plugin runtime.
+Requires Tunnelde 0.25.1+ and an explicitly approved local Node 22+ plugin runtime.
 Install from Marketplace, this folder or its ZIP and open its own sidebar.
 Each assistant has independent settings, secrets, conversations and lifecycle.
+
+## Conversation history
+
+Click the conversation title in the chat toolbar to search history. Rename or delete any
+conversation directly from its row without opening it first. Running conversations cannot
+be deleted. New conversation placeholders follow the application language; custom names
+are preserved. Multiple terminal connections to the same saved host and address appear as
+one execution target, and host renames update the displayed target immediately.
 
 ## Configure and run
 

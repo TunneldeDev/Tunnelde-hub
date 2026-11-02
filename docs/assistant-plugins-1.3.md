@@ -31,6 +31,20 @@ runs do not require the advanced native supervisor helper.
 
 ## Conversations and context
 
+### History improvements in 1.3.1
+
+Version 1.3.1 requires Tunnelde 0.25.1 or later. Click the conversation title to search
+history. Each row supports opening, inline renaming and confirmed deletion; managing
+another conversation does not switch the current one. Running conversations remain
+protected from deletion. Untitled placeholders follow the desktop language, while
+custom titles are preserved. Existing saved conversations migrate automatically.
+
+The target selector uses the current saved host name and combines connections to the
+same host and address into one machine choice. It keeps the selected connection and
+does not reconnect or terminate other terminals when a host is renamed.
+
+### Messages and execution targets
+
 All four plugins expose native thinking summaries and tool activity to the desktop's
 per-turn expandable activity view. Intermediate work is collapsed together while the
 final reply stays visible. Activity output is bounded; this view is not an unbounded

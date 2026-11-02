@@ -157,6 +157,12 @@ export class AiPlugin {
           identifier(session.id, "saved session");
           if (!Array.isArray(session.history) || !Array.isArray(session.tasks))
             throw new Error("Saved AI conversation is invalid");
+          // The old placeholder was stored as English text. Keep user titles intact,
+          // and let the host localize only genuinely untitled conversations.
+          if (typeof session.untitled !== "boolean")
+            session.untitled = !session.title ||
+              (["New conversation", "新会话"].includes(session.title) &&
+                !session.history.some((message) => message.role === "user"));
           if (
             session.run &&
             ["running", "waiting"].includes(session.run.status)
@@ -216,7 +222,8 @@ export class AiPlugin {
     }
     const session = {
       id: randomUUID(),
-      title: "New conversation",
+      title: "",
+      untitled: true,
       history: [],
       tasks: [],
       run: null,
@@ -249,7 +256,11 @@ export class AiPlugin {
         recover: "ai.recover",
         target: "ai.target",
       },
-      sessions: this.sessions.map(({ id, title }) => ({ id, title })),
+      sessions: this.sessions.map(({ id, title, untitled, updatedAt, createdAt, run }) => ({
+        id, title, untitled, updatedAt: updatedAt ?? createdAt,
+        running: this.runs.has(id) && ["running", "waiting"].includes(run?.status),
+        ...(run?.id ? { runId: run.id } : {}),
+      })),
       activeSessionId: session?.id ?? null,
       mode: session?.run?.mode ?? session?.mode ?? this.config.mode,
       models: this.config.profiles
@@ -649,8 +660,11 @@ export class AiPlugin {
     const controller = new AbortController();
     this.activeSessionId = session.id;
     session.history.push({ id: randomUUID(), role: "user", content: message });
-    if (session.title === "New conversation")
+    if (session.untitled) {
       session.title = message.slice(0, 60);
+      session.untitled = false;
+    }
+    session.updatedAt = Date.now();
     session.run = {
       id: runId,
       status: "running",
@@ -1331,7 +1345,13 @@ export class AiPlugin {
           if (this.runs.has(session.id))
             throw new Error("Stop this agent before deleting its conversation");
           this.sessions = this.sessions.filter((item) => item !== session);
-          this.activeSessionId = this.sessions.at(-1)?.id ?? null;
+          if (this.activeSessionId === session.id)
+            this.activeSessionId = this.sessions.at(-1)?.id ?? null;
+        } else if (input.action === "rename") {
+          session.title = boundedString(input.title, "conversation title", 120).trim();
+          if (!session.title) throw new Error("Conversation title cannot be empty");
+          session.untitled = false;
+          session.updatedAt = Date.now();
         } else throw new Error("Unknown conversation action");
       }
       await this.persist();

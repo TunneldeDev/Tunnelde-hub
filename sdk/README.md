@@ -138,5 +138,14 @@ Views render application controls and safe Markdown; plugin HTML and scripts are
 embedded. The SDK exports `PluginView`, `PluginChatBlock`, task, event, scope and runner
 types. Saved SSH metadata is `SavedHost`; `Host` is the host API transport.
 
+Tunnelde 0.25.1 provides searchable chat history with independent row actions.
+The session command receives `action: "select" | "new" | "rename" | "delete"`,
+`sessionId` for an existing conversation and `title` for renaming. Renaming or deleting
+another item must preserve the current conversation; running items must reject deletion.
+Use `ChatSession.untitled` to distinguish a localized placeholder from a custom title.
+`updatedAt` is a Unix millisecond timestamp, and `running` plus `runId` lets the host
+clear a background item's busy state when the matching run finishes. `ChatExecution`
+and structured message activity describe the selected target and collapsible tool work.
+
 Run `npm run sdk:sync -- ../Tunnelde` to regenerate both catalogue files from the desktop
 Rust `METHODS` source. This does not change the registry or publish packages.

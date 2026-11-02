@@ -1,6 +1,6 @@
 # Host API v1
 
-Generated from the host method catalogue for Tunnelde 0.25.0. All calls require an approved executable plugin, including calls without domain permissions. `host.describe()` reports the running version. Regenerate with `npm run sdk:sync -- ../Tunnelde`.
+Generated from the host method catalogue for Tunnelde 0.25.1. All calls require an approved executable plugin, including calls without domain permissions. `host.describe()` reports the running version. Regenerate with `npm run sdk:sync -- ../Tunnelde`.
 
 | Method | Permissions | Parameters | Behavior |
 | --- | --- | --- | --- |

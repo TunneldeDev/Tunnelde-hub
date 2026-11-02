@@ -279,8 +279,9 @@ test("standalone archives contain complete runtimes and preserve identity withou
       const manifest = JSON.parse(files.get("tunnelde-plugin.json"));
       assert.equal(manifest.id, agent.id);
       assert.equal(manifest.name, agent.title);
-      assert.equal(manifest.version, "1.3.0");
-      assert.equal(manifest.engines.tunnelde, ">=0.25.0");
+      const sourceManifest = JSON.parse(await readFile(path.join(root, "plugins", agent.id, "tunnelde-plugin.json"), "utf8"));
+      assert.equal(manifest.version, sourceManifest.version);
+      assert.equal(manifest.engines.tunnelde, sourceManifest.engines.tunnelde);
       assert.equal(manifest.views[0].title, agent.title);
       for (const required of [
         "README.md",
