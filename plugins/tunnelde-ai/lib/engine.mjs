@@ -31,7 +31,7 @@ import {
   executionProfile,
   workspaceContext,
 } from "./targets.mjs";
-import { deployFiles, runtimeFiles } from "./deployment.mjs";
+import { cleanupDeployment, deployFiles, runtimeFiles } from "./deployment.mjs";
 import { runRemoteAssistant } from "./remote-stdio.mjs";
 import { prepareAgent, preparationKey, executionKey } from "./readiness.mjs";
 import { installAgent } from "./installation.mjs";
@@ -216,14 +216,7 @@ export class AiPlugin {
   newSession() {
     const previous = this.session();
     if (this.sessions.length >= 12) {
-      const oldest = this.sessions.find(
-        (session) => !this.runs.has(session.id),
-      );
-      if (!oldest)
-        throw new Error(
-          "Close an active conversation before creating another one",
-        );
-      this.sessions = this.sessions.filter((session) => session !== oldest);
+      throw new Error("Delete a conversation before creating another one. Its history and remote files will be kept until you choose to delete it.");
     }
     const session = {
       id: randomUUID(),
@@ -1426,6 +1419,19 @@ export class AiPlugin {
         else if (input.action === "delete") {
           if (this.runs.has(session.id))
             throw new Error("Stop this agent before deleting its conversation");
+          if (session.remoteStdio || session.piDeployment) {
+            const targets = await this.host.call("sessions.list", {});
+            for (const saved of [session.remoteStdio, session.piDeployment].filter(Boolean)) {
+              const target = targets.find((item) => item.hostId === saved.hostId);
+              if (!target) throw new Error("Reconnect this conversation's SSH host before deleting its remote assistant files");
+              try {
+                await cleanupDeployment(this.host, { ...session.execution, sessionId: target.id }, saved);
+              } finally {
+                // Retain the remaining ownership entries if cleanup is interrupted.
+                await this.persist();
+              }
+            }
+          }
           this.sessions = this.sessions.filter((item) => item !== session);
           if (this.activeSessionId === session.id)
             this.activeSessionId = this.sessions.at(-1)?.id ?? null;

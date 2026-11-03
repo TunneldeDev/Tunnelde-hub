@@ -74,3 +74,10 @@ Shared source lives in `plugins/tunnelde-ai`. After changing common entry points
 `npm run package`. Checked-in copies keep folders and ZIPs independently installable.
 Tests use isolated API servers and simulated CLI/SSH transports; they do not authenticate
 the user's coding agents or contact paid providers.
+
+Private remote runtimes live under `~/.TunneldeAI/Runtimes/`; deployments live under
+`~/.TunneldeAI/Chats/`. Deleting a remote conversation first verifies and cleans its
+recorded source files, so reconnect that host before deleting it. Modified or unknown
+files are preserved and cleanup reports the reason. Known legacy deployment directories
+move into `Chats` on the next approved initialization. Existing runtime paths remain
+usable; untracked legacy directories are never deleted by a name-only sweep.

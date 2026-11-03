@@ -59,11 +59,11 @@ test("installer extracts only a verified archive into a fresh private directory 
   const result = setup.execute();
   assert.equal(result.status, 0, result.stderr);
   assert.match(result.stdout, /v24\.0\.0/);
-  const entries = await fs.readdir(setup.home);
-  const directory = entries.find((item) => item.startsWith(".tunnelde-runtime-"));
+  const entries = await fs.readdir(path.join(setup.home, ".TunneldeAI", "Runtimes"));
+  const directory = entries.find((item) => item.startsWith("node-"));
   assert.ok(directory);
   assert.match(result.stdout, /__TUNNELDE_RUNTIME__.*\/bin\/node/);
-  assert.match(await fs.readFile(path.join(setup.home, directory, "bin", "node"), "utf8"), /v24\.0\.0/);
+  assert.match(await fs.readFile(path.join(setup.home, ".TunneldeAI", "Runtimes", directory, "bin", "node"), "utf8"), /v24\.0\.0/);
   assert.equal(await fs.readFile(path.join(setup.home, "existing-service.conf"), "utf8"), "existing data\n");
   assert.equal(await fs.stat(path.join(setup.root, "INJECTED")).then(() => true, () => false), false);
 });
@@ -74,7 +74,8 @@ for (const failure of ["checksum", "download"]) {
     const result = setup.execute(failure === "checksum" ? "0".repeat(64) : undefined, failure === "download");
     assert.notEqual(result.status, 0);
     if (failure === "checksum") assert.match(result.stderr, /checksum verification failed/);
-    assert.deepEqual(await fs.readdir(setup.home), ["existing-service.conf"]);
+    assert.deepEqual((await fs.readdir(setup.home)).sort(), [".TunneldeAI", "existing-service.conf"]);
+    assert.deepEqual(await fs.readdir(path.join(setup.home, ".TunneldeAI", "Runtimes")), []);
     assert.equal(await fs.readFile(path.join(setup.home, "existing-service.conf"), "utf8"), "existing data\n");
   });
 }

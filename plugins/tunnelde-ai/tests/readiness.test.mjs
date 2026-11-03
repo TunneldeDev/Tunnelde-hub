@@ -85,7 +85,7 @@ test("remote API preparation verifies Node and worker JSON-RPC without secrets o
   assert.ok(records.some((record) => record.method === "initialize"));
   assert.equal(records.some((record) => record.method === "command.run"), false);
   assert.equal(host.calls.some((call) => call.method === "secrets.get"), false);
-  assert.ok(state.remoteStdio.directory.startsWith("/home/test/.tunnelde-"));
+  assert.ok(state.remoteStdio.directory.startsWith("/home/test/.TunneldeAI/Chats/"));
 });
 
 for (const protocol of ["codex", "claude-code", "pi"]) {
@@ -154,7 +154,7 @@ test("installation consent is required before network requests or commands", asy
 test("runtime installer quotes unusual home paths and checks official archive integrity before extraction", () => {
   const script = nodeInstallScript("/home/a'$(touch injected)", "https://nodejs.org/dist/v24.0.0/node-v24.0.0-linux-x64.tar.gz", "a".repeat(64));
   assert.ok(script.indexOf("checksum verification failed") < script.indexOf("tar -xzf"));
-  assert.ok(script.includes("mktemp -d '/home/a'\"'\"'$(touch injected)/.tunnelde-runtime-XXXXXX'"));
+  assert.ok(script.includes("app_dir='/home/a'\"'\"'$(touch injected)/.TunneldeAI'"));
   assert.equal(script.includes("sudo"), false);
   assert.throws(() => nodeInstallScript("/home", "https://evil.test/archive", "a".repeat(64)), /Invalid official/);
   assert.throws(() => nodeInstallScript("/home", "https://nodejs.org/dist/v24.0.0/node-v24.0.0-linux-x64.tar.gz", "bad"), /Invalid official/);
