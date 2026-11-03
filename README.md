@@ -26,6 +26,8 @@ the desktop installer.
 | Codex               | Independent Codex app-server assistant, local or SSH                | Node 22+, Tunnelde 0.25+ |
 | Claude Code         | Independent Claude Code stream-json assistant, local or SSH         | Node 22+, Tunnelde 0.25+ |
 | Pi                  | Independent Pi RPC assistant and permission extension, local or SSH | Node 22+, Tunnelde 0.25+ |
+| SSHFS               | Mount remote directories through authenticated SSH sessions        | Node 22+, Tunnelde 0.27+ |
+| SSHFS Lite          | The same native mount interface, without JavaScript or Node         | None, Tunnelde 0.27+     |
 | Tunnelde MCP        | Local authenticated MCP endpoint and revocable scoped clients       | Node 22+, Tunnelde 0.22+ |
 
 These are independent packages, each installable from its folder or versioned ZIP. Tunnelde
@@ -33,6 +35,10 @@ does not bundle Node and does not execute a system Node without explicit consent
 theme pack contains color data and never starts code. Executable plugins run with your local
 user permissions; API permissions are not an operating-system sandbox. Use restricted mode
 when testing unknown extensions or recovering from extension problems.
+
+SSHFS plugins require a compatible SSHFS/FUSE driver and support 0.27 Nightly builds.
+Mounts default to read only. See [SSHFS setup and API](docs/sshfs.md) for dependencies,
+permissions and cleanup behavior.
 
 ## Install
 
@@ -86,6 +92,9 @@ npm run sdk:sync           # regenerate host catalogue from sibling ../Tunnelde 
 npm run package           # artifacts/plugins/{archives,index.json,SHA256SUMS,marketplace.json}
 npm run audit             # download published packages and verify pinned checksums
 ```
+
+Packages normalize text-file line endings to LF and preserve binary bytes, so Windows
+and Unix checkouts produce the same hashes.
 
 Push/PR CI runs validation and tests on Node 22 and 24. Weekly audits verify published assets.
 The release workflow accepts a `plugins-v<version>` tag and publishes matching package versions;
