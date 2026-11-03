@@ -21,4 +21,11 @@ jobs:
       - name: Publish immutable packages
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" artifacts/release/* --verify-tag --title "Packages ${GITHUB_REF_NAME#plugins-v}" --notes "Independent Tunnelde plugins and themes. See registry.json and SHA256SUMS for pinned package identities and checksums."
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release download "$GITHUB_REF_NAME" --dir artifacts/existing-release
+            diff -qr artifacts/release artifacts/existing-release
+            echo "Existing release assets match the verified build; keeping the release unchanged."
+          else
+            gh release create "$GITHUB_REF_NAME" artifacts/release/* --verify-tag --title "Packages ${GITHUB_REF_NAME#plugins-v}" --notes "Independent Tunnelde plugins and themes. See registry.json and SHA256SUMS for pinned package identities and checksums."
+          fi
