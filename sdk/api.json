@@ -2,6 +2,102 @@
   "version": 1,
   "methods": [
     {
+      "name": "mounts.browse",
+      "permissions": [
+        "mounts.read"
+      ],
+      "params": "{sessionId:string,path?:string}",
+      "description": "Browse directories through an authenticated SFTP session for the mount chooser."
+    },
+    {
+      "name": "mounts.open",
+      "permissions": [
+        "mounts.write"
+      ],
+      "params": "{id:string}",
+      "description": "Open this plugin's mount in the system file manager."
+    },
+    {
+      "name": "mounts.documentation",
+      "permissions": [
+        "mounts.read"
+      ],
+      "params": "{}",
+      "description": "Open platform SSHFS installation instructions in the system browser."
+    },
+    {
+      "name": "mounts.dependencies",
+      "permissions": [
+        "mounts.read"
+      ],
+      "params": "{}",
+      "description": "Detect SSHFS and FUSE compatibility; never install software or drivers."
+    },
+    {
+      "name": "mounts.list",
+      "permissions": [
+        "mounts.read"
+      ],
+      "params": "{}",
+      "description": "List this plugin's own SSHFS mounts."
+    },
+    {
+      "name": "mounts.mount",
+      "permissions": [
+        "mounts.write"
+      ],
+      "params": "{sessionId:string,remotePath:string,mountPoint:string,readOnly?:boolean}",
+      "description": "Mount using an authenticated SSH subsystem and the host's proxy/jump route. Defaults read-only."
+    },
+    {
+      "name": "mounts.unmount",
+      "permissions": [
+        "mounts.write"
+      ],
+      "params": "{id:string,force?:boolean}",
+      "description": "Unmount this plugin's own SSHFS filesystem; never terminate unrelated processes."
+    },
+    {
+      "name": "forwards.list",
+      "permissions": [
+        "forwards.read"
+      ],
+      "params": "{}",
+      "description": "Read saved TCP forwarding rules and running status."
+    },
+    {
+      "name": "forwards.save",
+      "permissions": [
+        "forwards.write"
+      ],
+      "params": "{rule:ForwardRule}",
+      "description": "Create or update a validated TCP forwarding rule; active rules must be stopped first."
+    },
+    {
+      "name": "forwards.remove",
+      "permissions": [
+        "forwards.write"
+      ],
+      "params": "{id:string}",
+      "description": "Remove a saved forwarding rule and stop its active connections."
+    },
+    {
+      "name": "forwards.start",
+      "permissions": [
+        "forwards.write"
+      ],
+      "params": "{id:string,sessionId:string}",
+      "description": "Start a saved forward through its host's active authenticated session; stopped on plugin revocation."
+    },
+    {
+      "name": "forwards.stop",
+      "permissions": [
+        "forwards.write"
+      ],
+      "params": "{id:string}",
+      "description": "Stop a forwarding listener and its active connections."
+    },
+    {
       "name": "runners.deploy",
       "permissions": [
         "ssh.exec",

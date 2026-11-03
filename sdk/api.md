@@ -1,9 +1,21 @@
 # Host API v1
 
-Generated from the host method catalogue for Tunnelde 0.26.0. All calls require an approved executable plugin, including calls without domain permissions. `host.describe()` reports the running version. Regenerate with `npm run sdk:sync -- ../Tunnelde`.
+Generated from the host method catalogue for Tunnelde 0.26.1. All calls require an approved executable plugin, including calls without domain permissions. `host.describe()` reports the running version. Regenerate with `npm run sdk:sync -- ../Tunnelde`.
 
 | Method | Permissions | Parameters | Behavior |
 | --- | --- | --- | --- |
+| `mounts.browse` | `mounts.read` | `{sessionId:string,path?:string}` | Browse directories through an authenticated SFTP session for the mount chooser. |
+| `mounts.open` | `mounts.write` | `{id:string}` | Open this plugin's mount in the system file manager. |
+| `mounts.documentation` | `mounts.read` | `{}` | Open platform SSHFS installation instructions in the system browser. |
+| `mounts.dependencies` | `mounts.read` | `{}` | Detect SSHFS and FUSE compatibility; never install software or drivers. |
+| `mounts.list` | `mounts.read` | `{}` | List this plugin's own SSHFS mounts. |
+| `mounts.mount` | `mounts.write` | `{sessionId:string,remotePath:string,mountPoint:string,readOnly?:boolean}` | Mount using an authenticated SSH subsystem and the host's proxy/jump route. Defaults read-only. |
+| `mounts.unmount` | `mounts.write` | `{id:string,force?:boolean}` | Unmount this plugin's own SSHFS filesystem; never terminate unrelated processes. |
+| `forwards.list` | `forwards.read` | `{}` | Read saved TCP forwarding rules and running status. |
+| `forwards.save` | `forwards.write` | `{rule:ForwardRule}` | Create or update a validated TCP forwarding rule; active rules must be stopped first. |
+| `forwards.remove` | `forwards.write` | `{id:string}` | Remove a saved forwarding rule and stop its active connections. |
+| `forwards.start` | `forwards.write` | `{id:string,sessionId:string}` | Start a saved forward through its host's active authenticated session; stopped on plugin revocation. |
+| `forwards.stop` | `forwards.write` | `{id:string}` | Stop a forwarding listener and its active connections. |
 | `runners.deploy` | `ssh.exec`, `fs.read`, `sftp.write` | `{sessionId:string,platform:posix\|windows,directory:string,runnerPath:string,executable:string}` | After explicit confirmation, deploy an optional selected native helper and this plugin into a fresh user directory. Never install Node or modify services. |
 | `runners.start` | `ssh.exec` | `{sessionId:string,directory:string,config:object,secrets?:object}` | Start a durable plugin runner using a previously approved deployment; secrets travel over SSH stdin, not files or argv. |
 | `runners.list` | `ssh.exec` | `{}` | Read this plugin's durable runner records, including stopPending for unreachable revoked tasks. |

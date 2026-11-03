@@ -1,0 +1,5 @@
+{
+  "views": {
+    "main": { "title": "SSHFS Lite", "blocks": [{ "type": "mounts" }] }
+  }
+}

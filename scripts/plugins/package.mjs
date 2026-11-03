@@ -18,7 +18,7 @@ export const OFFICIAL_PLUGIN_IDS = readdirSync(join(repository, "plugins"), {
   .map((entry) => entry.name)
   .sort();
 export const OFFICIAL_NODE_PLUGIN_IDS = OFFICIAL_PLUGIN_IDS.filter(
-  (id) => JSON.parse(requireManifest(id)).runtime !== "theme",
+  (id) => [undefined, "node"].includes(JSON.parse(requireManifest(id)).runtime),
 );
 
 function requireManifest(id) {

@@ -275,6 +275,18 @@ export interface PluginChatBlock {
   };
 }
 export interface HostMethodMap {
+  "forwards.list": [{}, { id:string;hostId:string;name:string;mode:"local"|"remote";bindHost:string;bindPort:number;targetHost:string;targetPort:number;sessionId:string|null;active:boolean }[]];
+  "forwards.save": [{ rule: { id:string;hostId:string;name:string;mode:"local"|"remote";bindHost:string;bindPort:number;targetHost:string;targetPort:number } }, unknown];
+  "forwards.remove": [{ id:string }, null];
+  "forwards.start": [{ id:string;sessionId:string }, unknown];
+  "forwards.stop": [{ id:string }, null];
+  "mounts.dependencies": [{}, { available: boolean; executable: string | null; platform: string; instructions: string; documentation: string }];
+  "mounts.list": [{}, { id: string; owner: string; sessionId: string; remotePath: string; mountPoint: string; readOnly: boolean; cleanupError: string | null }[]];
+  "mounts.mount": [{ sessionId: string; remotePath: string; mountPoint: string; readOnly?: boolean }, { id: string; owner: string; sessionId: string; remotePath: string; mountPoint: string; readOnly: boolean; cleanupError: string | null }];
+  "mounts.unmount": [{ id: string; force?: boolean }, null];
+  "mounts.browse": [{ sessionId: string; path?: string }, Listing];
+  "mounts.open": [{ id: string }, null];
+  "mounts.documentation": [{}, null];
   "workspace.showQuickAccess": [{ query?: string }, unknown];
   "workspace.setPaneLocked": [{ paneId: string; locked: boolean }, unknown];
   "workspace.resizeSplit": [{ splitId: string; ratio: number }, unknown];

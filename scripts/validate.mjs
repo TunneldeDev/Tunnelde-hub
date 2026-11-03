@@ -19,7 +19,7 @@ export function validateManifest(manifest, id) {
   assert.ok(/^\d+\.\d+\.\d+$/.test(manifest.version), `${id}: use a semantic version`);
   assert.equal(manifest.apiVersion, 1, `${id}: unsupported API`);
   assert.ok(
-    ["node", "wasm", "theme"].includes(manifest.runtime ?? "node"),
+    ["node", "wasm", "theme", "declarative"].includes(manifest.runtime ?? "node"),
     `${id}: unknown runtime`,
   );
   assert.equal(
@@ -53,6 +53,8 @@ export function validateManifest(manifest, id) {
     "network",
     "process.exec",
     "secrets",
+    "mounts.read",
+    "mounts.write",
   ]);
   for (const permission of manifest.permissions)
     assert.ok(knownPermissions.has(permission), `${id}: unknown permission ${permission}`);
@@ -122,6 +124,10 @@ export function validateManifest(manifest, id) {
         !/^[\\/]|:/.test(manifest.main),
       `${id}: unsafe entry point`,
     );
+    if (manifest.runtime === "declarative") {
+      assert.ok(manifest.views?.length && !manifest.commands?.length && !manifest.engines?.node,
+        `${id}: declarative packages need views, no executable commands and no Node dependency`);
+    }
   }
   const colors = new Set([
     "background",
