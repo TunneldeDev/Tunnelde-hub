@@ -271,11 +271,11 @@ test("official packages are deterministic independent ZIPs with verifiable hashe
       assert.equal(manifest.id, entry.id);
       if (manifest.runtime === "theme") {
         assert.equal(manifest.main, undefined);
-        assert.equal(manifest.engines, undefined);
-        assert.ok(manifest.themes.length >= 2);
+        assert.equal(manifest.engines?.node, undefined);
+        assert.ok((manifest.themes?.length ?? 0) > 0 || (manifest.fileIconThemes?.length ?? 0) > 0 || (manifest.filePreviews?.length ?? 0) > 0);
         assert.equal(
-          new Set(manifest.themes.map((theme) => theme.id)).size,
-          manifest.themes.length,
+          new Set((manifest.themes ?? []).map((theme) => theme.id)).size,
+          (manifest.themes ?? []).length,
         );
         assert.equal(files.size, 3);
       } else if (manifest.runtime === "declarative") {

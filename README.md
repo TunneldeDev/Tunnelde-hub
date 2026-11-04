@@ -22,6 +22,8 @@ the desktop installer.
 | Timestamp Converter | Unix seconds/milliseconds and local/UTC date conversion             | Node 22+                 |
 | UUID Generator      | Cryptographically random UUID v4, batches of 1–100                  | Node 22+                 |
 | Studio Themes       | Cobalt Dusk and Porcelain, two coordinated workbench themes         | None                     |
+| Common File Previews | Pictures, music, video, PDF, Markdown and text Quick Look | None, preview-capable Tunnelde Beta |
+| Common File Icons   | Familiar file-type glyphs and language badges for local/remote files | None, icon-capable Tunnelde Beta |
 | Tunnelde AI         | API assistant running locally or on a selected SSH host             | Node 22+, Tunnelde 0.25+ |
 | Codex               | Independent Codex app-server assistant, local or SSH                | Node 22+, Tunnelde 0.25+ |
 | Claude Code         | Independent Claude Code stream-json assistant, local or SSH         | Node 22+, Tunnelde 0.25+ |
@@ -96,10 +98,16 @@ npm run audit             # download published packages and verify pinned checks
 Packages normalize text-file line endings to LF and preserve binary bytes, so Windows
 and Unix checkouts produce the same hashes.
 
-Push/PR CI runs validation and tests on Node 22 and 24. Weekly audits verify published assets.
+Contributions target protected `main` and merge by squash; the PR title and concise body form
+the commit message. Push/PR CI runs validation and tests on Node 22 and 24. Catalogue checks
+prevent version reuse and downgrades and verify published downloads. Weekly audits verify
+published assets; Dependabot opens monthly GitHub Actions updates.
 The release workflow accepts a `plugins-v<version>` tag and publishes matching package versions;
 unchanged versions retain their existing immutable release URLs. Maintainers publish packages
-before merging registry changes that advertise them. The initial release is `plugins-v1.0.0`.
+before merging registry changes that advertise them. Tag runs publish preview packages by
+default. Manual **Release packages** runs from `main` resume old tags without replacing assets,
+and drafts become public only after every downloaded byte matches. See
+[the contribution and publishing workflow](CONTRIBUTING.md). The initial release is `plugins-v1.0.0`.
 
 The repository layout and review workflow follow
 [myna-hub](https://github.com/quyansiyuanwang/myna-hub), adapted to Tunnelde's executable plugin

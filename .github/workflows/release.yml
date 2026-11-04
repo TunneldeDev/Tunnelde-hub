@@ -2,13 +2,57 @@ name: Release packages
 on:
   push:
     tags: ['plugins-v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing package tag (plugins-vX.Y.Z); reruns resume and verify assets'
+        required: true
+        type: string
+      prerelease:
+        description: 'Publish as a plugin preview release'
+        type: boolean
+        default: true
 permissions:
-  contents: write
+  contents: read
+concurrency:
+  group: packages-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
 jobs:
-  publish:
+  source:
+    name: Validate package tag
     runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+      sha: ${{ steps.tag.outputs.sha }}
+    steps:
+      - uses: actions/github-script@v7
+        id: tag
+        env:
+          PACKAGE_TAG: ${{ inputs.tag || github.ref_name }}
+        with:
+          retries: 3
+          script: |
+            const tag = process.env.PACKAGE_TAG;
+            if (!/^plugins-v\d+\.\d+\.\d+$/.test(tag)) throw new Error('Invalid package tag');
+            let {data: {object}} = await github.rest.git.getRef({...context.repo, ref: `tags/${tag}`});
+            for (let depth = 0; object.type === 'tag' && depth < 8; depth++) {
+              ({data: {object}} = await github.rest.git.getTag({...context.repo, tag_sha: object.sha}));
+            }
+            if (object.type !== 'commit') throw new Error('Tag must resolve to a commit');
+            core.setOutput('tag', tag);
+            core.setOutput('sha', object.sha);
+  publish:
+    name: Verify and publish packages
+    needs: source
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.source.outputs.sha }}
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: 24
@@ -16,16 +60,18 @@ jobs:
       - run: npm run package
       - name: Collect versioned assets
         env:
-          TAG: ${{ github.ref_name }}
+          TAG: ${{ needs.source.outputs.tag }}
         run: node scripts/release.mjs "$TAG"
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          path: publisher
+          persist-credentials: false
       - name: Publish immutable packages
         env:
           GH_TOKEN: ${{ github.token }}
-        run: |
-          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
-            gh release download "$GITHUB_REF_NAME" --dir artifacts/existing-release
-            diff -qr artifacts/release artifacts/existing-release
-            echo "Existing release assets match the verified build; keeping the release unchanged."
-          else
-            gh release create "$GITHUB_REF_NAME" artifacts/release/* --verify-tag --title "Packages ${GITHUB_REF_NAME#plugins-v}" --notes "Independent Tunnelde plugins and themes. See registry.json and SHA256SUMS for pinned package identities and checksums."
-          fi
+          GH_REPO: ${{ github.repository }}
+          PACKAGE_TAG: ${{ needs.source.outputs.tag }}
+          PACKAGE_SHA: ${{ needs.source.outputs.sha }}
+          PACKAGE_PRERELEASE: ${{ github.event_name != 'workflow_dispatch' || inputs.prerelease }}
+        run: node publisher/scripts/publishing/publish.mjs
