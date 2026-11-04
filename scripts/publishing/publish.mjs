@@ -35,6 +35,13 @@ export async function publishPackages({ gh, tag, sha, prerelease, output = "arti
     }
     const existingNames = release.assets.map((asset) => asset.name).sort();
     assert.ok(existingNames.every((name) => names.includes(name)), "Release contains unexpected assets");
+    if (existingNames.length) {
+      await gh(["release", "download", tag, "--dir", directory]);
+      for (const name of existingNames) {
+        assert.ok((await readFile(join(directory, name))).equals(await readFile(join(output, name))), `${name}: existing published bytes differ`);
+      }
+      for (const name of existingNames) await rm(join(directory, name));
+    }
     if (release.isDraft) {
       assert.equal(release.targetCommitish, sha, "Draft belongs to a different source commit");
       assert.equal(release.isPrerelease, prerelease, "Draft has a different release channel");

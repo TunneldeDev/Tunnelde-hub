@@ -62,6 +62,12 @@ test("lookup failures never cause release creation", () => fixture(async ({ remo
   await assert.rejects(publishPackages({ gh, tag, sha, prerelease: true, output }), /502/);
   assert.equal(remote.calls.length, 1);
 }));
+test("a conflicting partial draft is not extended with more assets", () => fixture(async ({ remote, gh, output }) => {
+  remote.release = { isDraft: true, isPrerelease: true, targetCommitish: sha };
+  remote.assets.set("registry.json", Buffer.from("changed catalogue"));
+  await assert.rejects(publishPackages({ gh, tag, sha, prerelease: true, output }), /bytes differ/);
+  assert.ok(remote.calls.every((args) => ["view", "download"].includes(args[1])));
+}));
 test("draft source and unexpected assets are rejected before uploads", () => fixture(async ({ remote, gh, output }) => {
   remote.release = { isDraft: true, isPrerelease: true, targetCommitish: "b".repeat(40) };
   await assert.rejects(publishPackages({ gh, tag, sha, prerelease: true, output }), /different source/);
