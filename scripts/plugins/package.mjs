@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { deflateRawSync } from "node:zlib";
 import { readdirSync, existsSync, readFileSync } from "node:fs";
 import { syncAgentPlugins } from "../sync-agent-plugins.mjs";
+import { catalogueTags } from "./tags.mjs";
 
 const repository = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 export const OFFICIAL_PLUGIN_IDS = readdirSync(join(repository, "plugins"), {
@@ -150,6 +151,7 @@ export async function packageOfficialPlugins(
         runtime: plugin.manifest.runtime,
         apiVersion: plugin.manifest.apiVersion,
         engines: plugin.manifest.engines,
+        tags: catalogueTags(plugin.manifest),
         readme: (await readFile(join(repository, "plugins", plugin.id, "README.md"), "utf8")).replaceAll("\r\n", "\n"),
         url: `https://github.com/TunneldeDev/tunnelde-hub/releases/download/plugins-v${plugin.version}/${plugin.archive}`,
         sha256: plugin.sha256,
