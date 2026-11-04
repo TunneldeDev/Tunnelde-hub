@@ -84,3 +84,85 @@ test("reaching the conversation limit does not discard history or remote ownersh
   assert.equal(engine.sessions.length, 12);
   assert.equal(engine.sessions[0], oldest);
 });
+
+test("a disconnected partial deployment retains persisted ownership and cleans on retry", async (t) => {
+  const f = await fixture(t);
+  const call = f.host.call.bind(f.host);
+  let disconnected = false;
+  let saved;
+  f.host.call = async (method, params) => {
+    if (disconnected) throw new Error("offline");
+    if (method === "files.sftp.writeText") { disconnected = true; throw new Error("write disconnected"); }
+    return call(method, params);
+  };
+  await assert.rejects(deployFiles(f.host, f.execution, new Map([["index.mjs", "code"]]), {
+    label: "tunnelde-ai", onCheckpoint: async (record) => { saved = structuredClone(record); },
+  }), /cleanup is pending/);
+  assert.equal(saved.incomplete, true);
+  assert.equal(saved.created.length, 2);
+  assert.equal(saved.pendingWrites["index.mjs"], createHash("sha256").update("code").digest("hex"));
+  const failedDirectory = saved.directory;
+  f.host.call = call;
+  const restored = await deployFiles(f.host, f.execution, new Map([["index.mjs", "code"]]), {
+    label: "tunnelde-ai", saved, onCheckpoint: async (record) => { saved = structuredClone(record); },
+  });
+  assert.equal(await stat(f.local(failedDirectory)).then(() => true, () => false), false);
+  assert.equal(restored.incomplete, false);
+  await cleanupDeployment(f.host, f.execution, restored);
+});
+
+test("cleanup verifies current content after a lost write acknowledgement", async (t) => {
+  const f = await fixture(t);
+  const call = f.host.call.bind(f.host);
+  f.host.call = async (method, params) => {
+    const result = await call(method, params);
+    if (method === "files.sftp.writeText") throw new Error("lost acknowledgement");
+    return result;
+  };
+  let saved;
+  await assert.rejects(deployFiles(f.host, f.execution, new Map([["index.mjs", "code"]]), {
+    label: "tunnelde-ai", onCheckpoint: async (record) => { saved = structuredClone(record); },
+  }), /lost acknowledgement/);
+  assert.equal(saved, null);
+  assert.deepEqual(await readdir(f.local("/home/test/.TunneldeAI/Chats")), []);
+});
+
+test("failed upload preserves unrecognized files and keeps a retryable ownership record", async (t) => {
+  const f = await fixture(t);
+  const call = f.host.call.bind(f.host);
+  f.host.call = async (method, params) => {
+    if (method === "files.sftp.writeText") {
+      await writeFile(f.local(path.posix.dirname(params.path) + "/user.txt"), "user data");
+      throw new Error("upload failed");
+    }
+    return call(method, params);
+  };
+  let saved;
+  await assert.rejects(deployFiles(f.host, f.execution, new Map([["index.mjs", "code"]]), {
+    label: "tunnelde-ai", onCheckpoint: async (record) => { saved = structuredClone(record); },
+  }), /cleanup is pending.*unrecognized/);
+  assert.equal(saved.incomplete, true);
+  assert.equal(await readFile(f.local(saved.directory + "/user.txt"), "utf8"), "user data");
+  assert.equal(f.calls.some((call) => call.method === "files.sftp.delete"), false);
+  await rm(f.local(saved.directory + "/user.txt"));
+  f.host.call = call;
+  await cleanupDeployment(f.host, f.execution, saved);
+});
+
+test("failed replacement cleanup preserves the previous reusable deployment", async (t) => {
+  const f = await fixture(t);
+  const old = await deployFiles(f.host, f.execution, new Map([["index.mjs", "old"]]), { label: "tunnelde-ai" });
+  const call = f.host.call.bind(f.host);
+  f.host.call = async (method, params) => {
+    if (method === "files.sftp.writeText") throw new Error("cannot upload");
+    return call(method, params);
+  };
+  let saved;
+  await assert.rejects(deployFiles(f.host, f.execution, new Map([["index.mjs", "new"]]), {
+    label: "tunnelde-ai", saved: old, onCheckpoint: async (record) => { saved = structuredClone(record); },
+  }), /cannot upload/);
+  assert.equal(saved.directory, old.directory);
+  assert.equal(await readFile(f.local(old.directory + "/index.mjs"), "utf8"), "old");
+  f.host.call = call;
+  await cleanupDeployment(f.host, f.execution, old);
+});

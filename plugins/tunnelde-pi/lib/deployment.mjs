@@ -58,7 +58,8 @@ export async function cleanupDeployment(host, execution, saved) {
       const name = paths.relative(saved.directory, entry.path).replaceAll("\\", "/");
       const expected = saved.hashes?.[name];
       const file = await host.call("files.sftp.readText", { ...params, path: entry.path });
-      if (typeof file?.content !== "string" || (saved.hashes && digest(file.content) !== expected))
+      const actual = typeof file?.content === "string" ? digest(file.content) : null;
+      if (actual === null || (saved.hashes && actual !== expected && actual !== saved.pendingWrites?.[name]))
         throw new Error("Remote assistant files changed or lack checksums; cleanup was stopped");
       content.push([name, file.content]);
     }
@@ -109,13 +110,19 @@ export async function deployFiles(
   host,
   execution,
   files,
-  { signal, label, saved } = {},
+  { signal, label, saved, onCheckpoint } = {},
 ) {
   const fingerprint = createHash("sha256")
     .update(JSON.stringify([...files]))
     .digest("hex");
   if (!/^[a-z0-9-]{1,80}$/.test(label ?? "")) throw new Error("Invalid deployment label");
   const { paths, root, chats } = assistantDirectories(execution);
+  if (saved?.incomplete) {
+    const previous = saved.retired?.[0] ?? null;
+    await cleanupDeployment(host, execution, { ...saved, retired: [] });
+    saved = previous;
+    await onCheckpoint?.(saved);
+  }
   if (
     saved &&
     saved.fingerprint === fingerprint &&
@@ -138,6 +145,8 @@ export async function deployFiles(
     throw new Error("Remote runtime deployment was cancelled");
   const params = { sessionId: execution.sessionId };
   const created = [];
+  const record = { directory, fingerprint, hostId: execution.hostId, created,
+    hashes: {}, pendingWrites: {}, incomplete: true, retired: saved ? [saved] : [] };
   try {
     await ensureDirectory(host, execution.sessionId, root, signal);
     await ensureDirectory(host, execution.sessionId, chats, signal);
@@ -152,6 +161,7 @@ export async function deployFiles(
       await host.call("files.sftp.rename", { ...params, from: previous, to: migrated, overwrite: false }, { signal });
       for (const entry of saved.created) entry.path = migrated + entry.path.slice(previous.length);
       saved.directory = migrated;
+      await onCheckpoint?.(saved);
       if (saved.fingerprint === fingerprint) return saved;
     }
     await host.call(
@@ -160,6 +170,7 @@ export async function deployFiles(
       { signal },
     );
     created.push({ path: directory, isDir: true });
+    await onCheckpoint?.(record);
     if ([...files.keys()].some((name) => name.startsWith("lib/"))) {
       const folder = paths.join(directory, "lib");
       await host.call(
@@ -168,6 +179,7 @@ export async function deployFiles(
         { signal },
       );
       created.push({ path: folder, isDir: true });
+      await onCheckpoint?.(record);
     }
     for (const [name, content] of files) {
       signal?.throwIfAborted();
@@ -178,21 +190,34 @@ export async function deployFiles(
         { signal },
       );
       created.push({ path: target, isDir: false });
+      record.hashes[name] = digest("");
+      record.pendingWrites[name] = digest(content);
+      await onCheckpoint?.(record);
       await host.call(
         "files.sftp.writeText",
         { ...params, path: target, content },
         { signal },
       );
+      record.hashes[name] = digest(content);
+      delete record.pendingWrites[name];
+      await onCheckpoint?.(record);
     }
-    return { directory, fingerprint, hostId: execution.hostId, created,
-      hashes: Object.fromEntries([...files].map(([name, content]) => [name, digest(content)])),
-      retired: saved ? [saved] : [] };
+    record.incomplete = false;
+    await onCheckpoint?.(record);
+    return record;
   } catch (error) {
-    // Only clean entries this deployment successfully created, in reverse order.
-    for (const entry of created.reverse())
-      await host
-        .call("files.sftp.delete", { ...params, ...entry })
-        .catch(() => {});
+    record.incomplete = true;
+    // Failed replacement must preserve the previous reusable deployment.
+    const partial = { ...record, retired: [] };
+    try {
+      await cleanupDeployment(host, execution, partial);
+      await onCheckpoint?.(saved ?? null);
+    } catch (cleanupError) {
+      record.created = partial.created;
+      record.hashes = partial.hashes;
+      await onCheckpoint?.(record);
+      throw new Error(`${error.message} Remote deployment cleanup is pending; reconnect this host and retry or delete the conversation. ${cleanupError.message}`, { cause: error });
+    }
     throw error;
   }
 }

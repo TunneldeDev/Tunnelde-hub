@@ -79,13 +79,18 @@ test("missing remote Node fails before upload and before appending a user turn",
 test("remote API preparation verifies Node and worker JSON-RPC without secrets or a chat prompt", async () => {
   const host = fixture();
   const state = {};
-  const result = await prepareAgent(host, profile, { ...execution }, state);
+  let persisted;
+  const result = await prepareAgent(host, profile, { ...execution }, state, undefined, {
+    checkpoint: async () => { persisted = structuredClone(state.remoteStdio); },
+  });
   assert.match(result.detail, /protocol initialized/);
   const records = host.calls.filter((call) => call.method === "tasks.write").map((call) => JSON.parse(call.params.data));
   assert.ok(records.some((record) => record.method === "initialize"));
   assert.equal(records.some((record) => record.method === "command.run"), false);
   assert.equal(host.calls.some((call) => call.method === "secrets.get"), false);
   assert.ok(state.remoteStdio.directory.startsWith("/home/test/.TunneldeAI/Chats/"));
+  assert.equal(persisted.directory, state.remoteStdio.directory);
+  assert.equal(persisted.incomplete, false);
 });
 
 for (const protocol of ["codex", "claude-code", "pi"]) {

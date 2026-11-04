@@ -273,6 +273,7 @@ test("failed deployment only removes entries it created, without overwriting exi
       calls.push({ method, params });
       if (method === "ui.confirm") return true;
       if (method === "files.sftp.createFile") throw new Error("target exists");
+      if (method === "files.sftp.list") return { entries: [] };
       return null;
     },
   };

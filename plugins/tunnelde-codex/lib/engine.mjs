@@ -832,7 +832,7 @@ export class AiPlugin {
           session,
           message,
           signal,
-          checkpoint: () => this.checkpoint(),
+          checkpoint: () => this.persist(),
           onEvent: async (event) => {
             if (event.type === "snapshot") {
               if (["running", "waiting"].includes(event.block?.run?.status))
@@ -857,6 +857,7 @@ export class AiPlugin {
               signal,
               label: "pi-permissions",
               saved: session.piDeployment,
+              onCheckpoint: async (record) => { session.piDeployment = record; await this.persist(); },
             },
           );
           const paths =
@@ -1312,7 +1313,7 @@ export class AiPlugin {
           controller.signal.throwIfAborted();
           if (command === "ai.install") await installAgent(this.host, profile, execution, this.fetchImpl, controller.signal);
           session.execution = execution;
-          const result = await prepareAgent(this.host, executionProfile(profile, execution), execution, session, controller.signal, { approved: command === "ai.install" });
+          const result = await prepareAgent(this.host, executionProfile(profile, execution), execution, session, controller.signal, { approved: command === "ai.install", checkpoint: () => this.persist() });
           controller.signal.throwIfAborted();
           this.preparations.set(preparationKey(profile, execution, this.configRevision), {
             status: "ready", profileId: profile.id, detail: result.detail,
