@@ -22,6 +22,28 @@
       "sha256": "fa4edd6fca2d698478eb738d2c37abbac645d4931f0f4230a049000b2ba8c51f"
     },
     {
+      "id": "file-previews",
+      "name": "Common File Previews",
+      "version": "1.7.0",
+      "description": "Quick Look for pictures, music, video, PDF, Markdown and text over local files or SSH.",
+      "author": "TunneldeDev",
+      "runtime": "theme",
+      "apiVersion": 1,
+      "engines": {
+        "tunnelde": ">=0.28.0-beta.5"
+      },
+      "tags": [
+        "preview",
+        "files",
+        "media",
+        "pdf",
+        "markdown"
+      ],
+      "readme": "# Common File Previews\n\nSelect a file and press **Space**, or use **Preview** from the file browser or Quick Access.\nThe same action opens local or connected SSH files. No session IDs or runtime setup are needed.\n\n- Images: PNG, JPEG, GIF, WebP, BMP, ICO and AVIF, when supported by the operating system.\n- Audio: MP3, WAV, Ogg, Opus, M4A and FLAC with native playback controls.\n- Video: MP4, M4V, WebM and MOV with native playback controls. Encoding support depends on the OS.\n- PDF: local bundled PDF.js, page navigation, zoom and bounded range loading. Password-protected\n  documents should be opened in a PDF application. Interactive scripts/forms are not executed.\n- Markdown and text: bounded UTF-8 read-only content; Markdown includes a source toggle.\n\nInstall the ZIP or folder with Tunnelde **0.28.0-beta.5 or later**. Preview providers become\navailable immediately. Removing this package restores the built-in bounded text preview.\nIf several installed providers support a file, choose one in the preview selector.\n\nThis package is declarative and runs no code. It does not require Node, file permissions,\nnetwork requests or uploading files. The host reads directly through the selected local file\nor authenticated SSH connection. It creates no remote preview copies or home-directory files.\n\nImages are limited to 32 MiB, PDFs to 128 MiB, and text/Markdown to 2 MiB. Media is read in\nbounded ranges rather than copied whole into JavaScript memory. Closing a preview revokes\nits ticket, cancels pending reads and releases its file/SFTP channel. Source files are read only.\n\nThird-party packages can declare one or more `filePreviews` providers. Renderers are selected\nfrom the host's `image`, `audio`, `video`, `pdf`, `markdown` and `text` implementations; custom\nHTML, scripts, URLs, styles and external viewers are not accepted by this contribution point.\n",
+      "url": "https://github.com/TunneldeDev/tunnelde-hub/releases/download/plugins-v1.7.0/file-previews-1.7.0.zip",
+      "sha256": "efd38830a4532d768bc1d6ad9c3b0edefbec66a6de9ee4b60888483bdf27667f"
+    },
+    {
       "id": "json-formatter",
       "name": "JSON Formatter",
       "version": "1.0.0",
