@@ -6,10 +6,13 @@ import { fileURLToPath } from "node:url";
 import { packageOfficialPlugins } from "./plugins/package.mjs";
 import { validateFileIconThemes, validateTags } from "./plugins/file-icons.mjs";
 
+import { validateFilePreviews } from "./plugins/previews.mjs";
+
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const idPattern = /^[a-z0-9][a-z0-9_-]{0,63}$/;
 export function validateManifest(manifest, id) {
   validateTags(manifest.tags);
+  validateFilePreviews(manifest.filePreviews);
   validateFileIconThemes(manifest.fileIconThemes);
   assert.ok(idPattern.test(id) && manifest.id === id, `Invalid plugin id: ${id}`);
   for (const key of ["name", "description", "author"])
@@ -115,7 +118,7 @@ export function validateManifest(manifest, id) {
       `${id}: themes cannot execute code`,
     );
     assert.ok(
-      ((manifest.themes ?? []).length > 0 || (manifest.fileIconThemes ?? []).length > 0) && (manifest.themes ?? []).length <= 32,
+      ((manifest.themes ?? []).length > 0 || (manifest.fileIconThemes ?? []).length > 0 || (manifest.filePreviews ?? []).length > 0) && (manifest.themes ?? []).length <= 32,
       `${id}: missing themes`,
     );
   } else {

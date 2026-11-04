@@ -1,0 +1,21 @@
+{
+  "id": "file-previews",
+  "name": "Common File Previews",
+  "version": "1.7.0",
+  "apiVersion": 1,
+  "runtime": "theme",
+  "author": "TunneldeDev",
+  "readme": "README.md",
+  "description": "Quick Look for pictures, music, video, PDF, Markdown and text over local files or SSH.",
+  "tags": ["preview", "files", "media", "pdf", "markdown"],
+  "engines": {"tunnelde": ">=0.28.0-beta.5"},
+  "permissions": [],
+  "filePreviews": [
+    {"id":"images","name":"Images","renderer":"image","extensions":["png","jpg","jpeg","gif","webp","bmp","ico","avif"]},
+    {"id":"audio","name":"Audio","renderer":"audio","extensions":["mp3","wav","ogg","opus","m4a","flac"]},
+    {"id":"video","name":"Video","renderer":"video","extensions":["mp4","m4v","webm","mov"]},
+    {"id":"pdf","name":"PDF documents","renderer":"pdf","extensions":["pdf"]},
+    {"id":"markdown","name":"Markdown","renderer":"markdown","extensions":["md","markdown"]},
+    {"id":"text","name":"Text","renderer":"text","extensions":["txt","log","csv","tsv","json","jsonc","yaml","yml","toml","ini","conf"]}
+  ]
+}
