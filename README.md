@@ -89,10 +89,16 @@ npm run package           # artifacts/plugins/{archives,index.json,SHA256SUMS,ma
 npm run audit             # download published packages and verify pinned checksums
 ```
 
-Push/PR CI runs validation and tests on Node 22 and 24. Weekly audits verify published assets.
+Contributions target protected `main` and merge by squash; the PR title and concise body form
+the commit message. Push/PR CI runs validation and tests on Node 22 and 24. Catalogue checks
+prevent version reuse and downgrades and verify published downloads. Weekly audits verify
+published assets; Dependabot opens monthly GitHub Actions updates.
 The release workflow accepts a `plugins-v<version>` tag and publishes matching package versions;
 unchanged versions retain their existing immutable release URLs. Maintainers publish packages
-before merging registry changes that advertise them. The initial release is `plugins-v1.0.0`.
+before merging registry changes that advertise them. Tag runs publish preview packages by
+default. Manual **Release packages** runs from `main` resume old tags without replacing assets,
+and drafts become public only after every downloaded byte matches. See
+[the contribution and publishing workflow](CONTRIBUTING.md). The initial release is `plugins-v1.0.0`.
 
 The repository layout and review workflow follow
 [myna-hub](https://github.com/quyansiyuanwang/myna-hub), adapted to Tunnelde's executable plugin
