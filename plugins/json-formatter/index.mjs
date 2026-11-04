@@ -75,7 +75,8 @@ export function runCommand(command, input = {}) {
   }
   const tokens = source.match(/"(?:\\[\s\S]|[^"\\])*"|[^\s"{}[\]:,]+|[{}[\]:,]/g) ?? [];
   if (command === "minify") return { text: tokens.join("") };
-  const indent = input.indent === "tab" ? "\t" : input.indent === "4" ? "    " : "  ";
+  const width = String(input.indent ?? "2");
+  const indent = width === "tab" ? "\t" : " ".repeat(/^[1-8]$/.test(width) ? Number(width) : 2);
   let depth = 0;
   let output = "";
   for (let i = 0; i < tokens.length; i++) {
@@ -101,6 +102,10 @@ export function runCommand(command, input = {}) {
           : "JSON is too deeply nested or the formatted output is too large. Use a smaller input or minify instead.",
       };
     }
+  }
+  if (input.document) {
+    if (source.includes("\r\n")) output = output.replaceAll("\n", "\r\n");
+    if (source.endsWith("\n")) output += source.endsWith("\r\n") ? "\r\n" : "\n";
   }
   return { text: output };
 }
