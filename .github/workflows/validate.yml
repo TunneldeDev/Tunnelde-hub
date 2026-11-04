@@ -11,12 +11,15 @@ concurrency:
   cancel-in-progress: true
 jobs:
   validate:
+    name: Validate (Node ${{ matrix.node }})
     runs-on: ubuntu-latest
     strategy:
       matrix:
         node: [22, 24]
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
@@ -26,3 +29,20 @@ jobs:
         with:
           name: packages-node-${{ matrix.node }}
           path: artifacts/plugins/
+  catalogue:
+    name: Catalogue policy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Check immutable versions
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: node scripts/ci/registry-policy.mjs "$BASE_SHA"
+      - run: npm run audit
