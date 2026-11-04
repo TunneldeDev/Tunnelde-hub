@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { deflateRawSync } from "node:zlib";
 import { readdirSync, existsSync, readFileSync } from "node:fs";
 import { syncAgentPlugins } from "../sync-agent-plugins.mjs";
+import { catalogueTags } from "./tags.mjs";
 
 const repository = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 export const OFFICIAL_PLUGIN_IDS = readdirSync(join(repository, "plugins"), {
@@ -18,7 +19,7 @@ export const OFFICIAL_PLUGIN_IDS = readdirSync(join(repository, "plugins"), {
   .map((entry) => entry.name)
   .sort();
 export const OFFICIAL_NODE_PLUGIN_IDS = OFFICIAL_PLUGIN_IDS.filter(
-  (id) => JSON.parse(requireManifest(id)).runtime !== "theme",
+  (id) => [undefined, "node"].includes(JSON.parse(requireManifest(id)).runtime),
 );
 
 function requireManifest(id) {
@@ -34,6 +35,18 @@ function crc32(bytes) {
   return (crc ^ 0xffffffff) >>> 0;
 }
 
+function canonicalBytes(name, bytes) {
+  if (
+    !/(?:\.(?:json|md|mjs|js|ts|css|html|txt|svg|ya?ml)|(?:^|\/)LICENSE)$/i.test(
+      name,
+    )
+  )
+    return bytes;
+  const text = bytes.toString("utf8");
+  if (!Buffer.from(text, "utf8").equals(bytes)) return bytes;
+  return Buffer.from(text.replaceAll("\r\n", "\n"), "utf8");
+}
+
 async function collect(directory, base = directory) {
   const entries = await readdir(directory, { withFileTypes: true });
   const files = [];
@@ -45,7 +58,7 @@ async function collect(directory, base = directory) {
     else if (entry.isFile())
       files.push({
         name: relative(base, path).replaceAll("\\", "/"),
-        bytes: await readFile(path),
+        bytes: canonicalBytes(entry.name, await readFile(path)),
       });
   }
   return files;
@@ -60,7 +73,7 @@ export async function buildPluginArchive(directory) {
   if (!files.some((file) => file.name === "LICENSE"))
     files.push({
       name: "LICENSE",
-      bytes: await readFile(join(repository, "LICENSE")),
+      bytes: canonicalBytes("LICENSE", await readFile(join(repository, "LICENSE"))),
     });
   files.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
   for (const file of files) {
@@ -138,7 +151,8 @@ export async function packageOfficialPlugins(
         runtime: plugin.manifest.runtime,
         apiVersion: plugin.manifest.apiVersion,
         engines: plugin.manifest.engines,
-        readme: await readFile(join(repository, "plugins", plugin.id, "README.md"), "utf8"),
+        tags: catalogueTags(plugin.manifest),
+        readme: (await readFile(join(repository, "plugins", plugin.id, "README.md"), "utf8")).replaceAll("\r\n", "\n"),
         url: `https://github.com/TunneldeDev/tunnelde-hub/releases/download/plugins-v${plugin.version}/${plugin.archive}`,
         sha256: plugin.sha256,
       })),

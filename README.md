@@ -22,6 +22,8 @@ the desktop installer.
 | Timestamp Converter | Unix seconds/milliseconds and local/UTC date conversion             | Node 22+                 |
 | UUID Generator      | Cryptographically random UUID v4, batches of 1–100                  | Node 22+                 |
 | Studio Themes       | Cobalt Dusk and Porcelain, two coordinated workbench themes         | None                     |
+| Common File Previews | Pictures, music, video, PDF, Markdown and text Quick Look | None, preview-capable Tunnelde Beta |
+| Common File Icons   | Familiar file-type glyphs and language badges for local/remote files | None, icon-capable Tunnelde Beta |
 | Tunnelde AI         | API assistant running locally or on a selected SSH host             | Node 22+, Tunnelde 0.25+ |
 | Codex               | Independent Codex app-server assistant, local or SSH                | Node 22+, Tunnelde 0.25+ |
 | Claude Code         | Independent Claude Code stream-json assistant, local or SSH         | Node 22+, Tunnelde 0.25+ |

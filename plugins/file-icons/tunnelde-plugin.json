@@ -1,0 +1,357 @@
+{
+  "id": "file-icons",
+  "name": "Common File Icons",
+  "version": "1.6.0",
+  "apiVersion": 1,
+  "runtime": "theme",
+  "author": "TunneldeDev",
+  "readme": "README.md",
+  "description": "Recognizable file-type icons and language badges for local and remote file browsers, editor tabs and previews.",
+  "tags": [
+    "icons",
+    "files",
+    "appearance"
+  ],
+  "engines": {
+    "tunnelde": ">=0.28.0-beta.4"
+  },
+  "permissions": [],
+  "fileIconThemes": [
+    {
+      "id": "common",
+      "name": "Common files",
+      "icons": {
+        "typescript": {
+          "symbol": "code",
+          "color": "#3178C6",
+          "label": "TS"
+        },
+        "javascript": {
+          "symbol": "code",
+          "color": "#D6BB35",
+          "label": "JS"
+        },
+        "python": {
+          "symbol": "code",
+          "color": "#4B8BBE",
+          "label": "PY"
+        },
+        "rust": {
+          "symbol": "code",
+          "color": "#D58A68",
+          "label": "RS"
+        },
+        "go": {
+          "symbol": "code",
+          "color": "#00ADD8",
+          "label": "GO"
+        },
+        "java": {
+          "symbol": "code",
+          "color": "#D68D33",
+          "label": "JAVA"
+        },
+        "c": {
+          "symbol": "code",
+          "color": "#679AD1",
+          "label": "C"
+        },
+        "cpp": {
+          "symbol": "code",
+          "color": "#8D76BD",
+          "label": "CPP"
+        },
+        "csharp": {
+          "symbol": "code",
+          "color": "#8C69C6",
+          "label": "CS"
+        },
+        "swift": {
+          "symbol": "code",
+          "color": "#E87940",
+          "label": "SW"
+        },
+        "ruby": {
+          "symbol": "code",
+          "color": "#C65353",
+          "label": "RB"
+        },
+        "php": {
+          "symbol": "code",
+          "color": "#9A9FCC",
+          "label": "PHP"
+        },
+        "vue": {
+          "symbol": "code",
+          "color": "#42B883",
+          "label": "VUE"
+        },
+        "html": {
+          "symbol": "code",
+          "color": "#E87947",
+          "label": "HTML"
+        },
+        "css": {
+          "symbol": "code",
+          "color": "#6C9EEB",
+          "label": "CSS"
+        },
+        "json": {
+          "symbol": "json",
+          "color": "#D4B757",
+          "label": "JSON"
+        },
+        "config": {
+          "symbol": "settings",
+          "color": "#97A2B3"
+        },
+        "markdown": {
+          "symbol": "markdown",
+          "color": "#79A9DE",
+          "label": "MD"
+        },
+        "text": {
+          "symbol": "text",
+          "color": "#AAB4C3"
+        },
+        "shell": {
+          "symbol": "terminal",
+          "color": "#6AB990",
+          "label": "SH"
+        },
+        "docker": {
+          "symbol": "code",
+          "color": "#2496ED",
+          "label": "DK"
+        },
+        "git": {
+          "symbol": "settings",
+          "color": "#E47C62",
+          "label": "GIT"
+        },
+        "lock": {
+          "symbol": "key",
+          "color": "#A7A2C0"
+        },
+        "image": {
+          "symbol": "image",
+          "color": "#AB8ACD"
+        },
+        "audio": {
+          "symbol": "audio",
+          "color": "#D79A58"
+        },
+        "video": {
+          "symbol": "video",
+          "color": "#C8799C"
+        },
+        "archive": {
+          "symbol": "archive",
+          "color": "#C5A35E"
+        },
+        "pdf": {
+          "symbol": "pdf",
+          "color": "#D96666",
+          "label": "PDF"
+        },
+        "word": {
+          "symbol": "text",
+          "color": "#5685CC",
+          "label": "DOC"
+        },
+        "excel": {
+          "symbol": "spreadsheet",
+          "color": "#5AAC83",
+          "label": "XLS"
+        },
+        "powerpoint": {
+          "symbol": "text",
+          "color": "#D58561",
+          "label": "PPT"
+        },
+        "database": {
+          "symbol": "database",
+          "color": "#71A6C8"
+        },
+        "font": {
+          "symbol": "font",
+          "color": "#B4A3C3"
+        },
+        "key": {
+          "symbol": "key",
+          "color": "#CBBA75"
+        },
+        "binary": {
+          "symbol": "binary",
+          "color": "#92A2B4"
+        }
+      },
+      "extensions": {
+        "ts": "typescript",
+        "tsx": "typescript",
+        "mts": "typescript",
+        "cts": "typescript",
+        "js": "javascript",
+        "jsx": "javascript",
+        "mjs": "javascript",
+        "cjs": "javascript",
+        "py": "python",
+        "pyi": "python",
+        "pyw": "python",
+        "rs": "rust",
+        "go": "go",
+        "java": "java",
+        "jar": "java",
+        "class": "java",
+        "c": "c",
+        "h": "c",
+        "cpp": "cpp",
+        "cc": "cpp",
+        "cxx": "cpp",
+        "hpp": "cpp",
+        "hxx": "cpp",
+        "cs": "csharp",
+        "csproj": "csharp",
+        "sln": "csharp",
+        "swift": "swift",
+        "rb": "ruby",
+        "gemspec": "ruby",
+        "php": "php",
+        "vue": "vue",
+        "html": "html",
+        "htm": "html",
+        "css": "css",
+        "scss": "css",
+        "sass": "css",
+        "less": "css",
+        "json": "json",
+        "jsonc": "json",
+        "jsonl": "json",
+        "toml": "config",
+        "yaml": "config",
+        "yml": "config",
+        "ini": "config",
+        "conf": "config",
+        "cfg": "config",
+        "properties": "config",
+        "env": "config",
+        "md": "markdown",
+        "markdown": "markdown",
+        "mdx": "markdown",
+        "txt": "text",
+        "log": "text",
+        "csv": "text",
+        "tsv": "text",
+        "rtf": "text",
+        "sh": "shell",
+        "bash": "shell",
+        "zsh": "shell",
+        "fish": "shell",
+        "ps1": "shell",
+        "bat": "shell",
+        "cmd": "shell",
+        "dockerfile": "docker",
+        "lock": "lock",
+        "png": "image",
+        "jpg": "image",
+        "jpeg": "image",
+        "gif": "image",
+        "webp": "image",
+        "bmp": "image",
+        "ico": "image",
+        "svg": "image",
+        "avif": "image",
+        "tif": "image",
+        "tiff": "image",
+        "heic": "image",
+        "mp3": "audio",
+        "wav": "audio",
+        "flac": "audio",
+        "ogg": "audio",
+        "aac": "audio",
+        "m4a": "audio",
+        "aiff": "audio",
+        "opus": "audio",
+        "mp4": "video",
+        "mkv": "video",
+        "mov": "video",
+        "webm": "video",
+        "avi": "video",
+        "m4v": "video",
+        "mpeg": "video",
+        "mpg": "video",
+        "zip": "archive",
+        "7z": "archive",
+        "rar": "archive",
+        "gz": "archive",
+        "bz2": "archive",
+        "xz": "archive",
+        "tar": "archive",
+        "tar.gz": "archive",
+        "tar.bz2": "archive",
+        "tar.xz": "archive",
+        "tgz": "archive",
+        "zst": "archive",
+        "pdf": "pdf",
+        "doc": "word",
+        "docx": "word",
+        "odt": "word",
+        "xls": "excel",
+        "xlsx": "excel",
+        "ods": "excel",
+        "ppt": "powerpoint",
+        "pptx": "powerpoint",
+        "odp": "powerpoint",
+        "db": "database",
+        "sqlite": "database",
+        "sqlite3": "database",
+        "sql": "database",
+        "ttf": "font",
+        "otf": "font",
+        "woff": "font",
+        "woff2": "font",
+        "pem": "key",
+        "key": "key",
+        "pub": "key",
+        "crt": "key",
+        "cer": "key",
+        "p12": "key",
+        "pfx": "key",
+        "exe": "binary",
+        "dll": "binary",
+        "so": "binary",
+        "dylib": "binary",
+        "bin": "binary",
+        "wasm": "binary",
+        "msi": "binary",
+        "deb": "binary",
+        "rpm": "binary",
+        "appimage": "binary"
+      },
+      "fileNames": {
+        "go.mod": "go",
+        "go.sum": "go",
+        "Gemfile": "ruby",
+        ".env": "config",
+        ".editorconfig": "config",
+        "README": "markdown",
+        "CHANGELOG": "markdown",
+        "LICENSE": "text",
+        "COPYING": "text",
+        "NOTICE": "text",
+        ".bashrc": "shell",
+        ".zshrc": "shell",
+        ".profile": "shell",
+        "Dockerfile": "docker",
+        "Containerfile": "docker",
+        ".gitignore": "git",
+        ".gitattributes": "git",
+        ".gitmodules": "git",
+        "package-lock.json": "lock",
+        "pnpm-lock.yaml": "lock",
+        "yarn.lock": "lock",
+        "Cargo.lock": "lock"
+      }
+    }
+  ]
+}
