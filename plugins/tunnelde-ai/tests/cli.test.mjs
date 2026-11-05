@@ -6,6 +6,26 @@ import path from "node:path";
 import { runCli, insideRoot, codexPolicy, TaskConnection } from "../lib/cli.mjs";
 import { canonicalWithin } from "../lib/pi-permissions.mjs";
 
+test("recovery never starts a new process when the saved task is gone", async () => {
+  for (const result of [null, { status: "completed" }, new Error("plugin.tasks.notFound")]) {
+    const calls = [];
+    const host = { async call(method) {
+      calls.push(method);
+      if (method !== "tasks.status") throw new Error(`Unexpected ${method}`);
+      if (result instanceof Error) throw result;
+      return result;
+    } };
+    await assert.rejects(runCli({
+      host,
+      profile: { protocol: "codex", executable: "codex", cwd: "/home/test", sessionId: "ssh" },
+      config: { mode: "ask", scope: { sessionIds: ["ssh"], remoteRoots: [{ sessionId: "ssh", path: "/home/test" }] } },
+      session: { cli: { taskId: "old-task" } }, message: "continue", recover: true,
+      signal: new AbortController().signal, onDelta: () => {}, approve: async () => false,
+    }), /previous agent process is no longer/);
+    assert.deepEqual(calls, ["tasks.status"]);
+  }
+});
+
 test("agent reconnect restores a partial protocol line and its cursor together", async () => {
   const events = [
     { seq: 1, stream: "stdout", data: '{"message":"hel' },
