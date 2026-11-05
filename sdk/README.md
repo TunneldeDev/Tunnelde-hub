@@ -1,5 +1,7 @@
 # Tunnelde plugin SDK
 
+File context-menu contributions are under development: [English](../docs/file-menu.en-us.md) · [简体中文](../docs/file-menu.zh-cn.md).
+
 Editor commands, formatting and contributed keybindings:
 [English](../docs/editor-plugins.en-us.md) · [简体中文](../docs/editor-plugins.zh-cn.md).
 

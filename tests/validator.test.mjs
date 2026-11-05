@@ -96,3 +96,44 @@ test("validator supports explicitly permissioned chat sidebars and rejects malfo
   duplicateGrant.permissions.push("secrets");
   assert.throws(() => validateManifest(duplicateGrant, "agent"), /duplicate permission/);
 });
+
+test("file menu contributions require valid filters and matching source permissions", () => {
+  const manifest = {
+    id: "file-actions", name: "File Actions", description: "File actions", author: "Test",
+    version: "1.0.0", apiVersion: 1, runtime: "node", main: "index.mjs", readme: "README.md",
+    permissions: ["fs.read", "sftp.read"],
+    commands: [{ id: "inspect", title: "Inspect", fileMenu: {
+      sources: ["local", "remote"], kinds: ["file", "directory"], extensions: ["json", "tar.gz"],
+    } }],
+  };
+  assert.equal(validateManifest(manifest, manifest.id), manifest);
+  for (const mutate of [
+    (m) => { m.permissions = ["fs.read"]; },
+    (m) => { m.permissions = ["sftp.read"]; },
+    (m) => { m.commands[0].fileMenu.sources = []; },
+    (m) => { m.commands[0].fileMenu.sources = ["local", "local"]; },
+    (m) => { m.commands[0].fileMenu.kinds = ["symlink"]; },
+    (m) => { m.commands[0].fileMenu.kinds = ["file", "file"]; },
+    (m) => { m.commands[0].fileMenu.extensions = ["../json"]; },
+    (m) => { m.commands[0].fileMenu.extensions = ["json\n"]; },
+    (m) => { m.commands[0].fileMenu.extensions = Array(65).fill("json"); },
+    (m) => { m.commands[0].fileMenu.extra = true; },
+  ]) {
+    const invalid = structuredClone(manifest);
+    mutate(invalid);
+    assert.throws(() => validateManifest(invalid, invalid.id), /file menu/);
+  }
+});
+
+test("mounted file reveal requires both mount permissions and an executable or declarative runtime", () => {
+  const manifest = {
+    id: "mount-tool", name: "Mount tool", description: "Mount files", author: "Test",
+    version: "1.0.0", apiVersion: 1, runtime: "declarative", main: "views.json", readme: "README.md",
+    permissions: ["mounts.read", "mounts.write"], views: [{ id: "main", title: "Mounts" }], mountedFileReveal: true,
+  };
+  assert.equal(validateManifest(manifest, manifest.id), manifest);
+  for (const permissions of [[], ["mounts.read"], ["mounts.write"]]) {
+    assert.throws(() => validateManifest({ ...manifest, permissions }, manifest.id), /mounted file reveal/);
+  }
+  assert.throws(() => validateManifest({ ...manifest, mountedFileReveal: "yes" }, manifest.id), /mounted file reveal/);
+});
