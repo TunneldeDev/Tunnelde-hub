@@ -144,7 +144,7 @@ export async function probeCli(host, profile, execution, signal) {
   }
 }
 
-export async function prepareAgent(host, profile, execution, session, signal, { approved = false } = {}) {
+export async function prepareAgent(host, profile, execution, session, signal, { approved = false, checkpoint } = {}) {
   const cli = CLI_PROTOCOLS.has(profile.protocol);
   if (execution.kind === "local" && !cli) return { detail: "API provider configured" };
   const allowed = approved || await host.call("ui.confirm", {
@@ -168,7 +168,10 @@ export async function prepareAgent(host, profile, execution, session, signal, { 
     return { detail: `${profile.protocol} protocol initialized` };
   }
   const version = await probeNode(host, execution, signal);
-  session.remoteStdio = await deployFiles(host, execution, await runtimeFiles(), { label: PLUGIN_ID, saved: session.remoteStdio, signal });
+  session.remoteStdio = await deployFiles(host, execution, await runtimeFiles(), {
+    label: PLUGIN_ID, saved: session.remoteStdio, signal,
+    onCheckpoint: async (record) => { session.remoteStdio = record; await checkpoint?.(); },
+  });
   const paths = execution.platform === "windows" ? path.win32 : path.posix;
   const started = await host.call("tasks.start", {
     executable: execution.runtime, args: [paths.join(session.remoteStdio.directory, "stdio-entry.mjs")],

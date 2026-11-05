@@ -23,8 +23,8 @@ export async function runRemoteAssistant({
     signal,
     label: PLUGIN_ID,
     saved: session.remoteStdio,
+    onCheckpoint: async (record) => { session.remoteStdio = record; await checkpoint?.(); },
   });
-  checkpoint?.();
   const paths = target.platform === "windows" ? path.win32 : path.posix;
   const started = await host.call(
     "tasks.start",

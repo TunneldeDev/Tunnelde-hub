@@ -273,6 +273,7 @@ test("failed deployment only removes entries it created, without overwriting exi
       calls.push({ method, params });
       if (method === "ui.confirm") return true;
       if (method === "files.sftp.createFile") throw new Error("target exists");
+      if (method === "files.sftp.list") return { entries: [] };
       return null;
     },
   };
@@ -294,5 +295,5 @@ test("failed deployment only removes entries it created, without overwriting exi
   const removed = calls.filter(({ method }) => method === "files.sftp.delete");
   assert.equal(removed.length, 1);
   assert.equal(removed[0].params.isDir, true);
-  assert.match(removed[0].params.path, /^\/home\/test\/\.tunnelde-test-/);
+  assert.match(removed[0].params.path, /^\/home\/test\/\.TunneldeAI\/Chats\/test-/);
 });

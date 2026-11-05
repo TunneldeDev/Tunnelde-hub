@@ -39,11 +39,14 @@ See [initialization and installation](https://github.com/TunneldeDev/tunnelde-hu
 
 ## Remote execution
 
-Remote execution requires selecting an existing Node 22+ runtime or approving a private runtime installation, followed by approval to upload plugin source into a new `.tunnelde-tunnelde-ai-*` directory. Configuration, history and keys travel in memory over encrypted SSH stdin; they are not embedded in uploaded source or command arguments. Provider requests originate on the selected machine, so loopback URLs refer to that machine.
+Remote execution requires selecting an existing Node 22+ runtime or approving a private runtime installation, followed by approval to upload plugin source into a new `.TunneldeAI/Chats/tunnelde-ai-*` directory. Configuration, history and keys travel in memory over encrypted SSH stdin; they are not embedded in uploaded source or command arguments. Provider requests originate on the selected machine, so loopback URLs refer to that machine.
 
 Successful source/extension uploads are retained for reuse while their fingerprint and
 host match. Only newly created plugin-owned directories are written. Failed deployments
-only attempt cleanup of entries created by that attempt.
+only attempt cleanup of entries created by that attempt. Ownership checkpoints are saved
+during upload and initialization. If a connection drops before cleanup finishes, reconnect
+the host and retry initialization or delete the conversation; unknown or modified files
+stop cleanup and remain intact.
 
 Targets are saved per conversation. Switching a populated conversation's machine or
 workspace creates another conversation and preserves the previous one. Disconnected
@@ -74,3 +77,10 @@ Shared source lives in `plugins/tunnelde-ai`. After changing common entry points
 `npm run package`. Checked-in copies keep folders and ZIPs independently installable.
 Tests use isolated API servers and simulated CLI/SSH transports; they do not authenticate
 the user's coding agents or contact paid providers.
+
+Private remote runtimes live under `~/.TunneldeAI/Runtimes/`; deployments live under
+`~/.TunneldeAI/Chats/`. Deleting a remote conversation first verifies and cleans its
+recorded source files, so reconnect that host before deleting it. Modified or unknown
+files are preserved and cleanup reports the reason. Known legacy deployment directories
+move into `Chats` on the next approved initialization. Existing runtime paths remain
+usable; untracked legacy directories are never deleted by a name-only sweep.
