@@ -47,6 +47,12 @@ const safeResult = (value) => {
     : text;
 };
 const snapshotSize = (value) => Buffer.byteLength(JSON.stringify(value));
+class RemoteRunnerInterrupted extends Error {
+  constructor(error) {
+    super(`Remote runner connection interrupted. Reconnect the SSH host and resume to inspect the existing run; the request will not be sent again. ${String(error?.message ?? error)}`);
+    this.name = "RemoteRunnerInterrupted";
+  }
+}
 function configFingerprint(config, keyVersions = {}) {
   const normalized = structuredClone(config);
   normalized.scope.sessionIds = [];
@@ -1011,7 +1017,8 @@ export class AiPlugin {
       settleActivity(signal.aborted ? "cancelled" : "error");
       await flush().catch(() => {});
       const cancelled = signal.aborted;
-      session.run.status = cancelled
+      const interrupted = !cancelled && error instanceof RemoteRunnerInterrupted;
+      session.run.status = interrupted ? "interrupted" : cancelled
         ? this.closed && profile.remote
           ? "interrupted"
           : "cancelled"
@@ -1180,6 +1187,9 @@ export class AiPlugin {
             },
           },
         },
+      }).catch((error) => {
+        signal.throwIfAborted();
+        throw new RemoteRunnerInterrupted(error);
       });
     const approvals = new Set();
     const handleApproval = async (item) => {
@@ -1216,6 +1226,9 @@ export class AiPlugin {
           sessionId: saved.sessionId,
           runnerId: saved.runnerId,
           afterSeq: saved.afterSeq,
+        }).catch((error) => {
+          signal.throwIfAborted();
+          throw new RemoteRunnerInterrupted(error);
         });
         if (batch.truncated)
           throw new Error(
