@@ -80,6 +80,18 @@ test("SDK propagates permission denial with RPC code", async () => {
     t.close();
   }
 });
+test("SDK preserves JSON null returned by host mutation methods", async () => {
+  const t = transport();
+  try {
+    const pending = t.plugin.host.log("hello");
+    const request = await t.next();
+    assert.equal(request.method, "log");
+    t.send({ jsonrpc: "2.0", id: request.id, result: null });
+    assert.equal(await pending, null);
+  } finally {
+    t.close();
+  }
+});
 test("SDK abort, timeout and disposal settle outstanding requests", async () => {
   const t = transport({}, { timeout: 20 });
   try {
