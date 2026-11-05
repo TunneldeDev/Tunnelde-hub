@@ -1,4 +1,4 @@
-import { createHash, randomUUID } from "node:crypto";
+import { createHash, randomInt, randomUUID } from "node:crypto";
 import {
   CLI_PROTOCOLS,
   DEFAULT_CONFIG,
@@ -699,6 +699,13 @@ export class AiPlugin {
       profileId: profile.id,
       mode,
     };
+    if (!recover && legacyDeployment && session.remote) {
+      // Do not mistake a previous completed operation for this new run if
+      // the app exits before executeRemote reserves its request identity.
+      session.remote.runId = null;
+      session.remote.requestId = null;
+      session.remote.acknowledged = false;
+    }
     const run = { controller, done: null };
     this.runs.set(session.id, run);
     try {
@@ -1130,7 +1137,18 @@ export class AiPlugin {
       };
       await this.persist();
     }
-    const requestId = Date.now();
+    // Reserve the operation identity before sending. A lost SSH response must
+    // never cause recovery to submit the same request a second time.
+    let requestId = saved.requestId;
+    if (!recover) {
+      // The plugin's JSON-RPC transport accepts safe integer IDs only.
+      requestId = randomInt(1, 2 ** 48 - 1);
+      saved.requestId = requestId;
+      saved.runId = session.run.id;
+      saved.acknowledged = false;
+      await this.persist();
+    }
+    const waitStarted = Date.now();
     const runnerTask = {
       id: saved.runnerId,
       title: `${profile.name} remote agent`,
@@ -1142,8 +1160,8 @@ export class AiPlugin {
     );
     if (existingTask < 0) session.tasks.push(runnerTask);
     else session.tasks[existingTask] = runnerTask;
-    let started = recover && saved.runId;
-    if (!started)
+    let started = recover && (saved.acknowledged || !requestId);
+    if (!recover)
       await this.host.call("runners.send", {
         sessionId: saved.sessionId,
         runnerId: saved.runnerId,
@@ -1209,11 +1227,22 @@ export class AiPlugin {
           if (item?.type === "approval") await handleApproval(item);
           if (item?.type === "response" && item.message?.id === requestId) {
             if (item.message.error) throw new Error(item.message.error.message);
+            const acknowledgedRun = item.message.result?.block?.run?.id;
+            if (acknowledgedRun && acknowledgedRun !== saved.runId)
+              throw new Error("Remote runner acknowledged a different run; inspect it before retrying");
             applyBlock(item.message.result?.block);
             started = true;
+            saved.acknowledged = true;
           }
           if (item?.type === "event" && item.event === "chat") {
             const payload = item.payload ?? {};
+            // A journal can contain buffered events from an earlier request.
+            // New runs carry a persistent ID; never apply another run's events.
+            if (payload.runId && payload.runId !== saved.runId) {
+              saved.afterSeq = event.seq;
+              this.checkpoint();
+              continue;
+            }
             if (payload.type === "snapshot") applyBlock(payload.block);
             if (payload.type === "delta") {
               let target = session.history.find(
@@ -1285,7 +1314,7 @@ export class AiPlugin {
           ["stopped", "failed", "exited"].includes(batch.state.status)
         )
           throw new Error(`Remote runner ${batch.state.status}`);
-        if (!started && Date.now() - requestId > 120000)
+        if (!started && Date.now() - waitStarted > 120000)
           throw new Error(
             "Remote agent did not acknowledge the request; inspect it before retrying",
           );
