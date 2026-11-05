@@ -2,6 +2,8 @@ import test from "node:test";
 import { preparedRuntime } from "./prepared-fixture.mjs";
 import assert from "node:assert/strict";
 import { PassThrough } from "node:stream";
+import { spawn } from "node:child_process";
+import { createServer } from "node:http";
 import { mkdtemp, writeFile, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -239,7 +241,7 @@ test("remote send deploys only the selected runtime and relays pending approvals
                   result: {
                     block: {
                       activeSessionId: "remote-session",
-                      run: { id: "remote-run" },
+                      run: { id: request.params.input.runId },
                       messages: [],
                       tasks: [],
                     },
@@ -319,4 +321,190 @@ test("remote send deploys only the selected runtime and relays pending approvals
     ),
   );
   await engine.shutdown();
+});
+
+test("lost send acknowledgement resumes from the journal without resending the operation", async () => {
+  const data = new Map(), calls = [];
+  let request, stage = "send";
+  const host = {
+    async call(method, params) {
+      calls.push({ method, params: structuredClone(params) });
+      if (method === "storage.get") return data.get(params.key) ?? null;
+      if (method === "storage.set") {
+        data.set(params.key, structuredClone(params.value));
+        return null;
+      }
+      if (method === "runners.send") {
+        request = structuredClone(params.message);
+        const persisted = data.get("ai.sessions").sessions.find((s) => s.remote?.runnerId === "runner");
+        assert.equal(persisted.remote.requestId, request.id);
+        assert.equal(persisted.remote.runId, "run-original");
+        throw new Error("SSH response lost after enqueue");
+      }
+      if (method === "runners.poll") {
+        assert.equal(stage, "recover");
+        return { events: [
+          { seq: 1, message: { type: "response", message: { id: request.id, result: { block: {
+            activeSessionId: "remote-session", run: { id: "run-original" }, messages: [], tasks: [],
+          } } } } },
+          { seq: 2, message: { type: "event", event: "chat", payload: {
+            runId: "older-run", type: "done", status: "done",
+          } } },
+          { seq: 3, message: { type: "event", event: "chat", payload: {
+            runId: "run-original", type: "done", status: "done",
+          } } },
+        ] };
+      }
+      throw new Error(`Unexpected ${method}`);
+    },
+  };
+  const engine = new AiPlugin(host);
+  const profile = { id: "main", name: "Main", remote: { sessionId: "ssh" } };
+  const config = { scope: { sessionIds: ["ssh"], remoteRoots: [{ sessionId: "ssh", path: "/work" }] } };
+  const session = engine.newSession();
+  session.remote = { pluginId: PLUGIN_ID, profilePolicy: structuredClone(PROFILE_POLICY),
+    sessionId: "ssh", runnerId: "runner", profileId: "main", revision: engine.configRevision,
+    afterSeq: 0, runId: "previous-run" };
+  session.run = { id: "run-original" };
+  await assert.rejects(engine.executeRemote(profile, config, session, "hello", new AbortController().signal, false), /response lost/);
+  assert.equal(session.remote.acknowledged, false);
+  stage = "recover";
+  const restarted = new AiPlugin(host);
+  await restarted.initialize();
+  const restored = restarted.session(session.id);
+  await restarted.executeRemote(profile, config, restored, "ignored", new AbortController().signal, true);
+  assert.equal(restored.remote.afterSeq, 3);
+  assert.equal(restored.remote.acknowledged, true);
+  assert.equal(calls.filter((item) => item.method === "runners.send").length, 1);
+});
+
+test("failed request identity persistence never sends a remote operation", async () => {
+  const calls = [];
+  const host = { async call(method) {
+    calls.push(method);
+    if (method === "storage.set") throw new Error("storage unavailable");
+    throw new Error(`Unexpected ${method}`);
+  } };
+  const engine = new AiPlugin(host);
+  const session = engine.newSession();
+  session.run = { id: "run-new" };
+  session.remote = { pluginId: PLUGIN_ID, profilePolicy: structuredClone(PROFILE_POLICY), sessionId: "ssh",
+    runnerId: "runner", profileId: "main", revision: engine.configRevision, afterSeq: 0, runId: null };
+  const profile = { id: "main", name: "Main", remote: { sessionId: "ssh" } };
+  const config = { scope: { sessionIds: ["ssh"], remoteRoots: [{ sessionId: "ssh", path: "/work" }] } };
+  await assert.rejects(engine.executeRemote(profile, config, session, "hello", new AbortController().signal, false), /storage unavailable/);
+  assert.deepEqual(calls, ["storage.set"]);
+});
+
+test("starting another message clears the preceding remote run before persisting", async () => {
+  const data = new Map();
+  const host = { async call(method, params) {
+    if (method === "storage.get") return data.get(params.key) ?? null;
+    if (method === "storage.set") { data.set(params.key, structuredClone(params.value)); return null; }
+    if (method === "events.publish") return true;
+    throw new Error(`Unexpected ${method}`);
+  } };
+  const engine = new AiPlugin(host);
+  await engine.command("ai.configure", { config: {
+    profiles: [{ id: "main", protocol: "openai-chat", model: "model", helperBinary: "/runner",
+      remote: { sessionId: "ssh", platform: "posix", directory: "/runner", executable: "/node" } }],
+    scope: { sessionIds: ["ssh"], remoteRoots: [{ sessionId: "ssh", path: "/work" }] },
+  } });
+  const session = engine.newSession();
+  session.remote = { pluginId: PLUGIN_ID, profilePolicy: structuredClone(PROFILE_POLICY), sessionId: "ssh",
+    runnerId: "runner", profileId: "main", revision: engine.configRevision, afterSeq: 9,
+    runId: "previous-run", requestId: 42, acknowledged: true };
+  session.run = { id: "previous-run", status: "done", profileId: "main", mode: "ask" };
+  await preparedRuntime(engine);
+  engine.execute = async () => {
+    const saved = data.get("ai.sessions").sessions.find((item) => item.id === session.id);
+    assert.equal(saved.remote.runId, null);
+    assert.equal(saved.remote.requestId, null);
+    assert.equal(saved.remote.acknowledged, false);
+  };
+  await engine.send({ sessionId: session.id, message: "another message" });
+  await engine.runs.get(session.id)?.done;
+});
+
+test("native runner and real plugin protocol recover a lost enqueue acknowledgement", {
+  skip: !process.env.TUNNELDE_TEST_RUNNER,
+  timeout: 30000,
+}, async () => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), "tunnelde-runner-integration-"));
+  const runner = process.env.TUNNELDE_TEST_RUNNER;
+  const id = "recovery-test";
+  let requests = 0;
+  const server = createServer((req, res) => {
+    requests++;
+    req.resume();
+    res.writeHead(200, { "content-type": "text/event-stream" });
+    res.end('data: {"choices":[{"delta":{"content":"recovered answer"},"finish_reason":"stop"}]}\n\ndata: [DONE]\n\n');
+  });
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const callRunner = (operation, extra = [], input = null) => new Promise((resolve, reject) => {
+    const child = spawn(runner, [operation, "--directory", directory, "--id", id, ...extra], { stdio: "pipe" });
+    let stdout = "", stderr = "";
+    child.stdout.on("data", (chunk) => { stdout += chunk; });
+    child.stderr.on("data", (chunk) => { stderr += chunk; });
+    child.on("error", reject);
+    child.on("exit", (code) => {
+      child.stdout.destroy();
+      child.stderr.destroy();
+      if (code !== 0) reject(new Error(`runner ${operation} failed: ${stderr}`));
+      else {
+        try { resolve(JSON.parse(stdout)); } catch (error) { reject(error); }
+      }
+    });
+    child.stdin.end(input == null ? "" : JSON.stringify(input) + "\n");
+  });
+  let started = false;
+  try {
+    const profile = { id: "main", name: "Main", protocol: "openai-chat", model: "test", baseUrl: `http://127.0.0.1:${server.address().port}/v1` };
+    const config = { profiles: [profile], activeProfileId: "main", mode: "ask", scope: { localRoots: [directory], sessionIds: [], remoteRoots: [] } };
+    const configPath = path.join(directory, "config.json");
+    await writeFile(configPath, JSON.stringify({ version: 1, pluginId: PLUGIN_ID, profilePolicy: PROFILE_POLICY, config }));
+    await callRunner("start", ["--config", configPath, "--executable", process.execPath, "--entry", path.resolve("plugins/tunnelde-ai/remote-entry.mjs")], { secrets: { "provider.main": "fixture" } });
+    started = true;
+    const data = new Map();
+    let sends = 0;
+    const host = { async call(method, params) {
+      if (method === "storage.get") return data.get(params.key) ?? null;
+      if (method === "storage.set") { data.set(params.key, structuredClone(params.value)); return null; }
+      if (method === "events.publish") return true;
+      if (method === "runners.send") {
+        sends++;
+        assert.ok(Number.isSafeInteger(params.message.id));
+        await callRunner("send", [], params.message);
+        throw new Error("simulated lost acknowledgement");
+      }
+      if (method === "runners.poll") return callRunner("poll", ["--after", String(params.afterSeq)]);
+      throw new Error(`Unexpected ${method}`);
+    } };
+    const engine = new AiPlugin(host);
+    const session = engine.newSession();
+    session.remote = { pluginId: PLUGIN_ID, profilePolicy: structuredClone(PROFILE_POLICY), sessionId: "ssh", runnerId: id,
+      profileId: "main", revision: engine.configRevision, afterSeq: 0, runId: null };
+    session.run = { id: "run-original", status: "running", seq: 0 };
+    const outerProfile = { ...profile, remote: { sessionId: "ssh" } };
+    const outerConfig = { scope: { sessionIds: ["ssh"], remoteRoots: [{ sessionId: "ssh", path: directory }] } };
+    await assert.rejects(engine.executeRemote(outerProfile, outerConfig, session, "hello", new AbortController().signal, false), /lost acknowledgement/);
+    const restarted = new AiPlugin(host);
+    await restarted.initialize();
+    const restored = restarted.session(session.id);
+    await restarted.executeRemote(outerProfile, outerConfig, restored, "ignored", new AbortController().signal, true);
+    assert.equal(sends, 1);
+    assert.equal(requests, 1);
+    assert.ok(restored.history.some((item) => item.content?.includes("recovered answer")));
+  } finally {
+    if (started) {
+      await callRunner("stop").catch(() => {});
+      for (let i = 0; i < 50; i++) {
+        const status = await callRunner("status").catch(() => null);
+        if (["stopped", "failed"].includes(status?.status)) break;
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+    }
+    await new Promise((resolve) => server.close(resolve));
+    await rm(directory, { recursive: true, force: true });
+  }
 });
