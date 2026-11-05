@@ -17,6 +17,7 @@
     "package": "node scripts/plugins/package.mjs",
     "audit": "node scripts/audit.mjs",
     "verify": "npm run check && npm test",
-    "sdk:sync": "node scripts/sync-sdk.mjs"
+    "sdk:sync": "node scripts/sync-sdk.mjs",
+    "sdk:check": "node scripts/sync-sdk.mjs --check"
   }
 }
