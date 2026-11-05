@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import process from "node:process";
@@ -239,6 +239,26 @@ function unzip(bytes) {
   return files;
 }
 
+test("package text is canonical across Windows and Unix while binary bytes stay intact", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "tunnelde-package-eol-"));
+  try {
+    const binary = Buffer.from([0, 13, 10, 255]);
+    await writeFile(join(directory, "data.wasm"), binary);
+    const text = "first line\nsecond line\n";
+    await writeFile(join(directory, "README.md"), text);
+    const unix = await buildPluginArchive(directory);
+    await writeFile(
+      join(directory, "README.md"),
+      text.replaceAll("\n", "\r\n"),
+    );
+    const windows = await buildPluginArchive(directory);
+    assert.deepEqual(windows, unix);
+    assert.deepEqual(unzip(windows).get("data.wasm"), binary);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
 test("official packages are deterministic independent ZIPs with verifiable hashes and root manifests", async () => {
   const output = await mkdtemp(join(tmpdir(), "tunnelde-plugins-"));
   try {
@@ -265,6 +285,11 @@ test("official packages are deterministic independent ZIPs with verifiable hashe
           (manifest.themes ?? []).length,
         );
         assert.equal(files.size, 3);
+      } else if (manifest.runtime === "declarative") {
+        assert.equal(manifest.engines.node, undefined);
+        assert.equal(manifest.engines.tunnelde, ">=0.27.0-0");
+        assert.ok(files.has(manifest.main));
+        assert.ok(JSON.parse(files.get(manifest.main).toString("utf8")).views.main);
       } else {
         assert.equal(manifest.engines.node, ">=22");
         assert.ok(files.has(manifest.main));

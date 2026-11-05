@@ -1,0 +1,29 @@
+{
+  "id": "sshfs",
+  "name": "SSHFS",
+  "version": "1.5.0",
+  "apiVersion": 1,
+  "runtime": "node",
+  "main": "index.mjs",
+  "description": "Mount remote directories through authenticated Tunnelde sessions with a Node plugin.",
+  "author": "TunneldeDev",
+  "readme": "README.md",
+  "engines": {
+    "node": ">=22",
+    "tunnelde": ">=0.27.0-0"
+  },
+  "commands": [],
+  "views": [
+    {
+      "id": "main",
+      "title": "SSHFS",
+      "location": "workspace",
+      "kind": "blocks",
+      "icon": "folder"
+    }
+  ],
+  "permissions": [
+    "mounts.read",
+    "mounts.write"
+  ]
+}

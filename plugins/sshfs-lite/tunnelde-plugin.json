@@ -1,0 +1,28 @@
+{
+  "id": "sshfs-lite",
+  "name": "SSHFS Lite",
+  "version": "1.5.0",
+  "apiVersion": 1,
+  "runtime": "declarative",
+  "main": "views.json",
+  "description": "Mount remote directories through authenticated Tunnelde sessions without Node.js.",
+  "author": "TunneldeDev",
+  "readme": "README.md",
+  "engines": {
+    "tunnelde": ">=0.27.0-0"
+  },
+  "commands": [],
+  "views": [
+    {
+      "id": "main",
+      "title": "SSHFS Lite",
+      "location": "workspace",
+      "kind": "blocks",
+      "icon": "folder"
+    }
+  ],
+  "permissions": [
+    "mounts.read",
+    "mounts.write"
+  ]
+}
