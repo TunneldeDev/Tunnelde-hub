@@ -45,6 +45,13 @@ The [API catalogue](api.md) documents all methods and their required permissions
 [`api.json`](api.json) is a machine-readable snapshot of `host.describe()`. The host's
 live description is authoritative. `terminal.write` takes ordinary UTF-8 text, not base64.
 
+Maintainers can run `npm run sdk:check -- ../Tunnelde` to compare both generated
+catalogue files with a chosen application checkout without modifying either repository.
+Hub validation also checks against the application's `dev` branch. If it reports drift,
+review the host change, run `npm run sdk:sync -- ../Tunnelde`, and update SDK types and
+compatibility coverage as needed. This check detects catalogue text and permission drift;
+it does not prove input/output schemas or behavior are backward compatible.
+
 On Tunnelde 0.25+, `files.sftp.resolveDirectory({sessionId, path?})` returns
 `{home, path}` using SFTP canonicalization and directory metadata. It accepts omitted
 paths, `~` and relative directories and requires `sftp.read`. Use it for explicit target

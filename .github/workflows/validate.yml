@@ -10,6 +10,24 @@ concurrency:
   group: validate-${{ github.ref }}
   cancel-in-progress: true
 jobs:
+  host-catalogue:
+    name: SDK catalogue matches application dev
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: TunneldeDev/Tunnelde
+          ref: dev
+          path: application
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm run sdk:check -- application
+
   validate:
     name: Validate (Node ${{ matrix.node }})
     runs-on: ubuntu-latest
