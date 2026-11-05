@@ -220,8 +220,10 @@ export class TaskConnection {
         throw new Error(
           "CLI output was truncated; resume the saved CLI session in a new task",
         );
+      let processed = 0;
       for (const event of batch?.events ?? []) {
         if ((event.seq ?? 0) <= this.afterSeq) continue;
+        processed++;
         this.afterSeq = Math.max(this.afterSeq, event.seq);
         if (event.stream === "stderr" && event.data)
           this.stderr = (this.stderr + event.data).slice(-8000);
@@ -255,12 +257,15 @@ export class TaskConnection {
         }
       }
       this.onCheckpoint?.({ taskId: this.taskId, afterSeq: this.afterSeq });
-      const status = await this.host.call(
-        "tasks.status",
-        { taskId: this.taskId },
-        { signal: this.signal },
+      // readOutput captures status and its event batch under the same host lock.
+      // A separate status request can observe exit after the output snapshot and
+      // discard the final messages. Drain all terminal batches before failing.
+      const status = batch?.status ? batch : await this.host.call(
+        "tasks.status", { taskId: this.taskId }, { signal: this.signal },
       );
       if (!status) throw new Error("CLI task is no longer available");
+      if (!["running", "starting"].includes(status.status) && !this.closed && processed)
+        continue;
       if (!["running", "starting"].includes(status.status) && !this.closed)
         throw new Error(
           `Agent process ended (${status.status}, exit ${status.exitCode ?? "unknown"}). ${status.error || this.stderr || "Check the selected executable, login and protocol support on this machine."}`,
