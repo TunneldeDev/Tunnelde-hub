@@ -1,7 +1,7 @@
 {
   "id": "sshfs-lite",
   "name": "SSHFS Lite",
-  "version": "1.5.0",
+  "version": "1.9.0",
   "apiVersion": 1,
   "runtime": "declarative",
   "main": "views.json",
@@ -9,7 +9,7 @@
   "author": "TunneldeDev",
   "readme": "README.md",
   "engines": {
-    "tunnelde": ">=0.27.0-0"
+    "tunnelde": ">=0.29.0-beta.6"
   },
   "commands": [],
   "views": [
@@ -21,6 +21,7 @@
       "icon": "folder"
     }
   ],
+  "mountedFileReveal": true,
   "permissions": [
     "mounts.read",
     "mounts.write"

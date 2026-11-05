@@ -111,6 +111,26 @@ export interface PluginCommand {
   macKeybindings?: string[];
   /** Receive the matching document as input.source; return {text:string}. */
   editor?: { extensions: string[]; format?: boolean };
+  /** Offer this command for a user-selected file or directory. */
+  fileMenu?: FileMenuContribution;
+}
+export interface FileMenuContribution {
+  sources: ("local" | "remote")[];
+  kinds: ("file" | "directory")[];
+  /** Case-insensitive file suffixes without the leading dot; directories ignore this filter. */
+  extensions?: string[];
+}
+/** Optional manifest field: register native reveal for this plugin's active mounts. */
+export interface MountedFileRevealContribution {
+  mountedFileReveal?: boolean;
+}
+export interface FileMenuCommandInput {
+  file: {
+    path: string;
+    name: string;
+    isDirectory: boolean;
+    source: { kind: "local" } | { kind: "remote"; sessionId: string };
+  };
 }
 export interface EditorCommandInput {
   source: string;

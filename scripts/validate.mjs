@@ -68,6 +68,14 @@ export function validateManifest(manifest, id) {
   ]);
   for (const permission of manifest.permissions)
     assert.ok(knownPermissions.has(permission), `${id}: unknown permission ${permission}`);
+  assert.ok(
+    manifest.mountedFileReveal === undefined ||
+      (typeof manifest.mountedFileReveal === "boolean" &&
+        (!manifest.mountedFileReveal ||
+          (manifest.runtime !== "theme" && manifest.permissions.includes("mounts.read") &&
+            manifest.permissions.includes("mounts.write")))),
+    `${id}: invalid mounted file reveal contribution or missing permissions`,
+  );
   const commandIds = new Set();
   assert.ok(
     manifest.commands === undefined || Array.isArray(manifest.commands),
@@ -123,6 +131,24 @@ export function validateManifest(manifest, id) {
           manifest.permissions.includes("editor.read") &&
           manifest.permissions.includes("editor.write"),
         `${id}: invalid editor contribution or missing permissions`,
+      );
+    }
+    if (command.fileMenu !== undefined) {
+      const menu = command.fileMenu;
+      const validList = (value, allowed) =>
+        Array.isArray(value) && value.length > 0 && value.length <= allowed.length &&
+        new Set(value).size === value.length && value.every((item) => allowed.includes(item));
+      assert.ok(
+        menu && typeof menu === "object" && !Array.isArray(menu) &&
+          Object.keys(menu).every((key) => ["sources", "kinds", "extensions"].includes(key)) &&
+          validList(menu.sources, ["local", "remote"]) &&
+          validList(menu.kinds, ["file", "directory"]) &&
+          (menu.extensions === undefined ||
+            (Array.isArray(menu.extensions) && menu.extensions.length <= 64 &&
+              menu.extensions.every((ext) => typeof ext === "string" && /^[a-z0-9._-]{1,64}(?![\s\S])/i.test(ext)))) &&
+          (!menu.sources.includes("local") || manifest.permissions.includes("fs.read")) &&
+          (!menu.sources.includes("remote") || manifest.permissions.includes("sftp.read")),
+        `${id}: invalid file menu contribution or missing permissions`,
       );
     }
   }

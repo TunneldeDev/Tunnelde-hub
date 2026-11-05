@@ -287,7 +287,7 @@ test("official packages are deterministic independent ZIPs with verifiable hashe
         assert.equal(files.size, 3);
       } else if (manifest.runtime === "declarative") {
         assert.equal(manifest.engines.node, undefined);
-        assert.equal(manifest.engines.tunnelde, ">=0.27.0-0");
+        assert.equal(manifest.engines.tunnelde, ">=0.29.0-beta.6");
         assert.ok(files.has(manifest.main));
         assert.ok(JSON.parse(files.get(manifest.main).toString("utf8")).views.main);
       } else {

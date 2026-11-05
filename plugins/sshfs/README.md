@@ -1,6 +1,6 @@
 # SSHFS
 
-Requires Tunnelde 0.27.0 or newer, including 0.27 Nightly builds.
+Requires Tunnelde 0.29.0-beta.6 or newer.
 
 Install this folder or its release ZIP, approve the mount permissions, and open its view from the command palette. Requires Node.js 22 or later; Tunnelde asks before using a system Node runtime. Choose SSHFS Lite for the same native mount interface without Node.
 
@@ -9,5 +9,7 @@ Connect a saved SSH host first, select the session, enter the remote directory, 
 Install WinFsp + SSHFS-Win on Windows, compatible FUSE + SSHFS on macOS, or FUSE + SSHFS on Linux. The host detects dependencies and opens documentation only when requested. Drivers are never installed automatically. Close open files and Unmount before disconnecting or exiting; retry busy mounts after closing applications that use them.
 
 Permissions: `mounts.read` checks dependencies and lists owned mounts; `mounts.write` creates, opens and unmounts owned mounts. Both plugin variants share one mount registry. No automatic mounts at startup, no bundled Node runtime, no credential-bearing command line and no unauthenticated local SFTP listener.
+
+While a mount is active, right-click a file in the corresponding remote session and choose the file-manager action to reveal it through the mounted filesystem.
 
 GPL-3.0-only.

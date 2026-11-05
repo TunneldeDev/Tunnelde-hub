@@ -22,7 +22,10 @@ test("SSHFS plugins share native mount UI but Lite has no Node dependency", asyn
   assert.equal(lite.engines.node, undefined);
   assert.deepEqual(node.permissions, ["mounts.read", "mounts.write"]);
   assert.deepEqual(lite.permissions, node.permissions);
-  assert.equal(lite.engines.tunnelde, ">=0.27.0-0");
+  assert.equal(lite.engines.tunnelde, ">=0.29.0-beta.6");
+  assert.equal(node.engines.tunnelde, lite.engines.tunnelde);
+  assert.equal(node.mountedFileReveal, true);
+  assert.equal(lite.mountedFileReveal, true);
   const views = await load("sshfs-lite", "views.json");
   assert.deepEqual(views.views.main.blocks, renderView().blocks);
   assert.ok(!node.permissions.includes("secrets"));

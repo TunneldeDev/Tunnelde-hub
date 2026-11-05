@@ -67,34 +67,34 @@
     {
       "id": "sshfs",
       "name": "SSHFS",
-      "version": "1.5.0",
+      "version": "1.9.0",
       "description": "Mount remote directories through authenticated Tunnelde sessions with a Node plugin.",
       "author": "TunneldeDev",
       "runtime": "node",
       "apiVersion": 1,
       "engines": {
         "node": ">=22",
-        "tunnelde": ">=0.27.0-0"
+        "tunnelde": ">=0.29.0-beta.6"
       },
       "tags": [
         "sshfs",
         "files",
         "remote"
       ],
-      "readme": "# SSHFS\n\nRequires Tunnelde 0.27.0 or newer, including 0.27 Nightly builds.\n\nInstall this folder or its release ZIP, approve the mount permissions, and open its view from the command palette. Requires Node.js 22 or later; Tunnelde asks before using a system Node runtime. Choose SSHFS Lite for the same native mount interface without Node.\n\nConnect a saved SSH host first, select the session, enter the remote directory, and choose an empty local mount directory or unused Windows drive. Mounts default to read only. The native host reuses the session's authentication, trusted host keys, proxies and jump hosts. This plugin does not receive SSH passwords or keys.\n\nInstall WinFsp + SSHFS-Win on Windows, compatible FUSE + SSHFS on macOS, or FUSE + SSHFS on Linux. The host detects dependencies and opens documentation only when requested. Drivers are never installed automatically. Close open files and Unmount before disconnecting or exiting; retry busy mounts after closing applications that use them.\n\nPermissions: `mounts.read` checks dependencies and lists owned mounts; `mounts.write` creates, opens and unmounts owned mounts. Both plugin variants share one mount registry. No automatic mounts at startup, no bundled Node runtime, no credential-bearing command line and no unauthenticated local SFTP listener.\n\nGPL-3.0-only.\n",
-      "url": "https://github.com/TunneldeDev/tunnelde-hub/releases/download/plugins-v1.5.0/sshfs-1.5.0.zip",
-      "sha256": "321e5eabd7ba15875805461938a1230bbc279e96af65f9a567ddf26b4df61cc3"
+      "readme": "# SSHFS\n\nRequires Tunnelde 0.29.0-beta.6 or newer.\n\nInstall this folder or its release ZIP, approve the mount permissions, and open its view from the command palette. Requires Node.js 22 or later; Tunnelde asks before using a system Node runtime. Choose SSHFS Lite for the same native mount interface without Node.\n\nConnect a saved SSH host first, select the session, enter the remote directory, and choose an empty local mount directory or unused Windows drive. Mounts default to read only. The native host reuses the session's authentication, trusted host keys, proxies and jump hosts. This plugin does not receive SSH passwords or keys.\n\nInstall WinFsp + SSHFS-Win on Windows, compatible FUSE + SSHFS on macOS, or FUSE + SSHFS on Linux. The host detects dependencies and opens documentation only when requested. Drivers are never installed automatically. Close open files and Unmount before disconnecting or exiting; retry busy mounts after closing applications that use them.\n\nPermissions: `mounts.read` checks dependencies and lists owned mounts; `mounts.write` creates, opens and unmounts owned mounts. Both plugin variants share one mount registry. No automatic mounts at startup, no bundled Node runtime, no credential-bearing command line and no unauthenticated local SFTP listener.\n\nWhile a mount is active, right-click a file in the corresponding remote session and choose the file-manager action to reveal it through the mounted filesystem.\n\nGPL-3.0-only.\n",
+      "url": "https://github.com/TunneldeDev/tunnelde-hub/releases/download/plugins-v1.9.0/sshfs-1.9.0.zip",
+      "sha256": "19db663b41c30a38a79e594ec160577bb82b6ac5e9c3e5e2100655d1984b44f1"
     },
     {
       "id": "sshfs-lite",
       "name": "SSHFS Lite",
-      "version": "1.5.0",
+      "version": "1.9.0",
       "description": "Mount remote directories through authenticated Tunnelde sessions without Node.js.",
       "author": "TunneldeDev",
       "runtime": "declarative",
       "apiVersion": 1,
       "engines": {
-        "tunnelde": ">=0.27.0-0"
+        "tunnelde": ">=0.29.0-beta.6"
       },
       "tags": [
         "sshfs",
@@ -102,9 +102,9 @@
         "remote",
         "no-node"
       ],
-      "readme": "# SSHFS Lite\n\nRequires Tunnelde 0.27.0 or newer, including 0.27 Nightly builds.\n\nInstall this folder or its release ZIP in Tunnelde, approve `mounts.read` and `mounts.write`, and open its view from the command palette. This data-only plugin requires no Node.js runtime.\n\nConnect to a saved SSH host first. Select the connected session, remote directory and an empty local directory (or unused Windows drive). Mounts default to read only. Authentication, trusted host keys, proxies and jump hosts come from the existing session; plugins never receive SSH credentials.\n\nSystem dependencies are required: WinFsp + SSHFS-Win on Windows, compatible FUSE + SSHFS on macOS, or FUSE + SSHFS on Linux. The panel detects the executable and links installation instructions; it never installs drivers automatically. Use Unmount before disconnecting or exiting. Close open files and retry if the operating system reports that a mount is busy.\n\nBoth SSHFS plugins use one native mount registry. Each plugin manages its own mounts and cannot unmount another plugin's resources. No automatic mount occurs at startup. Permissions permit access to remote files through a filesystem mount; grant them only to a plugin you trust.\n\nGPL-3.0-only.\n",
-      "url": "https://github.com/TunneldeDev/tunnelde-hub/releases/download/plugins-v1.5.0/sshfs-lite-1.5.0.zip",
-      "sha256": "b71a861bc8efe06a7e3bf4620fed2c8f34d1933df94b409cc83a2fac49fb30b1"
+      "readme": "# SSHFS Lite\n\nRequires Tunnelde 0.29.0-beta.6 or newer.\n\nInstall this folder or its release ZIP in Tunnelde, approve `mounts.read` and `mounts.write`, and open its view from the command palette. This data-only plugin requires no Node.js runtime.\n\nConnect to a saved SSH host first. Select the connected session, remote directory and an empty local directory (or unused Windows drive). Mounts default to read only. Authentication, trusted host keys, proxies and jump hosts come from the existing session; plugins never receive SSH credentials.\n\nSystem dependencies are required: WinFsp + SSHFS-Win on Windows, compatible FUSE + SSHFS on macOS, or FUSE + SSHFS on Linux. The panel detects the executable and links installation instructions; it never installs drivers automatically. Use Unmount before disconnecting or exiting. Close open files and retry if the operating system reports that a mount is busy.\n\nBoth SSHFS plugins use one native mount registry. Each plugin manages its own mounts and cannot unmount another plugin's resources. No automatic mount occurs at startup. Permissions permit access to remote files through a filesystem mount; grant them only to a plugin you trust.\n\nWhile a mount is active, right-click a file in the corresponding remote session and choose the file-manager action to reveal it through the mounted filesystem.\n\nGPL-3.0-only.\n",
+      "url": "https://github.com/TunneldeDev/tunnelde-hub/releases/download/plugins-v1.9.0/sshfs-lite-1.9.0.zip",
+      "sha256": "9ac2039c7b4c61d625b84313d85cea81ba0f9f68ac88c6ffab77e79ba41813e3"
     },
     {
       "id": "studio-themes",
