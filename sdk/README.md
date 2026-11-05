@@ -52,6 +52,13 @@ review the host change, run `npm run sdk:sync -- ../Tunnelde`, and update SDK ty
 compatibility coverage as needed. This check detects catalogue text and permission drift;
 it does not prove input/output schemas or behavior are backward compatible.
 
+New package releases and unpublished drafts are checked against the current application
+`dev` catalogue before publishing. If `dev` changes while a draft is waiting, the check
+can fail on retry; reconcile the SDK and prepare a new version rather than replacing an
+immutable tag. Retrying an already published release skips this moving comparison and
+still verifies every existing asset against the tagged source. Historical tags run their
+own original workflow when pushed; use the current workflow's manual dispatch for recovery.
+
 On Tunnelde 0.25+, `files.sftp.resolveDirectory({sessionId, path?})` returns
 `{home, path}` using SFTP canonicalization and directory metadata. It accepts omitted
 paths, `~` and relative directories and requires `sftp.read`. Use it for explicit target

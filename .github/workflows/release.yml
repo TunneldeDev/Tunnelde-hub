@@ -56,17 +56,45 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          path: publisher
+          persist-credentials: false
+      - name: Determine whether this is a published release recovery
+        id: existing
+        uses: actions/github-script@v7
+        env:
+          PACKAGE_TAG: ${{ needs.source.outputs.tag }}
+        with:
+          retries: 3
+          script: |
+            try {
+              const {data} = await github.rest.repos.getReleaseByTag({
+                ...context.repo, tag: process.env.PACKAGE_TAG
+              });
+              core.setOutput('published', String(!data.draft));
+            } catch (error) {
+              if (error.status !== 404) throw error;
+              core.setOutput('published', 'false');
+            }
+      - name: Check out current application catalogue
+        if: steps.existing.outputs.published != 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: TunneldeDev/Tunnelde
+          ref: dev
+          path: application
+          persist-credentials: false
+      - name: Check SDK catalogue before publishing
+        if: steps.existing.outputs.published != 'true'
+        run: node publisher/scripts/ci/check-release-sdk.mjs application sdk
       - run: npm run verify
       - run: npm run package
       - name: Collect versioned assets
         env:
           TAG: ${{ needs.source.outputs.tag }}
         run: node scripts/release.mjs "$TAG"
-      - uses: actions/checkout@v4
-        with:
-          ref: main
-          path: publisher
-          persist-credentials: false
       - name: Publish immutable packages
         env:
           GH_TOKEN: ${{ github.token }}

@@ -3,7 +3,13 @@ import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+import { fileURLToPath } from "node:url";
 import { syncSdk } from "../scripts/sync-sdk.mjs";
+
+const run = promisify(execFile);
+const releaseCheck = fileURLToPath(new URL("../scripts/ci/check-release-sdk.mjs", import.meta.url));
 
 test("SDK check detects host and documentation drift without changing files", async () => {
   const root = await mkdtemp(join(tmpdir(), "tunnelde-sdk-check-"));
@@ -18,9 +24,11 @@ test("SDK check detects host and documentation drift without changing files", as
     await writeFile(host, source);
     await syncSdk(app, { sdkDirectory: sdk });
     await syncSdk(app, { sdkDirectory: sdk, check: true });
+    await run(process.execPath, [releaseCheck, app, sdk]);
     const previous = await readFile(join(sdk, "api.json"), "utf8");
     await writeFile(host, source.replace("Discover methods.", "Changed behavior."));
     await assert.rejects(syncSdk(app, { sdkDirectory: sdk, check: true }), /api.json differs/);
+    await assert.rejects(run(process.execPath, [releaseCheck, app, sdk]), /api.json differs/);
     assert.equal(await readFile(join(sdk, "api.json"), "utf8"), previous);
     await writeFile(host, source);
     await writeFile(join(sdk, "api.md"), "stale\n");
