@@ -1,13 +1,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { AiPlugin } from "../lib/engine.mjs";
-import { prepareAgent } from "../lib/readiness.mjs";
+import { checkedTask, prepareAgent } from "../lib/readiness.mjs";
 import { installAgent, nodeInstallScript } from "../lib/installation.mjs";
 
 const execution = { kind: "remote", sessionId: "ssh", hostId: "server", title: "Server", home: "/home/test", cwd: "/home/test", runtime: "/opt/node", platform: "posix" };
 const profile = { id: "api", name: "API", protocol: "openai-chat", model: "test" };
 
-function fixture({ consent = true, failNode = false, authenticated = true, waiting = false } = {}) {
+function fixture({ consent = true, failNode = false, authenticated = true, waiting = false, authStatus } = {}) {
   const calls = [], tasks = new Map(), storage = new Map();
   let seq = 0;
   const host = {
@@ -28,7 +28,7 @@ function fixture({ consent = true, failNode = false, authenticated = true, waiti
         const node = params.args.includes("--eval");
         const finite = node || params.args.includes("--version") || params.args.includes("auth");
         const text = node ? JSON.stringify({ version: "24.0.0", path: "/opt/node" }) : params.args.includes("auth") ? JSON.stringify({ loggedIn: authenticated }) : "1.0.0";
-        tasks.set(id, { status: waiting || !finite ? "running" : "completed", exitCode: failNode && node ? 127 : 0,
+        tasks.set(id, { status: params.args.includes("auth") && authStatus ? authStatus : waiting || !finite ? "running" : "completed", exitCode: failNode && node ? 127 : 0,
           events: finite ? [{ seq: ++seq, stream: failNode && node ? "stderr" : "stdout", data: failNode && node ? "node: not found" : text }] : [] });
         return { taskId: id };
       }
@@ -51,6 +51,23 @@ function fixture({ consent = true, failNode = false, authenticated = true, waiti
   };
   return host;
 }
+
+test("initialization reports timeouts and cancellations without suggesting an install", async () => {
+  for (const status of ["timedOut", "cancelled"]) {
+    const host = fixture({ authStatus: status });
+    const selected = { ...profile, protocol: "claude-code", executable: "claude" };
+    await assert.rejects(prepareAgent(host, selected, { ...execution }, {}), (error) => {
+      assert.equal(error.code, status === "timedOut" ? "agent.prepare.timeout" : "agent.prepare.cancelled");
+      assert.doesNotMatch(error.message, /auth login|Install or select/);
+      assert.match(error.message, status === "timedOut" ? /did not respond.*remote host.*connection/ : /cancelled or access was revoked/);
+      return true;
+    });
+    assert.ok([...host.tasks.values()].every((task) => task.status === "cancelled"));
+  }
+  const host = fixture({ waiting: true });
+  await assert.rejects(checkedTask(host, execution, "claude", ["--version"], 1), { code: "agent.prepare.timeout" });
+  assert.ok([...host.tasks.values()].every((task) => task.status === "cancelled"));
+});
 
 test("declining initialization never probes Node, uploads files or starts an agent", async () => {
   const host = fixture({ consent: false });

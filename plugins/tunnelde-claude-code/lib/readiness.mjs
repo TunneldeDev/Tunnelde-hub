@@ -13,6 +13,11 @@ export const executionKey = (execution) => JSON.stringify([
   execution?.cwd || "", execution?.runtime || "", execution?.executable || "",
 ]);
 
+function preparationTimeout(executable, execution, timeoutMs) {
+  const target = execution.kind === "remote" ? "the selected remote host" : "this computer";
+  return Object.assign(new Error(`${executable} did not respond within ${Math.ceil(timeoutMs / 1000)} seconds on ${target}. Check the executable, connection and host load, then retry.`), { code: "agent.prepare.timeout" });
+}
+
 /** Finite checks run only from an explicit preparation action, never on render. */
 export async function checkedTask(host, execution, executable, args, timeoutMs = 30000, signal) {
   signal?.throwIfAborted();
@@ -49,13 +54,16 @@ export async function checkedTask(host, execution, executable, args, timeoutMs =
           if (event.stream === "stderr") stderr += event.data || "";
         }
         if (stdout.length + stderr.length > 64000) throw new Error("Initialization output exceeded its limit");
+        if (status.status === "timedOut") throw preparationTimeout(executable, execution, timeoutMs);
+        if (status.status === "cancelled")
+          throw Object.assign(new Error("Initialization was cancelled or access was revoked."), { code: "agent.prepare.cancelled" });
         if (status.status !== "completed" || status.exitCode !== 0)
           throw new Error(`${executable} could not initialize (exit ${status.exitCode ?? "unknown"}). ${status.error || stderr.slice(-2000) || "Install or select this executable on the chosen machine."}`);
         return stdout;
       }
       await delay(75, signal);
     }
-    throw new Error("Initialization timed out; check the selected executable and connection");
+    throw preparationTimeout(executable, execution, timeoutMs);
   } finally {
     await host.call("tasks.cancel", { taskId }).catch(() => {});
   }
@@ -158,7 +166,8 @@ export async function prepareAgent(host, profile, execution, session, signal, { 
       try { output = await checkedTask(host, execution, profile.executable, ["auth", "status"], 30000, signal); }
       catch (error) {
         signal?.throwIfAborted();
-        throw new Error(`Claude Code sign-in verification failed on ${execution.title}. Run ${profile.executable} auth login, then Initialize again. ${error.message}`);
+        if (error?.code === "agent.prepare.timeout" || error?.code === "agent.prepare.cancelled") throw error;
+        throw new Error(`Claude Code sign-in status could not be verified on ${execution.title}. Check the executable and connection; if needed, run ${profile.executable} auth login, then Initialize again. ${error.message}`);
       }
       let auth;
       try { auth = JSON.parse(output); } catch { throw new Error("Claude Code did not return authentication status. Update Claude Code and run claude auth login on this machine."); }
