@@ -18,17 +18,39 @@ export async function fetchArchive(entry, { fetcher = fetch, wait = delay, attem
       continue;
     }
     if (!response.ok && transientStatus(response.status) && attempt + 1 < attempts) {
-      await response.body?.cancel();
+      await response.body?.cancel().catch(() => {});
       await wait(1000 * 2 ** attempt);
       continue;
     }
     assert.ok(response.ok, `${entry.id}: HTTP ${response.status}`);
     const hash = createHash("sha256");
     let size = 0;
-    for await (const chunk of response.body) {
-      size += chunk.length;
-      assert.ok(size <= 64 * 1024 * 1024, `${entry.id}: archive exceeds limit`);
-      hash.update(chunk);
+    const reader = response.body.getReader();
+    let streamError;
+    let streamFailed = false;
+    try {
+      while (true) {
+        let result;
+        try {
+          result = await reader.read();
+        } catch (error) {
+          streamError = error;
+          streamFailed = true;
+          break;
+        }
+        if (result.done) break;
+        size += result.value.length;
+        assert.ok(size <= 64 * 1024 * 1024, `${entry.id}: archive exceeds limit`);
+        hash.update(result.value);
+      }
+    } finally {
+      await reader.cancel().catch(() => {});
+      reader.releaseLock();
+    }
+    if (streamFailed) {
+      if (attempt + 1 === attempts) throw streamError;
+      await wait(1000 * 2 ** attempt);
+      continue;
     }
     assert.equal(hash.digest("hex"), entry.sha256, `${entry.id}: published checksum differs`);
     return;
