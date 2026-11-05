@@ -4,6 +4,8 @@ Generated from the host method catalogue for Tunnelde 0.26.1. All calls require 
 
 | Method | Permissions | Parameters | Behavior |
 | --- | --- | --- | --- |
+| `editor.active` | `editor.read` | `{}` | Read the active ready editor document or null. Returns tabId, documentId, version, path, name, content and dirty. Maximum UTF-8 content 128KiB. Does not read files from disk. |
+| `editor.replace` | `editor.write` | `{tabId:string,documentId:string,version:number,text:string}` | Replace an open editor buffer only if the document identity and version still match. Maximum UTF-8 text 128KiB. Undoable; never saves automatically. Rejects stale, closed, loading or disconnected documents. |
 | `mounts.browse` | `mounts.read` | `{sessionId:string,path?:string}` | Browse directories through an authenticated SFTP session for the mount chooser. |
 | `mounts.open` | `mounts.write` | `{id:string}` | Open this plugin's mount in the system file manager. |
 | `mounts.documentation` | `mounts.read` | `{}` | Open platform SSHFS installation instructions in the system browser. |

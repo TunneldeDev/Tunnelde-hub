@@ -53,6 +53,8 @@ export function validateManifest(manifest, id) {
     "history.write",
     "workspace.read",
     "workspace.write",
+    "editor.read",
+    "editor.write",
     "clipboard.read",
     "clipboard.write",
     "app.openExternal",
@@ -61,9 +63,69 @@ export function validateManifest(manifest, id) {
     "secrets",
     "mounts.read",
     "mounts.write",
+    "forwards.read",
+    "forwards.write",
   ]);
   for (const permission of manifest.permissions)
     assert.ok(knownPermissions.has(permission), `${id}: unknown permission ${permission}`);
+  const commandIds = new Set();
+  assert.ok(
+    manifest.commands === undefined || Array.isArray(manifest.commands),
+    `${id}: commands must be an array`,
+  );
+  for (const command of manifest.commands ?? []) {
+    assert.ok(
+      command &&
+        typeof command.id === "string" &&
+        command.id.length <= 128 &&
+        command.id.split(".").every((part) => idPattern.test(part)) &&
+        !commandIds.has(command.id),
+      `${id}: invalid command id`,
+    );
+    commandIds.add(command.id);
+    assert.ok(
+      typeof command.title === "string" && command.title.trim(),
+      `${id}: invalid command title`,
+    );
+    for (const field of ["keybindings", "macKeybindings"]) {
+      const bindings = command[field];
+      if (bindings === undefined) continue;
+      assert.ok(Array.isArray(bindings) && bindings.length <= 4, `${id}: invalid ${field}`);
+      for (const binding of bindings) {
+        assert.equal(typeof binding, "string", `${id}: invalid shortcut`);
+        const parts = binding.split("+"),
+          key = parts.pop();
+        const modifiers = new Set(parts);
+        assert.ok(
+          parts.every((part) => ["Mod", "Ctrl", "Meta", "Alt", "Shift"].includes(part)) &&
+            modifiers.size === parts.length &&
+            !(modifiers.has("Mod") && (modifiers.has("Ctrl") || modifiers.has("Meta"))) &&
+            !(modifiers.has("Ctrl") && modifiers.has("Meta")) &&
+            /^(?:[a-zA-Z0-9]|F(?:[1-9]|1\d|2[0-4])|Comma|Period|Backslash|Equal|Plus|Minus|Space|Escape|Tab|Enter|Backspace|Delete|Insert|Home|End|PageUp|PageDown|ArrowUp|ArrowDown|ArrowLeft|ArrowRight)$/.test(
+              key,
+            ),
+          `${id}: invalid shortcut ${binding}`,
+        );
+      }
+    }
+    if (command.editor !== undefined) {
+      const editor = command.editor;
+      assert.ok(
+        editor &&
+          Array.isArray(editor.extensions) &&
+          editor.extensions.length > 0 &&
+          editor.extensions.length <= 64 &&
+          editor.extensions.every(
+            (extension) => typeof extension === "string" && /^[a-z0-9._-]{1,64}$/i.test(extension),
+          ) &&
+          (editor.format === undefined || typeof editor.format === "boolean") &&
+          Object.keys(editor).every((key) => ["extensions", "format"].includes(key)) &&
+          manifest.permissions.includes("editor.read") &&
+          manifest.permissions.includes("editor.write"),
+        `${id}: invalid editor contribution or missing permissions`,
+      );
+    }
+  }
   assert.equal(
     new Set(manifest.permissions).size,
     manifest.permissions.length,
@@ -120,7 +182,10 @@ export function validateManifest(manifest, id) {
       `${id}: themes cannot execute code`,
     );
     assert.ok(
-      ((manifest.themes ?? []).length > 0 || (manifest.fileIconThemes ?? []).length > 0 || (manifest.filePreviews ?? []).length > 0) && (manifest.themes ?? []).length <= 32,
+      ((manifest.themes ?? []).length > 0 ||
+        (manifest.fileIconThemes ?? []).length > 0 ||
+        (manifest.filePreviews ?? []).length > 0) &&
+        (manifest.themes ?? []).length <= 32,
       `${id}: missing themes`,
     );
   } else {
