@@ -177,3 +177,8 @@ Run `npm run sdk:check -- ../Tunnelde` to check the generated files and ensure t
 `HostMethodMap` declares exactly the host's method names. The check does not verify
 parameter or return types, runtime behavior, or compatibility with older plugins;
 those require separate contract and integration tests.
+
+Host calls whose success has no payload resolve to JSON `null`. The SDK types now
+reflect that existing wire behavior; TypeScript code that explicitly annotated
+such a result as `void` should use `null` or ignore the result instead. This
+correction does not change the runtime protocol.

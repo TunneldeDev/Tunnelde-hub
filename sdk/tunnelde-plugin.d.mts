@@ -435,53 +435,53 @@ export interface HostMethodMap {
   "files.local.home": [Record<string, never>, string];
   "files.local.list": [{ path?: string }, Listing];
   "files.local.readText": [{ path: string }, { content: string; size: number }];
-  "files.local.writeText": [{ path: string; content: string }, void];
-  "files.local.createFile": [{ path: string }, void];
-  "files.local.mkdir": [{ path: string }, void];
-  "files.local.rename": [{ from: string; to: string; overwrite?: boolean }, void];
-  "files.local.copy": [{ from: string; to: string; overwrite?: boolean }, void];
-  "files.local.delete": [{ path: string; isDir: boolean }, void];
+  "files.local.writeText": [{ path: string; content: string }, null];
+  "files.local.createFile": [{ path: string }, null];
+  "files.local.mkdir": [{ path: string }, null];
+  "files.local.rename": [{ from: string; to: string; overwrite?: boolean }, null];
+  "files.local.copy": [{ from: string; to: string; overwrite?: boolean }, null];
+  "files.local.delete": [{ path: string; isDir: boolean }, null];
   "files.sftp.list": [{ sessionId: string; path?: string }, Listing];
   "files.sftp.resolveDirectory": [
     { sessionId: string; path?: string },
     { home: string; path: string },
   ];
   "files.sftp.readText": [{ sessionId: string; path: string }, { content: string; size: number }];
-  "files.sftp.writeText": [{ sessionId: string; path: string; content: string }, void];
-  "files.sftp.createFile": [{ sessionId: string; path: string }, void];
-  "files.sftp.mkdir": [{ sessionId: string; path: string }, void];
-  "files.sftp.rename": [{ sessionId: string; from: string; to: string; overwrite?: boolean }, void];
-  "files.sftp.copy": [{ sessionId: string; from: string; to: string; overwrite?: boolean }, void];
-  "files.sftp.delete": [{ sessionId: string; path: string; isDir: boolean }, void];
+  "files.sftp.writeText": [{ sessionId: string; path: string; content: string }, null];
+  "files.sftp.createFile": [{ sessionId: string; path: string }, null];
+  "files.sftp.mkdir": [{ sessionId: string; path: string }, null];
+  "files.sftp.rename": [{ sessionId: string; from: string; to: string; overwrite?: boolean }, null];
+  "files.sftp.copy": [{ sessionId: string; from: string; to: string; overwrite?: boolean }, null];
+  "files.sftp.delete": [{ sessionId: string; path: string; isDir: boolean }, null];
   "monitor.system": [Record<string, never>, unknown];
   "monitor.stats": [{ sessionId: string }, unknown];
   "monitor.processes": [{ sessionId: string }, unknown];
-  "monitor.kill": [{ sessionId: string; pid: number }, void];
+  "monitor.kill": [{ sessionId: string; pid: number }, null];
   "history.list": [{ hostId: string; limit?: number }, unknown];
   "history.record": [{ hostId: string; command: string }, Record<string, unknown> | null];
-  "history.delete": [{ id: number }, void];
-  "history.clear": [{ hostId: string }, void];
+  "history.delete": [{ id: number }, null];
+  "history.clear": [{ hostId: string }, null];
 
   "api.describe": [Record<string, never>, { version: number; methods: MethodDescription[] }];
   "app.info": [Record<string, never>, Record<string, unknown>];
-  "app.openExternal": [{ url: string }, void];
+  "app.openExternal": [{ url: string }, null];
   "settings.get": [Record<string, never>, Record<string, unknown>];
   "settings.update": [{ patch: Record<string, unknown> }, Record<string, unknown>];
   "hosts.snapshot": [Record<string, never>, { hosts: SavedHost[]; groups: Group[] }];
   "hosts.create": [{ input: HostInput }, SavedHost];
   "hosts.update": [{ id: string; input: HostInput }, SavedHost];
-  "hosts.delete": [{ id: string }, void];
-  "hosts.markUsed": [{ id: string }, void];
-  "hosts.reorder": [{ ids: string[] }, void];
+  "hosts.delete": [{ id: string }, null];
+  "hosts.markUsed": [{ id: string }, null];
+  "hosts.reorder": [{ ids: string[] }, null];
   "groups.create": [{ input: { name: string; parentId?: string | null } }, Record<string, unknown>];
   "groups.update": [
     { id: string; input: { name: string; parentId?: string | null } },
     Record<string, unknown>,
   ];
-  "groups.delete": [{ id: string }, void];
+  "groups.delete": [{ id: string }, null];
   "sessions.list": [Record<string, never>, SshSession[]];
   "sessions.connect": [{ request: SshConnectRequest }, SshSession];
-  "sessions.disconnect": [{ sessionId: string }, void];
+  "sessions.disconnect": [{ sessionId: string }, null];
   "sessions.exec": [
     { sessionId: string; command: string; timeoutMs?: number },
     {
@@ -491,11 +491,11 @@ export interface HostMethodMap {
       signal: string | null;
     },
   ];
-  "terminal.write": [{ sessionId: string; data: string }, void];
-  "terminal.resize": [{ sessionId: string; cols: number; rows: number }, void];
+  "terminal.write": [{ sessionId: string; data: string }, null];
+  "terminal.resize": [{ sessionId: string; cols: number; rows: number }, null];
   "storage.get": [{ key: string }, unknown];
-  "storage.set": [{ key: string; value: unknown }, void];
-  "storage.delete": [{ key: string }, void];
+  "storage.set": [{ key: string; value: unknown }, null];
+  "storage.delete": [{ key: string }, null];
   "workspace.snapshot": [Record<string, never>, Record<string, unknown>];
   "workspace.openPage": [
     { kind: "welcome" | "settings" | "about" | "updates" | "knownHosts" },
@@ -519,10 +519,10 @@ export interface HostMethodMap {
   "workspace.move": [{ tabId: string; paneId: string; beforeTabId?: string | null }, unknown];
   "workspace.returnSidebar": [{ view: "hosts" | "knownHosts" | "plugins" }, unknown];
   "clipboard.readText": [Record<string, never>, string];
-  "clipboard.writeText": [{ text: string }, void];
-  "ui.showMessage": [{ message: string; kind?: "info" | "success" | "error" }, void];
+  "clipboard.writeText": [{ text: string }, null];
+  "ui.showMessage": [{ message: string; kind?: "info" | "success" | "error" }, null];
   "ui.confirm": [{ message: string }, boolean];
-  log: [{ message: string; level?: string }, void];
+  log: [{ message: string; level?: string }, null];
 }
 export interface Host {
   call<M extends keyof HostMethodMap>(
@@ -537,7 +537,7 @@ export interface Host {
     options?: { signal?: AbortSignal; timeoutMs?: number },
   ): Promise<T>;
   describe(): Promise<HostMethodMap["api.describe"][1]>;
-  log(message: string, level?: string): Promise<void>;
+  log(message: string, level?: string): Promise<null>;
 }
 export interface PluginHandlers {
   initialize?(
