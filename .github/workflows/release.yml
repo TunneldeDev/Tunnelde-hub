@@ -49,14 +49,14 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.source.outputs.sha }}
           persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: main
           path: publisher
@@ -80,7 +80,7 @@ jobs:
             }
       - name: Check out current application catalogue
         if: steps.existing.outputs.published != 'true'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: TunneldeDev/Tunnelde
           ref: dev
