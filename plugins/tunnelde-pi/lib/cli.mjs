@@ -319,10 +319,19 @@ export async function runCli({
     );
   const saved = session.cli ?? {};
   let taskId;
-  if (recover && saved.taskId) {
-    const task = await host.call("tasks.status", { taskId: saved.taskId });
-    if (task && ["running", "starting"].includes(task.status))
-      taskId = saved.taskId;
+  if (recover) {
+    if (!saved.taskId)
+      throw new Error("The previous agent task has no live process to reconnect to. Inspect the conversation and start a new message explicitly.");
+    let task;
+    try {
+      task = await host.call("tasks.status", { taskId: saved.taskId });
+    } catch (error) {
+      if (error?.message !== "plugin.tasks.notFound") throw error;
+      throw new Error("The previous agent process is no longer available. Inspect the conversation and start a new message explicitly.");
+    }
+    if (!task || !["running", "starting"].includes(task.status))
+      throw new Error("The previous agent process is no longer running. Inspect the conversation and start a new message explicitly.");
+    taskId = saved.taskId;
   }
   const reattached = !!taskId;
   if (reattached && saved.outputRecoveryUnavailable)
