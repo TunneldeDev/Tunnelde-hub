@@ -6,6 +6,75 @@ import path from "node:path";
 import { runCli, insideRoot, codexPolicy, TaskConnection } from "../lib/cli.mjs";
 import { canonicalWithin } from "../lib/pi-permissions.mjs";
 
+test("large concurrent agent requests respect the host limit and keep frames intact", async () => {
+  const chunks = [];
+  const host = { async call(method, params) {
+    if (method === "tasks.cancel") return true;
+    if (method === "tasks.readOutput") return { status: "running", events: [] };
+    if (method === "tasks.write") {
+      assert.ok(Buffer.byteLength(params.data) <= 128 * 1024);
+      assert.equal(Buffer.from(params.data).toString("utf8"), params.data);
+      chunks.push(params.data);
+      await new Promise((resolve) => setTimeout(resolve, 1));
+      return true;
+    }
+    throw new Error(`Unexpected ${method}`);
+  } };
+  const connection = new TaskConnection(host, "task", { onRecord: async () => {} });
+  const first = { id: 1, text: "界".repeat(32760) + "😀" + "界".repeat(17000) };
+  const second = { id: 2, text: "second" };
+  await Promise.all([connection.write(first), connection.write(second)]);
+  assert.ok(chunks.length > 2);
+  assert.deepEqual(chunks.join("").trimEnd().split("\n").map(JSON.parse), [first, second]);
+  await connection.close();
+  await connection.done;
+});
+
+test("a failed partial agent frame closes the task and rejects queued writes", async () => {
+  let writes = 0, cancelled = 0;
+  const host = { async call(method) {
+    if (method === "tasks.readOutput") return { status: "running", events: [] };
+    if (method === "tasks.cancel") { cancelled++; return true; }
+    if (method === "tasks.write") {
+      writes++;
+      if (writes === 2) throw new Error("disconnected");
+      return true;
+    }
+    throw new Error(`Unexpected ${method}`);
+  } };
+  const connection = new TaskConnection(host, "task", { onRecord: async () => {} });
+  const [first, second] = await Promise.allSettled([
+    connection.write({ text: "x".repeat(70000) }),
+    connection.write({ text: "must not follow a partial frame" }),
+  ]);
+  assert.equal(first.status, "rejected");
+  assert.equal(second.status, "rejected");
+  assert.equal(writes, 2);
+  assert.equal(cancelled, 1);
+  await connection.done;
+});
+
+test("closing a task stops remaining fragments of an in-flight write", async () => {
+  let release, started;
+  const blocked = new Promise((resolve) => { release = resolve; });
+  const firstWrite = new Promise((resolve) => { started = resolve; });
+  let writes = 0;
+  const host = { async call(method) {
+    if (method === "tasks.readOutput") return { status: "running", events: [] };
+    if (method === "tasks.cancel") return true;
+    if (method === "tasks.write") { writes++; started(); await blocked; return true; }
+    throw new Error(`Unexpected ${method}`);
+  } };
+  const connection = new TaskConnection(host, "task", { onRecord: async () => {} });
+  const writing = connection.write({ text: "x".repeat(70000) });
+  await firstWrite;
+  await connection.close();
+  release();
+  await assert.rejects(writing, /task is closed/);
+  assert.equal(writes, 1);
+  await connection.done;
+});
+
 test("recovery never starts a new process when the saved task is gone", async () => {
   for (const result of [null, { status: "completed" }, new Error("plugin.tasks.notFound")]) {
     const calls = [];
