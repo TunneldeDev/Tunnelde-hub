@@ -396,6 +396,54 @@ test("failed request identity persistence never sends a remote operation", async
   assert.deepEqual(calls, ["storage.set"]);
 });
 
+for (const failurePoint of ["send", "poll"]) {
+  test(`remote ${failurePoint} disconnect exposes recovery and never resends`, async () => {
+    const data = new Map();
+    let request, disconnected = true, sends = 0;
+    const host = { async call(method, params) {
+      if (method === "storage.get") return data.get(params.key) ?? null;
+      if (method === "storage.set") { data.set(params.key, structuredClone(params.value)); return null; }
+      if (method === "events.publish") return true;
+      if (method === "secrets.get") return "fixture";
+      if (method === "runners.deploy") return true;
+      if (method === "runners.start") return { runnerId: "runner" };
+      if (method === "runners.send") {
+        sends++;
+        request = structuredClone(params.message);
+        if (disconnected && failurePoint === "send") throw new Error("connection lost");
+        return true;
+      }
+      if (method === "runners.poll") {
+        if (disconnected && failurePoint === "poll") throw new Error("connection lost");
+        return { events: [
+          { seq: 1, message: { type: "response", message: { id: request.id, result: { block: {
+            activeSessionId: "remote", run: { id: request.params.input.runId }, messages: [], tasks: [],
+          } } } } },
+          { seq: 2, message: { type: "event", event: "chat", payload: { runId: request.params.input.runId, type: "done" } } },
+        ] };
+      }
+      throw new Error(`Unexpected ${method}`);
+    } };
+    const engine = new AiPlugin(host);
+    await engine.command("ai.configure", { config: {
+      profiles: [{ id: "main", protocol: "openai-chat", model: "model", helperBinary: "/runner",
+        remote: { sessionId: "ssh", platform: "posix", directory: "/runner", executable: "/node" } }],
+      scope: { sessionIds: ["ssh"], remoteRoots: [{ sessionId: "ssh", path: "/work" }] },
+    } });
+    await preparedRuntime(engine);
+    await engine.command("ai.send", { message: "hello" });
+    await [...engine.runs.values()][0].done;
+    assert.equal(engine.block().run.status, "interrupted");
+    assert.ok(engine.block().tasks.some((task) => task.recoverable && task.status === "interrupted"));
+    assert.equal(data.get("ai.sessions").sessions[0].run.status, "interrupted");
+    disconnected = false;
+    await engine.command("ai.recover", { action: "resume" });
+    await [...engine.runs.values()][0].done;
+    assert.equal(engine.block().run.status, "done");
+    assert.equal(sends, 1);
+  });
+}
+
 test("starting another message clears the preceding remote run before persisting", async () => {
   const data = new Map();
   const host = { async call(method, params) {
