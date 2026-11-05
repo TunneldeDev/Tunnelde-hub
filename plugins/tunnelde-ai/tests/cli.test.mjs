@@ -3,8 +3,31 @@ import assert from "node:assert/strict";
 import { mkdtemp, mkdir, writeFile, symlink, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { runCli, insideRoot, codexPolicy } from "../lib/cli.mjs";
+import { runCli, insideRoot, codexPolicy, TaskConnection } from "../lib/cli.mjs";
 import { canonicalWithin } from "../lib/pi-permissions.mjs";
+
+test("agent output drains after process exit without losing split final records", async () => {
+  let reads = 0;
+  const records = [];
+  const host = {
+    async call(method) {
+      if (method === "tasks.cancel") return true;
+      if (method === "tasks.status") return { status: "completed", exitCode: 0 };
+      if (method !== "tasks.readOutput") throw new Error(`Unexpected ${method}`);
+      reads++;
+      if (reads === 1) return { events: [], status: "running" };
+      if (reads === 2) return { events: [{ seq: 1, stream: "stdout", data: '{"text":' }], status: "completed", exitCode: 0 };
+      return { events: [{ seq: 2, stream: "stdout", data: '"finished"}\n' }], status: "completed", exitCode: 0 };
+    },
+  };
+  const connection = new TaskConnection(host, "task", {
+    onRecord: async (record, channel) => { records.push(record); await channel.close(); },
+  });
+  await connection.done;
+  assert.equal(connection.error, null);
+  assert.deepEqual(records, [{ text: "finished" }]);
+  assert.equal(reads, 3);
+});
 
 function fixture(protocol, { truncated = false, handled = false } = {}) {
   const queue = [],
