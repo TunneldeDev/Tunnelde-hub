@@ -93,6 +93,35 @@ export interface MethodDescription {
   params: string;
   description: string;
 }
+
+/** Snapshot of a ready open editor. Excludes transport credentials and internal state. */
+export interface EditorDocument {
+  tabId: string;
+  documentId: string;
+  version: number;
+  path: string;
+  name: string;
+  content: string;
+  dirty: boolean;
+}
+export interface PluginCommand {
+  id: string;
+  title: string;
+  keybindings?: string[];
+  macKeybindings?: string[];
+  /** Receive the matching document as input.source; return {text:string}. */
+  editor?: { extensions: string[]; format?: boolean };
+}
+export interface EditorCommandInput {
+  source: string;
+  document: Pick<EditorDocument, "tabId" | "documentId" | "version" | "path" | "name">;
+  indent: string;
+  _locale: string;
+}
+export interface EditorCommandResult {
+  text: string;
+  error?: boolean;
+}
 export type ToolMode = "ask" | "approve" | "full" | "readOnly";
 export type RemotePlatform = "posix" | "windows";
 export interface ToolScope {
@@ -274,7 +303,58 @@ export interface PluginChatBlock {
     detail?: string;
   };
 }
+export interface ForwardRule {
+  id: string;
+  hostId: string;
+  name: string;
+  mode: "local" | "remote";
+  bindHost: string;
+  bindPort: number;
+  targetHost: string;
+  targetPort: number;
+}
+export interface ForwardInfo extends ForwardRule {
+  sessionId: string | null;
+  active: boolean;
+}
+export interface MountInfo {
+  id: string;
+  owner: string;
+  sessionId: string;
+  remotePath: string;
+  mountPoint: string;
+  readOnly: boolean;
+  cleanupError: string | null;
+}
+export interface MountDependencies {
+  available: boolean;
+  executable: string | null;
+  platform: string;
+  instructions: string;
+  documentation: string;
+  transport: string | null;
+}
 export interface HostMethodMap {
+  "forwards.list": [Record<string, never>, ForwardInfo[]];
+  "forwards.save": [{ rule: ForwardRule }, ForwardRule];
+  "forwards.remove": [{ id: string }, null];
+  "forwards.start": [{ id: string; sessionId: string }, null];
+  "forwards.stop": [{ id: string }, null];
+  "mounts.dependencies": [Record<string, never>, MountDependencies];
+  "mounts.list": [Record<string, never>, MountInfo[]];
+  "mounts.mount": [
+    { sessionId: string; remotePath: string; mountPoint: string; readOnly?: boolean },
+    MountInfo,
+  ];
+  "mounts.unmount": [{ id: string; force?: boolean }, null];
+  "mounts.browse": [{ sessionId: string; path?: string }, Listing];
+  "mounts.open": [{ id: string }, null];
+  "mounts.documentation": [Record<string, never>, null];
+  "editor.active": [Record<string, never>, EditorDocument | null];
+  "editor.replace": [
+    { tabId: string; documentId: string; version: number; text: string },
+    Pick<EditorDocument, "tabId" | "documentId" | "version" | "dirty">,
+  ];
   "workspace.showQuickAccess": [{ query?: string }, unknown];
   "workspace.setPaneLocked": [{ paneId: string; locked: boolean }, unknown];
   "workspace.resizeSplit": [{ splitId: string; ratio: number }, unknown];

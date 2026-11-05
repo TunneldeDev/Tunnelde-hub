@@ -25,7 +25,10 @@ for (const id of OFFICIAL_NODE_PLUGIN_IDS) {
   const manifest = JSON.parse(
     await readFile(join(root, "plugins", id, "tunnelde-plugin.json"), "utf8"),
   );
-  if ((manifest.runtime ?? "node") === "node" && manifest.permissions.length === 0)
+  if (
+    (manifest.runtime ?? "node") === "node" &&
+    (manifest.permissions.length === 0 || id === "json-formatter")
+  )
     permissionFreeNodePluginIds.push(id);
 }
 
@@ -252,7 +255,11 @@ test("official packages are deterministic independent ZIPs with verifiable hashe
       if (manifest.runtime === "theme") {
         assert.equal(manifest.main, undefined);
         assert.equal(manifest.engines?.node, undefined);
-        assert.ok((manifest.themes?.length ?? 0) > 0 || (manifest.fileIconThemes?.length ?? 0) > 0 || (manifest.filePreviews?.length ?? 0) > 0);
+        assert.ok(
+          (manifest.themes?.length ?? 0) > 0 ||
+            (manifest.fileIconThemes?.length ?? 0) > 0 ||
+            (manifest.filePreviews?.length ?? 0) > 0,
+        );
         assert.equal(
           new Set((manifest.themes ?? []).map((theme) => theme.id)).size,
           (manifest.themes ?? []).length,
@@ -270,7 +277,8 @@ test("official packages are deterministic independent ZIPs with verifiable hashe
       assert.ok(files.has(manifest.readme));
       assert.ok(files.get("LICENSE").equals(await readFile(resolve(root, "LICENSE"))));
     }
-    assert.match(await readFile(join(output, "SHA256SUMS"), "utf8"), /json-formatter-1\.0\.0\.zip/);
+    const formatter = index.plugins.find((entry) => entry.id === "json-formatter");
+    assert.ok((await readFile(join(output, "SHA256SUMS"), "utf8")).includes(formatter.archive));
   } finally {
     await rm(output, { recursive: true, force: true });
   }
