@@ -155,14 +155,14 @@ export function codexPolicy(mode, cwd) {
 }
 
 export class TaskConnection {
-  constructor(host, taskId, { signal, onRecord, onCheckpoint, afterSeq = 0 }) {
+  constructor(host, taskId, { signal, onRecord, onCheckpoint, afterSeq = 0, pendingOutput = "" }) {
     this.host = host;
     this.taskId = taskId;
     this.signal = signal;
     this.onRecord = onRecord;
     this.onCheckpoint = onCheckpoint;
     this.afterSeq = afterSeq;
-    this.buffer = "";
+    this.buffer = pendingOutput;
     this.stderr = "";
     this.sequence = 0;
     this.pending = new Map();
@@ -256,7 +256,12 @@ export class TaskConnection {
           }
         }
       }
-      this.onCheckpoint?.({ taskId: this.taskId, afterSeq: this.afterSeq });
+      // Persist the cursor and its incomplete line together. Large partial
+      // records cannot fit in the bounded conversation store; fail recovery
+      // explicitly instead of resuming from a cursor with missing bytes.
+      const recoverable = Buffer.byteLength(this.buffer) <= 8192;
+      this.onCheckpoint?.({ taskId: this.taskId, afterSeq: this.afterSeq,
+        pendingOutput: recoverable ? this.buffer : "", outputRecoveryUnavailable: !recoverable });
       // readOutput captures status and its event batch under the same host lock.
       // A separate status request can observe exit after the output snapshot and
       // discard the final messages. Drain all terminal batches before failing.
@@ -320,6 +325,8 @@ export async function runCli({
       taskId = saved.taskId;
   }
   const reattached = !!taskId;
+  if (reattached && saved.outputRecoveryUnavailable)
+    throw new Error("Cannot resume this agent task: an incomplete protocol message exceeded the recovery limit. Start a new task from the saved conversation.");
   if (!taskId) {
     const started = await host.call(
       "tasks.start",
@@ -339,7 +346,7 @@ export async function runCli({
     );
     taskId = typeof started === "string" ? started : started?.taskId;
     if (!taskId) throw new Error("Host did not return a CLI task ID");
-    session.cli = { ...saved, taskId, afterSeq: 0, protocol: profile.protocol };
+    session.cli = { ...saved, taskId, afterSeq: 0, pendingOutput: "", outputRecoveryUnavailable: false, protocol: profile.protocol };
   }
   onTask?.({
     id: taskId,
@@ -396,6 +403,7 @@ export async function runCli({
   const connection = new TaskConnection(host, taskId, {
     signal,
     afterSeq: reattached ? (saved.afterSeq ?? 0) : 0,
+    pendingOutput: reattached ? (saved.pendingOutput ?? "") : "",
     onCheckpoint: (value) => {
       Object.assign(session.cli, value);
       checkpoint?.();

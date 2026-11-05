@@ -6,6 +6,70 @@ import path from "node:path";
 import { runCli, insideRoot, codexPolicy, TaskConnection } from "../lib/cli.mjs";
 import { canonicalWithin } from "../lib/pi-permissions.mjs";
 
+test("agent reconnect restores a partial protocol line and its cursor together", async () => {
+  const events = [
+    { seq: 1, stream: "stdout", data: '{"message":"hel' },
+    { seq: 2, stream: "stderr", data: "diagnostic" },
+    { seq: 3, stream: "stdout", data: 'lo"}\n' },
+  ];
+  let save;
+  const checkpoint = new Promise((resolve) => { save = resolve; });
+  const host = {
+    async call(method, params) {
+      if (method === "tasks.cancel") return true;
+      if (method === "tasks.readOutput") return { status: "running", events: events.filter((e) => e.seq > params.afterSeq && e.seq <= 2) };
+      throw new Error(`Unexpected ${method}`);
+    },
+  };
+  const first = new TaskConnection(host, "task", { onRecord: async () => {}, onCheckpoint: save });
+  const saved = await checkpoint;
+  await first.close();
+  await first.done;
+  assert.deepEqual(saved, { taskId: "task", afterSeq: 2, pendingOutput: '{"message":"hel', outputRecoveryUnavailable: false });
+  const received = [];
+  const second = new TaskConnection({
+    async call(method, params) {
+      if (method === "tasks.cancel") return true;
+      if (method === "tasks.readOutput") return { status: "running", events: events.filter((e) => e.seq > params.afterSeq) };
+      throw new Error(`Unexpected ${method}`);
+    },
+  }, "task", { ...saved, onRecord: async (record, channel) => { received.push(record); await channel.close(); } });
+  await second.done;
+  assert.equal(second.error, null);
+  assert.deepEqual(received, [{ message: "hello" }]);
+});
+
+test("oversized partial agent output marks its saved cursor unrecoverable", async () => {
+  let save;
+  const checkpoint = new Promise((resolve) => { save = resolve; });
+  const connection = new TaskConnection({
+    async call(method) {
+      if (method === "tasks.cancel") return true;
+      if (method === "tasks.readOutput") return { status: "running", events: [{ seq: 1, stream: "stdout", data: "x".repeat(8193) }] };
+      throw new Error(`Unexpected ${method}`);
+    },
+  }, "task", { onRecord: async () => {}, onCheckpoint: save });
+  const saved = await checkpoint;
+  await connection.close();
+  await connection.done;
+  assert.equal(saved.outputRecoveryUnavailable, true);
+  assert.equal(saved.pendingOutput, "");
+});
+
+test("agent refuses to resume an incomplete oversized record rather than parsing a corrupted stream", async () => {
+  const calls = [];
+  const host = { async call(method) { calls.push(method); if (method === "tasks.status") return { status: "running" }; throw new Error(`Unexpected ${method}`); } };
+  await assert.rejects(runCli({
+    host,
+    profile: { protocol: "codex", executable: "codex", cwd: "/home/test", sessionId: "ssh" },
+    config: { mode: "ask", scope: { sessionIds: ["ssh"], remoteRoots: [{ sessionId: "ssh", path: "/home/test" }] } },
+    session: { cli: { taskId: "task", afterSeq: 1, outputRecoveryUnavailable: true } },
+    message: "hello", recover: true, signal: new AbortController().signal,
+    onDelta: () => {}, approve: async () => false,
+  }), /incomplete protocol message exceeded the recovery limit/);
+  assert.deepEqual(calls, ["tasks.status"]);
+});
+
 test("agent output drains after process exit without losing split final records", async () => {
   let reads = 0;
   const records = [];
