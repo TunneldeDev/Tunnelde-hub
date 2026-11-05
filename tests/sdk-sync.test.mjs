@@ -6,7 +6,7 @@ import { test } from "node:test";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
-import { syncSdk } from "../scripts/sync-sdk.mjs";
+import { checkMethodTypes, syncSdk } from "../scripts/sync-sdk.mjs";
 
 const run = promisify(execFile);
 const releaseCheck = fileURLToPath(new URL("../scripts/ci/check-release-sdk.mjs", import.meta.url));
@@ -22,6 +22,7 @@ test("SDK check detects host and documentation drift without changing files", as
     const host = join(app, "src-tauri/src/plugins/api.rs");
     const source = 'pub const METHODS: &[ApiMethod] = &[\n    method!("api.describe", [], "{}", "Discover methods."),\n];\n';
     await writeFile(host, source);
+    await writeFile(join(sdk, "tunnelde-plugin.d.mts"), 'export interface HostMethodMap {\n  "api.describe": [Record<string, never>, unknown];\n}\n');
     await syncSdk(app, { sdkDirectory: sdk });
     await syncSdk(app, { sdkDirectory: sdk, check: true });
     await run(process.execPath, [releaseCheck, app, sdk]);
@@ -37,4 +38,14 @@ test("SDK check detects host and documentation drift without changing files", as
   } finally {
     await rm(root, { recursive: true, force: true });
   }
+});
+
+test("SDK method types must cover precisely the host method names", () => {
+  const catalogue = { methods: [{ name: "api.describe" }, { name: "log" }] };
+  const types = 'export interface HostMethodMap {\n  "api.describe": [\n    Record<string, never>,\n    unknown,\n  ];\n  log: [{ message: string }, void];\n}\n';
+  checkMethodTypes(types, catalogue);
+  assert.throws(() => checkMethodTypes(types.replace('  log:', '  extra:'), catalogue), /SDK method types differ/);
+  assert.throws(() => checkMethodTypes(types.replace('  log:', '  "api.describe":'), catalogue), /Duplicate SDK method type/);
+  assert.throws(() => checkMethodTypes(types.replace('  log:', '  [key: string]:'), catalogue), /Unsupported HostMethodMap entry/);
+  assert.throws(() => checkMethodTypes("", catalogue), /HostMethodMap was not found/);
 });

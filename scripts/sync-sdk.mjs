@@ -29,6 +29,24 @@ export function parseRustCatalogue(source) {
   return { version: 1, methods };
 }
 
+export function checkMethodTypes(source, catalogue) {
+  const body = source.match(/^export interface HostMethodMap \{\s*$([\s\S]*?)^\}/m)?.[1];
+  assert.ok(body, "SDK HostMethodMap was not found");
+  const names = [];
+  for (const line of body.split(/\r?\n/)) {
+    if (!/^  \S/.test(line) || /^  \];\s*$/.test(line)) continue;
+    const match = line.match(/^  (?:"([^"\r\n]+)"|([A-Za-z_$][\w$]*)):\s*\[/);
+    assert.ok(match, `Unsupported HostMethodMap entry: ${line.trim()}`);
+    names.push(match[1] ?? match[2]);
+  }
+  assert.equal(new Set(names).size, names.length, "Duplicate SDK method type");
+  const actual = new Set(names);
+  const expected = new Set(catalogue.methods.map(({ name }) => name));
+  const missing = [...expected].filter((name) => !actual.has(name)).sort();
+  const extra = [...actual].filter((name) => !expected.has(name)).sort();
+  assert.deepEqual({ missing, extra }, { missing: [], extra: [] }, "SDK method types differ from host catalogue");
+}
+
 export async function syncSdk(applicationDirectory, { check = false, sdkDirectory = join(root, "sdk") } = {}) {
   const source = resolve(applicationDirectory);
   const catalogue = parseRustCatalogue(
@@ -49,6 +67,9 @@ export async function syncSdk(applicationDirectory, { check = false, sdkDirector
     } else {
       await writeFile(path, expected);
     }
+  }
+  if (check) {
+    checkMethodTypes(await readFile(join(sdkDirectory, "tunnelde-plugin.d.mts"), "utf8"), catalogue);
   }
   return catalogue;
 }
