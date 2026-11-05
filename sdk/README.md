@@ -173,3 +173,7 @@ as a fallback when a completion event is lost.
 
 Run `npm run sdk:sync -- ../Tunnelde` to regenerate both catalogue files from the desktop
 Rust `METHODS` source. This does not change the registry or publish packages.
+Run `npm run sdk:check -- ../Tunnelde` to check the generated files and ensure that
+`HostMethodMap` declares exactly the host's method names. The check does not verify
+parameter or return types, runtime behavior, or compatibility with older plugins;
+those require separate contract and integration tests.
