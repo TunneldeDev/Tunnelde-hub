@@ -272,7 +272,8 @@ export async function invokeTool(host, config, tool, review, signal) {
   const taskId = typeof result === "string" ? result : result?.taskId;
   if (!taskId) throw new Error("Host did not return a command task ID");
   let afterSeq = 0,
-    output = "";
+    output = "",
+    terminalObserved = false;
   try {
     while (true) {
       signal?.throwIfAborted();
@@ -283,15 +284,29 @@ export async function invokeTool(host, config, tool, review, signal) {
       );
       if (batch?.truncated)
         throw new Error("Command output exceeded the recoverable task buffer");
+      let processed = 0;
       for (const event of batch?.events ?? []) {
+        if ((event.seq ?? 0) <= afterSeq) continue;
+        processed++;
         afterSeq = Math.max(afterSeq, event.seq ?? 0);
         output += event.data ?? "";
         if (Buffer.byteLength(output) > 64 * 1024)
           throw new Error("Command output exceeds 64 KiB");
       }
-      const status = await host.call("tasks.status", { taskId }, { signal });
-      if (status && !["running", "starting"].includes(status.status))
-        return { ...status, output };
+      // New hosts capture status and output under the same lock. Older hosts
+      // require one extra read after observing exit to avoid losing its tail.
+      const atomicStatus = typeof batch?.status === "string";
+      const status = atomicStatus ? batch : await host.call("tasks.status", { taskId }, { signal });
+      if (!status?.status) throw new Error("Command task is no longer available");
+      if (!["running", "starting"].includes(status.status)) {
+        if (!processed && (atomicStatus || terminalObserved)) {
+          const final = atomicStatus ? await host.call("tasks.status", { taskId }, { signal }) : status;
+          if (!final?.status) throw new Error("Command task is no longer available");
+          return { ...final, output };
+        }
+        terminalObserved = true;
+        continue;
+      }
       await delay(100, signal);
     }
   } catch (error) {
