@@ -166,6 +166,7 @@ export class TaskConnection {
     this.stderr = "";
     this.sequence = 0;
     this.pending = new Map();
+    this.writeTail = Promise.resolve();
     this.closed = false;
     this.error = null;
     this.onFailure = null;
@@ -183,11 +184,35 @@ export class TaskConnection {
     const data = JSON.stringify(record) + "\n";
     if (Buffer.byteLength(data) > 192 * 1024)
       throw new Error("CLI request exceeds the supported host transport size");
-    await this.host.call(
-      "tasks.write",
-      { taskId: this.taskId, data },
-      { signal: this.signal },
-    );
+    // The host accepts at most 128 KiB per write. Keep frames serialized:
+    // interleaving fragments from concurrent RPCs corrupts the JSON stream.
+    const write = this.writeTail.then(async () => {
+      this.signal?.throwIfAborted();
+      if (this.error) throw this.error;
+      if (this.closed) throw new Error("CLI task is closed");
+      try {
+        for (let offset = 0; offset < data.length;) {
+          this.signal?.throwIfAborted();
+          if (this.closed) throw new Error("CLI task is closed");
+          let end = Math.min(offset + 32768, data.length);
+          // Do not split a UTF-16 surrogate pair across host calls.
+          if (end < data.length && /[\uD800-\uDBFF]/.test(data[end - 1])) end--;
+          await this.host.call(
+            "tasks.write",
+            { taskId: this.taskId, data: data.slice(offset, end) },
+            { signal: this.signal },
+          );
+          offset = end;
+        }
+      } catch (error) {
+        // A partial frame cannot be retried or followed by another frame safely.
+        this.error = error;
+        await this.close();
+        throw error;
+      }
+    });
+    this.writeTail = write.catch(() => {});
+    await write;
   }
   async rpc(method, params = {}) {
     const id = ++this.sequence;
