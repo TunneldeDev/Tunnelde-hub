@@ -401,6 +401,26 @@ test("saved running sessions become interrupted and inspect never replays tools"
     !host.calls.some((item) => /tools.invoke|tasks.start/.test(item.method)),
   );
 });
+test("recovering an API conversation without a durable run preserves history and does not replay", async () => {
+  const { host, engine } = await prepared();
+  const session = engine.newSession();
+  session.history = [{ id: "user", role: "user", content: "Original request" }];
+  session.run = { id: "old", status: "interrupted", profileId: "main", mode: "ask" };
+  const before = structuredClone(session);
+  await assert.rejects(engine.command("ai.recover", { action: "resume", sessionId: session.id }), /cannot be reconnected/);
+  assert.deepEqual(session, before);
+  assert.ok(!host.calls.some((item) => /tasks.start|runners.send|runners.deploy/.test(item.method)));
+  await engine.shutdown();
+});
+
+test("remote recovery without the original run never deploys or sends", async () => {
+  const { host, engine } = await prepared();
+  const session = engine.newSession();
+  session.remote = { runnerId: "runner", runId: null };
+  await assert.rejects(engine.executeRemote({ remote: {} }, {}, session, "ignored", new AbortController().signal, true), /cannot be identified/);
+  assert.ok(!host.calls.some((item) => /runners.send|runners.deploy|runners.start/.test(item.method)));
+  await engine.shutdown();
+});
 test("config rejects insecure endpoints, duplicate profile IDs and implicit CLI executable", () => {
   assert.throws(
     () =>

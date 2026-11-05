@@ -634,6 +634,15 @@ export class AiPlugin {
       ? this.session(input.sessionId)
       : (this.session() ?? this.newSession());
     if (!session) throw new Error("Conversation no longer exists");
+    if (recover) {
+      const durableRemote = !session.execution && !!profile.remote;
+      if (durableRemote && (!session.remote?.runnerId || !session.remote?.runId))
+        throw new Error("The previous remote run cannot be identified. Inspect the conversation and start a new message explicitly.");
+      if (!durableRemote && CLI_PROTOCOLS.has(profile.protocol) && !session.cli?.taskId)
+        throw new Error("The previous agent process cannot be identified. Inspect the conversation and start a new message explicitly.");
+      if (!durableRemote && !CLI_PROTOCOLS.has(profile.protocol))
+        throw new Error("This assistant run cannot be reconnected. Inspect the conversation and start a new message explicitly.");
+    }
     if (!this.host.remote && this.readiness(session, profile.id).status !== "ready")
       throw new Error("Initialize the selected agent on this machine before sending a message");
     if (this.runs.has(session.id))
@@ -677,8 +686,8 @@ export class AiPlugin {
       throw new Error("This run ID has already been used");
     const controller = new AbortController();
     this.activeSessionId = session.id;
-    session.history.push({ id: randomUUID(), role: "user", content: message });
-    if (session.untitled) {
+    if (!recover) session.history.push({ id: randomUUID(), role: "user", content: message });
+    if (!recover && session.untitled) {
       session.title = message.slice(0, 60);
       session.untitled = false;
     }
@@ -1032,6 +1041,8 @@ export class AiPlugin {
     }
   }
   async executeRemote(profile, config, session, message, signal, recover) {
+    if (recover && (!session.remote?.runnerId || !session.remote?.runId))
+      throw new Error("The previous remote run cannot be identified. Inspect the conversation and start a new message explicitly.");
     const remote = profile.remote;
     if (!config.scope.sessionIds.includes(remote.sessionId))
       throw new Error("Remote agent session is outside the authorized scope");
