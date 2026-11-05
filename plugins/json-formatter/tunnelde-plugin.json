@@ -1,7 +1,7 @@
 {
   "id": "json-formatter",
   "name": "JSON Formatter",
-  "version": "1.8.0",
+  "version": "1.8.1",
   "apiVersion": 1,
   "runtime": "node",
   "main": "index.mjs",
@@ -16,6 +16,7 @@
     {
       "id": "pretty",
       "title": "Format JSON",
+      "keybindings": ["Mod+Shift+F"],
       "editor": { "extensions": ["json"], "format": true }
     },
     {
