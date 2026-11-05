@@ -1,5 +1,8 @@
 # Tunnelde plugin SDK
 
+Editor commands, formatting and contributed keybindings:
+[English](../docs/editor-plugins.en-us.md) · [简体中文](../docs/editor-plugins.zh-cn.md).
+
 Copy `tunnelde-plugin.mjs` into an executable Node plugin and import `createPlugin`.
 There are no npm dependencies or implicit runtime downloads. The SDK starts only when
 Tunnelde launches a plugin after the user approves executable code and its declared host
