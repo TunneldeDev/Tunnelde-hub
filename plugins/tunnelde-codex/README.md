@@ -16,6 +16,9 @@ one execution target, and host renames update the displayed target immediately.
 ## Configure and run
 
 This package uses the actual installed `codex app-server` binary.
+Codex 0.167.0 or newer is required for named permission profiles. Older binaries
+must be updated before using this integration; a protocol or sandbox error never
+falls back to unrestricted access.
 
 Codex manages authentication on the selected machine. A default Codex profile is provided. Optional model overrides are separate from execution location.
 
@@ -61,7 +64,12 @@ supervisor. See [setup and migration](https://github.com/TunneldeDev/tunnelde-hu
 separate API reviewer, falling back to a human on missing, malformed, failed or negative
 review. **Full Access** intentionally permits supported unrestricted actions.
 
-ReadOnly uses Codex's restricted read sandbox with platform default roots disabled.
+ReadOnly uses a fresh named Codex permission profile granting read access only to
+the selected workspace, with restricted network access and no inherited default
+filesystem roots. Initialization tests this sandbox with an ephemeral thread and
+no model prompt. If Windows cannot enforce the selected read restrictions, configure
+Codex's native sandbox on that machine and initialize again. The plugin keeps Send
+disabled after a failed check and does not elevate privileges or widen access.
 
 Scope checks and permission prompts do not replace OS isolation. Executable plugins
 run with the user's permissions. API reviewer profiles cannot act as the primary

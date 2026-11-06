@@ -303,12 +303,21 @@ function fixture(protocol, { truncated = false, handled = false, piRecords } = {
         if (protocol === "codex") {
           if (record.method === "initialize")
             push({ jsonrpc: "2.0", id: record.id, result: {} });
-          if (["thread/start", "thread/resume"].includes(record.method))
+          if (["thread/start", "thread/resume"].includes(record.method)) {
+            // app-server uses kebab-case SandboxMode and approval enums here,
+            // unlike the camelCase SandboxPolicy tagged object in turn/start.
+            if (record.params.permissions) {
+              assert.match(record.params.permissions, /^tunnelde-[a-f0-9-]{36}$/);
+              assert.equal(record.params.sandbox, undefined);
+              assert.deepEqual(record.params.config[`permissions.${record.params.permissions}`], { filesystem: { [record.params.cwd]: "read" } });
+            } else assert.ok(["read-only", "workspace-write", "danger-full-access"].includes(record.params.sandbox));
+            assert.ok(["untrusted", "on-request", "never"].includes(record.params.approvalPolicy));
             push({
               jsonrpc: "2.0",
               id: record.id,
               result: { thread: { id: "thread" } },
             });
+          }
           if (record.method === "turn/start") {
             push({
               method: "item/reasoning/summaryTextDelta",
@@ -746,11 +755,24 @@ test("CLI read-only refuses unsupported sandbox modes before spawning", async ()
     );
     assert.equal(calls.length, 0);
   }
-  assert.equal(
-    codexPolicy("readOnly", "/work").sandboxPolicy.access
-      .includePlatformDefaults,
-    false,
-  );
+  const policy = codexPolicy("readOnly", "/work");
+  assert.deepEqual(policy.config[`permissions.${policy.permissions}`], { filesystem: { "/work": "read" } });
+  assert.notEqual(policy.permissions, codexPolicy("readOnly", "/work").permissions);
+});
+test("Codex thread policies use app-server wire enums independently of turn sandbox tags", () => {
+  for (const mode of ["ask", "auto", "readOnly", "full"]) {
+    const policy = codexPolicy(mode, "/work");
+    assert.equal(policy.approvalPolicy, ["full", "readOnly"].includes(mode) ? "never" : "untrusted");
+    if (mode === "full") {
+      assert.equal(policy.sandbox, "danger-full-access");
+      assert.equal(policy.sandboxPolicy.type, "dangerFullAccess");
+      assert.equal(policy.permissions, undefined);
+    } else {
+      assert.match(policy.permissions, /^tunnelde-[a-f0-9-]{36}$/);
+      assert.equal(policy.sandbox, undefined);
+      assert.equal(policy.sandboxPolicy, undefined);
+    }
+  }
 });
 test("CLI truncated transport rejects and cancels, without hanging handshake", async () => {
   const { host, calls } = fixture("codex", { truncated: true });
