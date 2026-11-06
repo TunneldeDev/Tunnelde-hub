@@ -254,6 +254,7 @@ test("denied remote deployment writes nothing and never starts a runtime", async
         kind: "remote",
         sessionId: "ssh",
         hostId: "host",
+        address: "test:22",
         title: "Host",
         home: "/home/test",
         platform: "posix",
@@ -272,6 +273,8 @@ test("failed deployment only removes entries it created, without overwriting exi
     async call(method, params) {
       calls.push({ method, params });
       if (method === "ui.confirm") return true;
+      if (method === "sessions.list") return [{ id: "ssh", hostId: "host", address: "test:22" }];
+      if (method === "files.sftp.resolveDirectory") return { home: "/home/test", path: "/home/test" };
       if (method === "files.sftp.createFile") throw new Error("target exists");
       if (method === "files.sftp.list") return { entries: [] };
       return null;
@@ -282,6 +285,8 @@ test("failed deployment only removes entries it created, without overwriting exi
       host,
       {
         sessionId: "ssh",
+        hostId: "host",
+        address: "test:22",
         title: "Host",
         home: "/home/test",
         platform: "posix",
