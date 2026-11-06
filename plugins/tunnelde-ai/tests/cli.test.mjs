@@ -121,6 +121,56 @@ test("recovery drains a finished agent's retained output without restarting or s
   }
 });
 
+test("Pi reconnect retains a consumed error until settlement without replaying a prompt", async () => {
+  const session = { cli: { taskId: "old-task", afterSeq: 5, piFailure: "401: previous provider failure" } };
+  const calls = [];
+  const host = { async call(method, params) {
+    calls.push(method);
+    if (method === "tasks.status") return { status: "completed", exitCode: 0 };
+    if (method === "tasks.readOutput") {
+      assert.equal(params.afterSeq, 5);
+      return { status: "completed", events: [{ seq: 6, stream: "stdout", data: '{"type":"agent_settled"}\n' }] };
+    }
+    throw new Error(`Unexpected ${method}`);
+  } };
+  await assert.rejects(runCli({ host, profile: { protocol: "pi", executable: "pi", cwd: "C:\\work" },
+    config: { mode: "ask", scope: { localRoots: ["C:\\work"] } }, session, recover: true,
+    signal: new AbortController().signal, onDelta() {}, approve: async () => false }), /401: previous provider failure/);
+  assert.deepEqual(calls, ["tasks.status", "tasks.readOutput"]);
+});
+
+test("Pi starts a new turn without a saved failure from its preceding turn", async () => {
+  const { host } = fixture("pi");
+  const session = { cli: { piFailure: "old error" } };
+  const result = await runCli({ host, profile: { protocol: "pi", executable: "pi", cwd: "C:\\work" },
+    config: { mode: "ask", scope: { localRoots: ["C:\\work"] } }, session, message: "hello",
+    signal: new AbortController().signal, onDelta() {}, approve: async () => false });
+  assert.equal(result.text, "answer");
+  assert.equal(session.cli.piFailure, null);
+});
+
+test("Pi reconnect clears a saved error after a successful retry message", async () => {
+  const session = { cli: { taskId: "old-task", afterSeq: 5, piFailure: "temporary failure" } };
+  const records = [
+    { type: "message_update", assistantMessageEvent: { type: "text_delta", delta: "recovered" } },
+    { type: "message_end", message: { role: "assistant", stopReason: "stop" } },
+    { type: "agent_settled" },
+  ];
+  const calls = [];
+  const host = { async call(method) {
+    calls.push(method);
+    if (method === "tasks.status") return { status: "completed", exitCode: 0 };
+    if (method === "tasks.readOutput") return { status: "completed", events: records.map((record, index) => ({ seq: index + 6, stream: "stdout", data: JSON.stringify(record) + "\n" })) };
+    throw new Error(`Unexpected ${method}`);
+  } };
+  const result = await runCli({ host, profile: { protocol: "pi", executable: "pi", cwd: "C:\\work" },
+    config: { mode: "ask", scope: { localRoots: ["C:\\work"] } }, session, recover: true,
+    signal: new AbortController().signal, onDelta() {}, approve: async () => false });
+  assert.equal(result.text, "recovered");
+  assert.equal(session.cli.piFailure, null);
+  assert.deepEqual(calls, ["tasks.status", "tasks.readOutput"]);
+});
+
 test("finished agent recovery never approves stale requests or sends replies", async () => {
   const calls = [];
   let approvals = 0;
