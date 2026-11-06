@@ -86,6 +86,10 @@ test("native Claude distinguishes signed-out state, initializes and reports prov
     assert.equal(requests, 0);
     withKey = true;
     await prepareAgent(host, profile, execution, {}, AbortSignal.timeout(35000), { approved: true });
+    await prepareAgent(host, profile, execution, {}, AbortSignal.timeout(35000), { approved: true, mode: "full" });
+    const beforeReadOnly = tasks.size;
+    await assert.rejects(prepareAgent(host, profile, execution, {}, AbortSignal.timeout(35000), { approved: true, mode: "readOnly" }), /ReadOnly CLI execution requires/);
+    assert.equal(tasks.size, beforeReadOnly, "unsupported read-only mode must not start an agent");
     assert.equal(requests, 0, "initialization must not submit a model prompt");
     await assert.rejects(runCli({ host, profile,
       config: { mode: "ask", scope: { localRoots: [execution.cwd], remoteRoots: [], sessionIds: [] } },

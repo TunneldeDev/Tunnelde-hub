@@ -1,12 +1,12 @@
 import path from "node:path";
-import { TaskConnection, cliArguments, codexPolicy } from "./cli.mjs";
+import { TaskConnection, cliArguments, codexPolicy, assertCliMode } from "./cli.mjs";
 import { CLI_PROTOCOLS } from "./config.mjs";
 import { delay } from "./tools.mjs";
 import { deployFiles, runtimeFiles } from "./deployment.mjs";
 import { PLUGIN_ID } from "./identity.mjs";
 
-export function preparationKey(profile, execution, revision) {
-  return JSON.stringify({ profile, execution, revision });
+export function preparationKey(profile, execution, revision, mode = "ask") {
+  return JSON.stringify({ profile, execution, revision, mode });
 }
 export const executionKey = (execution) => JSON.stringify([
   execution?.kind || "local", execution?.sessionId || "", execution?.hostId || "",
@@ -85,7 +85,8 @@ export async function probeNode(host, execution, signal) {
 
 /** Exercise the agent's real structured protocol without sending a user prompt. */
 export async function probeCli(host, profile, execution, signal, mode = "ask") {
-  const args = cliArguments(profile, "ask");
+  assertCliMode(profile, mode);
+  const args = cliArguments(profile, mode);
   if (profile.protocol === "pi") {
     // No prompts run in preflight; the permission extension is deployed only for
     // actual runs. Its local plugin path must never be sent to a remote machine.
@@ -170,6 +171,7 @@ export async function probeCli(host, profile, execution, signal, mode = "ask") {
 
 export async function prepareAgent(host, profile, execution, session, signal, { approved = false, checkpoint, mode = "ask" } = {}) {
   const cli = CLI_PROTOCOLS.has(profile.protocol);
+  if (cli) assertCliMode(profile, mode);
   if (execution.kind === "local" && !cli) return { detail: "API provider configured" };
   const allowed = approved || await host.call("ui.confirm", {
     message: `Initialize ${profile.name} on ${execution.title}?\n\n${cli ? `Start ${profile.executable} and check its structured agent protocol` : `Run ${execution.runtime || "a selected Node runtime"} to verify Node.js 22+ and initialize a remote worker. Uploading plugin source into a new private directory requires separate approval`}. No chat prompt will be sent. Existing Node runtimes may be used only after this approval. Installation requires a separate approval.`,

@@ -9,7 +9,7 @@ export async function preparedRuntime(engine) {
   const execution = profile.remote && !session.execution ? null :
     await resolveExecution(engine.host, session.execution, engine.config, profile);
   session.execution = execution;
-  engine.preparations.set(preparationKey(profile, execution, engine.configRevision), {
+  engine.preparations.set(preparationKey(profile, execution, engine.configRevision, session.mode ?? session.run?.mode ?? engine.config.mode), {
     status: "ready", profileId: profile.id, detail: "Test fixture initialized",
   });
 }

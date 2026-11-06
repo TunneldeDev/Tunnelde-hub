@@ -1,7 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { AiPlugin } from "../lib/engine.mjs";
-import { checkedTask, prepareAgent } from "../lib/readiness.mjs";
+import { checkedTask, prepareAgent, probeCli } from "../lib/readiness.mjs";
+import { AiPlugin as CodexPlugin } from "../../tunnelde-codex/lib/engine.mjs";
+import { AiPlugin as PiPlugin } from "../../tunnelde-pi/lib/engine.mjs";
 import { installAgent, nodeInstallScript } from "../lib/installation.mjs";
 
 const execution = { kind: "remote", sessionId: "ssh", hostId: "server", address: "test:22", title: "Server", home: "/home/test", cwd: "/home/test", runtime: "/opt/node", platform: "posix" };
@@ -42,7 +44,7 @@ function fixture({ consent = true, failNode = false, authenticated = true, waiti
         if (record.method === "initialize") result = { ok: true };
         if (record.method === "account/read") result = { requiresOpenaiAuth: true, account: authenticated ? { type: "chatgpt" } : null };
         if (record.method === "thread/start") {
-          if (sandboxFailure) task.events.push({ seq: ++seq, stream: "stdout", data: JSON.stringify({ id: record.id, error: { message: "native sandbox unavailable" } }) + "\n" });
+          if (sandboxFailure && record.params.sandbox !== "danger-full-access") task.events.push({ seq: ++seq, stream: "stdout", data: JSON.stringify({ id: record.id, error: { message: "native sandbox unavailable" } }) + "\n" });
           else result = { thread: { id: "probe" } };
         }
         if (result) task.events.push({ seq: ++seq, stream: "stdout", data: JSON.stringify({ jsonrpc: "2.0", id: record.id, result }) + "\n" });
@@ -111,6 +113,63 @@ test("Codex preparation validates the selected sandbox without a prompt or permi
   await prepareAgent(full, selected, { ...execution }, {}, undefined, { mode: "full" });
   const fullRecords = full.calls.filter(call => call.method === "tasks.write").map(call => JSON.parse(call.params.data));
   assert.equal(fullRecords.find(record => record.method === "thread/start").params.sandbox, "danger-full-access");
+});
+
+test("unsupported CLI read-only modes fail before consent, installation or starting processes", async () => {
+  for (const protocol of ["claude-code", "pi"]) {
+    for (const kind of ["local", "remote"]) {
+      const host = fixture();
+      const selected = { ...profile, protocol, executable: protocol };
+      const target = { ...execution, kind };
+      await assert.rejects(prepareAgent(host, selected, target, {}, undefined, { mode: "readOnly" }), /ReadOnly CLI execution requires/);
+      await assert.rejects(probeCli(host, selected, target, undefined, "readOnly"), /ReadOnly CLI execution requires/);
+      assert.deepEqual(host.calls, []);
+    }
+  }
+  const host = fixture();
+  const engine = new PiPlugin(host);
+  await engine.command("ai.configure", { config: { profiles: [{ ...profile, protocol: "pi", executable: "pi" }], scope: {} } });
+  host.calls.length = 0;
+  await assert.rejects(engine.command("ai.install", { mode: "readOnly" }), /ReadOnly CLI execution requires/);
+  assert.equal(engine.preparing, false);
+  assert.equal(host.calls.some(call => ["tasks.start", "ui.confirm"].includes(call.method)), false);
+  await engine.shutdown();
+});
+
+test("Claude protocol initialization exercises the selected native permission mode", async () => {
+  const host = fixture();
+  await probeCli(host, { ...profile, protocol: "claude-code", executable: "claude" }, { ...execution }, undefined, "full");
+  const args = host.calls.find(call => call.method === "tasks.start").params.args;
+  assert.ok(args.includes("bypassPermissions"));
+  assert.ok(args.includes("--dangerously-skip-permissions"));
+  assert.ok([...host.tasks.values()].every(task => task.status === "cancelled"));
+});
+
+test("mode-specific initialization cannot enable Send for another policy", async () => {
+  const host = fixture({ sandboxFailure: true });
+  const engine = new CodexPlugin(host);
+  await engine.command("ai.configure", { config: { profiles: [{ ...profile, protocol: "codex", executable: "codex" }], scope: {} } });
+  await engine.command("ai.target", { targetId: "ssh" });
+  engine.session().run = { id: "old-completed-run", status: "done", mode: "ask" };
+  await engine.command("ai.prepare", { mode: "full" });
+  await engine.preparationPromise;
+  assert.equal(engine.block().mode, "full");
+  assert.equal(engine.block().readiness.mode, "full");
+  assert.equal(engine.block().readiness.status, "ready");
+  await assert.rejects(engine.command("ai.send", { message: "Never queued", mode: "ask" }), /Initialize/);
+  assert.equal(engine.session().history.length, 0);
+  const changed = await engine.command("ai.target", { targetId: "ssh", mode: "ask" });
+  assert.equal(changed.block.readiness.status, "required");
+  await engine.command("ai.prepare", {});
+  await engine.preparationPromise;
+  assert.equal(engine.block().readiness.status, "error");
+  assert.match(engine.block().readiness.detail, /native sandbox unavailable/);
+  assert.equal(engine.block().readiness.mode, "ask");
+  const restored = await engine.command("ai.target", { targetId: "ssh", mode: "full" });
+  assert.equal(restored.block.readiness.status, "ready");
+  assert.equal(restored.block.readiness.mode, "full");
+  assert.equal(host.calls.filter(call => call.method === "tasks.write").some(call => JSON.parse(call.params.data).method === "turn/start"), false);
+  await engine.shutdown();
 });
 
 test("declining initialization never probes Node, uploads files or starts an agent", async () => {
