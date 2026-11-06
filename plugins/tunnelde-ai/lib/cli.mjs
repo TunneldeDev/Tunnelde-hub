@@ -153,6 +153,13 @@ export function codexPolicy(mode, cwd) {
       };
 }
 
+export function assertCliMode(profile, mode) {
+  if (mode === "readOnly" && profile.protocol !== "codex")
+    throw new Error(
+      "ReadOnly CLI execution requires Codex's restricted read sandbox. Claude Code and Pi do not provide a verifiable OS read sandbox; choose an API profile for scoped read-only work",
+    );
+}
+
 export class TaskConnection {
   constructor(host, taskId, { signal, onRecord, onCheckpoint, afterSeq = 0, pendingOutput = "", outputOnly = false }) {
     this.host = host;
@@ -332,10 +339,7 @@ export async function runCli({
   recover = false,
 }) {
   assertCliScope(profile, config.scope);
-  if (config.mode === "readOnly" && profile.protocol !== "codex")
-    throw new Error(
-      "ReadOnly CLI execution requires Codex's restricted read sandbox. Claude Code and Pi do not provide a verifiable OS read sandbox; choose an API profile for scoped read-only work",
-    );
+  assertCliMode(profile, config.mode);
   if (
     profile.sessionId &&
     profile.protocol === "pi" &&

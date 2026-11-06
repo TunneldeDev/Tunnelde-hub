@@ -29,8 +29,10 @@ Opening the view or selecting a target does not start an agent or discover user 
 Before the first message on a machine, **Initialize** replaces Send. Initialization asks
 for consent, checks the selected runtime and the agent's native structured protocol,
 and sends no model prompt. Errors appear beside the composer and keep your draft.
-You can cancel initialization. Changing the provider, executable, workspace or machine
-requires another check; readiness is not persisted across plugin restarts.
+You can cancel initialization. Changing the provider, executable, workspace, machine
+or permission mode requires another check; readiness is not persisted across plugin
+restarts. Initialization validates the selected permission mode without a model prompt.
+A successful check for one mode never enables sending in another mode.
 
 On supported SSH hosts, **Install and initialize** offers an explicit approved private
 installation. Local agents must be installed with their official installer, authenticated,

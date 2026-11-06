@@ -32,8 +32,10 @@ and sends no model prompt. Errors appear beside the composer and keep your draft
 Signed-out native responses show the selected machine's login command. Provider
 retries appear as one expandable activity with the attempt, delay and HTTP status;
 the agent retains control of retry policy and reports its final error.
-You can cancel initialization. Changing the provider, executable, workspace or machine
-requires another check; readiness is not persisted across plugin restarts.
+You can cancel initialization. Changing the provider, executable, workspace, machine
+or permission mode requires another check; readiness is not persisted across plugin
+restarts. Initialization validates the selected permission mode without a model prompt.
+A successful check for one mode never enables sending in another mode.
 
 On supported SSH hosts, **Install and initialize** offers an explicit approved private
 installation. Local agents must be installed with their official installer, authenticated,

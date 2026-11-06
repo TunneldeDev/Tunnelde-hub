@@ -24,7 +24,7 @@ import {
   toolInvocation,
   delay,
 } from "./tools.mjs";
-import { runCli } from "./cli.mjs";
+import { runCli, assertCliMode } from "./cli.mjs";
 import {
   resolveExecution,
   executionConfig,
@@ -237,23 +237,23 @@ export class AiPlugin {
         previous?.run?.profileId ??
         previous?.profileId ??
         this.config.activeProfileId,
-      mode: previous?.run?.mode ?? previous?.mode ?? this.config.mode,
+      mode: previous?.mode ?? previous?.run?.mode ?? this.config.mode,
       createdAt: Date.now(),
     };
     this.sessions.push(session);
     this.activeSessionId = session.id;
     return session;
   }
-  readiness(session = this.session(), profileId) {
+  readiness(session = this.session(), profileId, mode = session?.mode ?? session?.run?.mode ?? this.config.mode) {
     const profile = this.config.profiles.find((item) => item.id === (profileId || session?.profileId || this.config.activeProfileId));
     const targetKey = executionKey(session?.execution);
-    if (!profile) return { status: "required", profileId: "", targetKey, detail: "Choose an AI provider first" };
+    if (!profile) return { status: "required", profileId: "", targetKey, mode, detail: "Choose an AI provider first" };
     if (this.preparation && this.preparation.sessionId === session?.id && this.preparation.profileId === profile.id && this.preparing)
-      return { status: "checking", profileId: profile.id, targetKey, detail: this.preparation.install ? "Installing and initializing the selected agent" : "Initializing the selected agent" };
+      return { status: "checking", profileId: profile.id, targetKey, mode, detail: this.preparation.install ? "Installing and initializing the selected agent" : "Initializing the selected agent" };
     if (!CLI_PROTOCOLS.has(profile.protocol) && session?.execution?.kind !== "remote" && !profile.remote)
-      return { status: "ready", profileId: profile.id, targetKey, detail: "API provider configured" };
-    return { ...(this.preparations.get(preparationKey(profile, session?.execution ?? null, this.configRevision)) ??
-      { status: "required", profileId: profile.id, detail: "Initialize the selected agent before sending messages" }), targetKey };
+      return { status: "ready", profileId: profile.id, targetKey, mode, detail: "API provider configured" };
+    return { ...(this.preparations.get(preparationKey(profile, session?.execution ?? null, this.configRevision, mode)) ??
+      { status: "required", profileId: profile.id, detail: "Initialize the selected agent before sending messages" }), targetKey, mode };
   }
   block() {
     const session = this.session();
@@ -279,7 +279,7 @@ export class AiPlugin {
         ...(run?.id ? { runId: run.id } : {}),
       })),
       activeSessionId: session?.id ?? null,
-      mode: session?.run?.mode ?? session?.mode ?? this.config.mode,
+      mode: this.runs.has(session?.id) ? session.run.mode : session?.mode ?? session?.run?.mode ?? this.config.mode,
       models: this.config.profiles
         .filter((profile) =>
           PROFILE_POLICY.primaryProtocols.includes(profile.protocol),
@@ -634,12 +634,13 @@ export class AiPlugin {
       throw new Error(
         "This profile can only review actions; select this plugin's primary protocol",
       );
-    const mode = input.mode ?? this.config.mode;
-    if (!MODES.includes(mode)) throw new Error("Invalid permission mode");
     const session = input.sessionId
       ? this.session(input.sessionId)
       : (this.session() ?? this.newSession());
     if (!session) throw new Error("Conversation no longer exists");
+    const mode = input.mode ?? session.mode ?? session.run?.mode ?? this.config.mode;
+    if (!MODES.includes(mode)) throw new Error("Invalid permission mode");
+    if (CLI_PROTOCOLS.has(profile.protocol)) assertCliMode(profile, mode);
     if (recover) {
       const durableRemote = !session.execution && !!profile.remote;
       if (durableRemote && (!session.remote?.runnerId || !session.remote?.runId))
@@ -649,7 +650,7 @@ export class AiPlugin {
       if (!durableRemote && !CLI_PROTOCOLS.has(profile.protocol))
         throw new Error("This assistant run cannot be reconnected. Inspect the conversation and start a new message explicitly.");
     }
-    if (!this.host.remote && this.readiness(session, profile.id).status !== "ready")
+    if (!this.host.remote && this.readiness(session, profile.id, mode).status !== "ready")
       throw new Error("Initialize the selected agent on this machine before sending a message");
     if (this.runs.has(session.id))
       throw new Error("This conversation already has an active agent");
@@ -679,7 +680,7 @@ export class AiPlugin {
       );
     if (execution) {
       if (!this.host.remote && (CLI_PROTOCOLS.has(profile.protocol) || execution.kind === "remote") &&
-          this.preparations.get(preparationKey(profile, execution, this.configRevision))?.status !== "ready")
+          this.preparations.get(preparationKey(profile, execution, this.configRevision, mode))?.status !== "ready")
         throw new Error("The execution connection changed. Initialize this target again before sending messages.");
       session.execution = execution;
       session.profileId = profile.id;
@@ -692,6 +693,7 @@ export class AiPlugin {
       throw new Error("This run ID has already been used");
     const controller = new AbortController();
     this.activeSessionId = session.id;
+    session.mode = mode;
     if (!recover) session.history.push({ id: randomUUID(), role: "user", content: message });
     if (!recover && session.untitled) {
       session.title = message.slice(0, 60);
@@ -1035,7 +1037,7 @@ export class AiPlugin {
         const text = redact(error?.message ?? error, [secret]);
         const original = this.config.profiles.find((item) => item.id === profile.id);
         if (original && (CLI_PROTOCOLS.has(profile.protocol) || session.execution?.kind === "remote"))
-          this.preparations.set(preparationKey(original, session.execution, this.configRevision), {
+          this.preparations.set(preparationKey(original, session.execution, this.configRevision, config.mode), {
             status: "error", profileId: profile.id, detail: text,
           });
         session.history.push({
@@ -1353,12 +1355,16 @@ export class AiPlugin {
       if (!profile || !PROFILE_POLICY.primaryProtocols.includes(profile.protocol))
         throw new Error("Configure and select an AI provider first");
       const session = this.session(input.sessionId) ?? this.newSession();
+      const mode = input.mode ?? session.mode ?? session.run?.mode ?? this.config.mode;
+      if (!MODES.includes(mode)) throw new Error("Invalid permission mode");
+      if (CLI_PROTOCOLS.has(profile.protocol)) assertCliMode(profile, mode);
       if (profile.remote && !session.execution)
         throw new Error("Select Local or a connected SSH host in Execution location before initializing this legacy persistent profile.");
       this.preparing = true;
       const controller = new AbortController();
       this.preparation = { sessionId: session.id, profileId: profile.id, install: command === "ai.install", controller };
       session.profileId = profile.id;
+      session.mode = mode;
       this.preparationPromise = (async () => {
         let execution = session.execution;
         try {
@@ -1366,14 +1372,14 @@ export class AiPlugin {
           controller.signal.throwIfAborted();
           if (command === "ai.install") await installAgent(this.host, profile, execution, this.fetchImpl, controller.signal);
           session.execution = execution;
-          const result = await prepareAgent(this.host, executionProfile(profile, execution), execution, session, controller.signal, { approved: command === "ai.install", checkpoint: () => this.persist(), mode: this.config.mode });
+          const result = await prepareAgent(this.host, executionProfile(profile, execution), execution, session, controller.signal, { approved: command === "ai.install", checkpoint: () => this.persist(), mode });
           controller.signal.throwIfAborted();
-          this.preparations.set(preparationKey(profile, execution, this.configRevision), {
+          this.preparations.set(preparationKey(profile, execution, this.configRevision, mode), {
             status: "ready", profileId: profile.id, detail: result.detail,
           });
         } catch (error) {
           session.execution = execution;
-          this.preparations.set(preparationKey(profile, execution, this.configRevision), {
+          this.preparations.set(preparationKey(profile, execution, this.configRevision, mode), {
             status: "error", profileId: profile.id, detail: String(error.message).slice(0, 4000),
           });
         } finally {
