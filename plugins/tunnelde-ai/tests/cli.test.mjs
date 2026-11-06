@@ -76,7 +76,7 @@ test("closing a task stops remaining fragments of an in-flight write", async () 
 });
 
 test("recovery never starts a new process when the saved task is gone", async () => {
-  for (const result of [null, { status: "completed" }, new Error("plugin.tasks.notFound")]) {
+  for (const result of [null, new Error("plugin.tasks.notFound")]) {
     const calls = [];
     const host = { async call(method) {
       calls.push(method);
@@ -93,6 +93,51 @@ test("recovery never starts a new process when the saved task is gone", async ()
     }), /previous agent process is no longer/);
     assert.deepEqual(calls, ["tasks.status"]);
   }
+});
+
+test("recovery drains a finished agent's retained output without restarting or sending", async () => {
+  for (const [protocol, records] of [
+    ["codex", [{ method: "item/agentMessage/delta", params: { delta: "answer" } }, { method: "turn/completed", params: { turn: { status: "completed" } } }]],
+    ["claude-code", [{ type: "result", subtype: "success", result: "answer" }]],
+    ["pi", [{ type: "message_update", assistantMessageEvent: { type: "text_delta", delta: "answer" } }, { type: "agent_settled" }]],
+  ]) {
+    const calls = [];
+    let text = "";
+    const host = { async call(method) {
+      calls.push(method);
+      if (method === "tasks.status") return { status: "completed", exitCode: 0 };
+      if (method === "tasks.readOutput") return { status: "completed", events: records.map((record, i) => ({ seq: i + 1, stream: "stdout", data: JSON.stringify(record) + "\n" })) };
+      throw new Error(`Unexpected ${method}`);
+    } };
+    const result = await runCli({
+      host, profile: { name: protocol, protocol, executable: protocol, cwd: "/home/test", sessionId: "ssh", permissionExtension: "/home/test/ext.mjs" },
+      config: { mode: "ask", scope: { sessionIds: ["ssh"], remoteRoots: [{ sessionId: "ssh", path: "/home/test" }] } },
+      session: { cli: { taskId: "old-task" } }, message: "do not resend", recover: true,
+      signal: new AbortController().signal, onDelta: (delta) => { text += delta; }, approve: async () => { throw new Error("unexpected approval"); },
+    });
+    assert.equal(result.text, "answer");
+    assert.equal(text, "answer");
+    assert.deepEqual(calls, ["tasks.status", "tasks.readOutput"]);
+  }
+});
+
+test("finished agent recovery never approves stale requests or sends replies", async () => {
+  const calls = [];
+  let approvals = 0;
+  const host = { async call(method) {
+    calls.push(method);
+    if (method === "tasks.status") return { status: "failed" };
+    if (method === "tasks.readOutput") return { status: "failed", events: [{ seq: 1, stream: "stdout", data: JSON.stringify({ id: 12, method: "item/commandExecution/requestApproval", params: { command: "echo test" } }) + "\n" }] };
+    throw new Error(`Unexpected ${method}`);
+  } };
+  await assert.rejects(runCli({
+    host, profile: { name: "Codex", protocol: "codex", executable: "codex", cwd: "/home/test", sessionId: "ssh" },
+    config: { mode: "ask", scope: { sessionIds: ["ssh"], remoteRoots: [{ sessionId: "ssh", path: "/home/test" }] } },
+    session: { cli: { taskId: "old-task" } }, message: "do not resend", recover: true,
+    signal: new AbortController().signal, onDelta: () => {}, approve: async () => { approvals++; return true; },
+  }), /unanswered request/);
+  assert.equal(approvals, 0);
+  assert.deepEqual(calls, ["tasks.status", "tasks.readOutput"]);
 });
 
 test("agent reconnect restores a partial protocol line and its cursor together", async () => {
