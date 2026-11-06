@@ -384,7 +384,7 @@ export async function runCli({
     );
     taskId = typeof started === "string" ? started : started?.taskId;
     if (!taskId) throw new Error("Host did not return a CLI task ID");
-    session.cli = { ...saved, taskId, afterSeq: 0, pendingOutput: "", outputRecoveryUnavailable: false, protocol: profile.protocol };
+    session.cli = { ...saved, taskId, afterSeq: 0, pendingOutput: "", outputRecoveryUnavailable: false, piFailure: null, protocol: profile.protocol };
   }
   onTask?.({
     id: taskId,
@@ -396,7 +396,7 @@ export async function runCli({
     fail,
     text = "",
     complete = false;
-  let piFailure = null;
+  let piFailure = reattached && typeof saved.piFailure === "string" ? saved.piFailure : null;
   const initializationId = randomUUID();
   let claudeMessage = 0;
   const streamedThinking = new Set();
@@ -699,6 +699,7 @@ export async function runCli({
           piFailure = ["error", "aborted"].includes(message.stopReason)
             ? message.errorMessage || `Pi response ${message.stopReason}`
             : null;
+          session.cli.piFailure = piFailure;
         }
         if (
           record.type === "message_update" &&
