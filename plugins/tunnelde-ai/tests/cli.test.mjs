@@ -227,7 +227,7 @@ test("agent output drains after process exit without losing split final records"
   assert.equal(reads, 3);
 });
 
-function fixture(protocol, { truncated = false, handled = false } = {}) {
+function fixture(protocol, { truncated = false, handled = false, piRecords } = {}) {
   const queue = [],
     writes = [],
     calls = [];
@@ -399,6 +399,10 @@ function fixture(protocol, { truncated = false, handled = false } = {}) {
               data: { sessionFile: "/work/session.jsonl" },
             });
           if (record.type === "prompt") {
+            if (piRecords) {
+              for (const item of piRecords) push(item);
+              return true;
+            }
             if (handled) {
               push({
                 type: "response",
@@ -636,6 +640,47 @@ for (const protocol of ["codex", "claude-code", "pi"]) {
       );
   });
 }
+for (const stopReason of ["error", "aborted"]) {
+  test(`Pi reports a final ${stopReason} instead of an empty successful turn`, async () => {
+    const { host, calls } = fixture("pi", { piRecords: [
+      { type: "message_end", message: { role: "assistant", stopReason, errorMessage: "401: invalid test credentials" } },
+      { type: "agent_end" },
+      { type: "agent_settled" },
+    ] });
+    await assert.rejects(runCli({ host, profile: { protocol: "pi", executable: "pi", cwd: "C:\\work" },
+      config: { mode: "ask", scope: { localRoots: ["C:\\work"] } }, session: {}, message: "hello",
+      signal: new AbortController().signal, onDelta() {}, approve: async () => false }), /401: invalid test credentials/);
+    assert.ok(calls.some((call) => call.method === "tasks.cancel"));
+  });
+}
+
+test("Pi waits for retry and uses the last assistant outcome", async () => {
+  const { host, calls } = fixture("pi", { piRecords: [
+    { type: "message_end", message: { role: "assistant", stopReason: "error", errorMessage: "temporary unavailable" } },
+    { type: "agent_end" },
+    { type: "auto_retry_start" },
+    { type: "message_update", assistantMessageEvent: { type: "text_delta", delta: "recovered" } },
+    { type: "message_end", message: { role: "assistant", stopReason: "stop" } },
+    { type: "message_end", message: { role: "toolResult" } },
+    { type: "agent_settled" },
+  ] });
+  const result = await runCli({ host, profile: { protocol: "pi", executable: "pi", cwd: "C:\\work" },
+    config: { mode: "ask", scope: { localRoots: ["C:\\work"] } }, session: {}, message: "hello",
+    signal: new AbortController().signal, onDelta() {}, approve: async () => false });
+  assert.equal(result.text, "recovered");
+  assert.ok(calls.some((call) => call.method === "tasks.cancel"));
+});
+
+test("Pi gives a useful fallback when the final error omits its message", async () => {
+  const { host } = fixture("pi", { piRecords: [
+    { type: "message_end", message: { role: "assistant", stopReason: "error" } },
+    { type: "agent_settled" },
+  ] });
+  await assert.rejects(runCli({ host, profile: { protocol: "pi", executable: "pi", cwd: "C:\\work" },
+    config: { mode: "ask", scope: { localRoots: ["C:\\work"] } }, session: {}, message: "hello",
+    signal: new AbortController().signal, onDelta() {}, approve: async () => false }), /Pi response error/);
+});
+
 test("CLI read-only refuses unsupported sandbox modes before spawning", async () => {
   for (const protocol of ["claude-code", "pi"]) {
     const { host, calls } = fixture(protocol);
