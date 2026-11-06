@@ -35,3 +35,41 @@ test("audit fails after its bounded retry count", async () => {
   await assert.rejects(fetchArchive(entry, { fetcher: async () => { calls++; return new Response("busy", { status: 503 }); }, wait: async () => {} }), /HTTP 503/);
   assert.equal(calls, 3);
 });
+
+test("audit retries a broken response body from the beginning and verifies the full archive", async () => {
+  let calls = 0;
+  const waits = [];
+  await fetchArchive(entry, {
+    fetcher: async () => {
+      calls++;
+      if (calls === 1) return new Response(new ReadableStream({
+        start(controller) { controller.enqueue(bytes.subarray(0, 4)); },
+        pull(controller) { controller.error(new Error("connection reset")); },
+      }));
+      return new Response(bytes);
+    },
+    wait: async (ms) => waits.push(ms),
+  });
+  assert.equal(calls, 2);
+  assert.deepEqual(waits, [1000]);
+});
+
+test("audit gives up after repeated body failures and never retries an oversized archive", async () => {
+  let calls = 0;
+  await assert.rejects(fetchArchive(entry, {
+    fetcher: async () => { calls++; return new Response(new ReadableStream({
+      pull(controller) { controller.error(new Error("broken stream")); },
+    })); },
+    wait: async () => {},
+  }), /broken stream/);
+  assert.equal(calls, 3);
+  calls = 0;
+  const chunk = new Uint8Array(1024 * 1024);
+  await assert.rejects(fetchArchive(entry, {
+    fetcher: async () => { calls++; let count = 0; return new Response(new ReadableStream({
+      pull(controller) { if (++count <= 65) controller.enqueue(chunk); else controller.close(); },
+    })); },
+    wait: async () => {},
+  }), /archive exceeds limit/);
+  assert.equal(calls, 1);
+});
