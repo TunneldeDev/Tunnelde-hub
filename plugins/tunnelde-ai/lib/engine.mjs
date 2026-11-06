@@ -1366,7 +1366,7 @@ export class AiPlugin {
           controller.signal.throwIfAborted();
           if (command === "ai.install") await installAgent(this.host, profile, execution, this.fetchImpl, controller.signal);
           session.execution = execution;
-          const result = await prepareAgent(this.host, executionProfile(profile, execution), execution, session, controller.signal, { approved: command === "ai.install", checkpoint: () => this.persist() });
+          const result = await prepareAgent(this.host, executionProfile(profile, execution), execution, session, controller.signal, { approved: command === "ai.install", checkpoint: () => this.persist(), mode: this.config.mode });
           controller.signal.throwIfAborted();
           this.preparations.set(preparationKey(profile, execution, this.configRevision), {
             status: "ready", profileId: profile.id, detail: result.detail,

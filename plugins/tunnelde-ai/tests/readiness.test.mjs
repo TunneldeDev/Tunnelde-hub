@@ -7,7 +7,7 @@ import { installAgent, nodeInstallScript } from "../lib/installation.mjs";
 const execution = { kind: "remote", sessionId: "ssh", hostId: "server", address: "test:22", title: "Server", home: "/home/test", cwd: "/home/test", runtime: "/opt/node", platform: "posix" };
 const profile = { id: "api", name: "API", protocol: "openai-chat", model: "test" };
 
-function fixture({ consent = true, failNode = false, authenticated = true, waiting = false, authStatus } = {}) {
+function fixture({ consent = true, failNode = false, authenticated = true, waiting = false, authStatus, sandboxFailure = false } = {}) {
   const calls = [], tasks = new Map(), storage = new Map();
   let seq = 0;
   const host = {
@@ -41,6 +41,10 @@ function fixture({ consent = true, failNode = false, authenticated = true, waiti
         let result;
         if (record.method === "initialize") result = { ok: true };
         if (record.method === "account/read") result = { requiresOpenaiAuth: true, account: authenticated ? { type: "chatgpt" } : null };
+        if (record.method === "thread/start") {
+          if (sandboxFailure) task.events.push({ seq: ++seq, stream: "stdout", data: JSON.stringify({ id: record.id, error: { message: "native sandbox unavailable" } }) + "\n" });
+          else result = { thread: { id: "probe" } };
+        }
         if (result) task.events.push({ seq: ++seq, stream: "stdout", data: JSON.stringify({ jsonrpc: "2.0", id: record.id, result }) + "\n" });
         if (record.type === "control_request") task.events.push({ seq: ++seq, stream: "stdout", data: JSON.stringify({ type: "control_response", response: { request_id: record.request_id, subtype: "success" } }) + "\n" });
         if (record.type === "get_state" || record.type === "get_available_models") task.events.push({ seq: ++seq, stream: "stdout", data: JSON.stringify({ type: "response", id: record.id, success: true, data: record.type === "get_state" ? { model: authenticated ? { id: "test" } : null } : { models: authenticated ? [{ id: "test" }] : [] } }) + "\n" });
@@ -67,6 +71,22 @@ test("initialization reports timeouts and cancellations without suggesting an in
   const host = fixture({ waiting: true });
   await assert.rejects(checkedTask(host, execution, "claude", ["--version"], 1), { code: "agent.prepare.timeout" });
   assert.ok([...host.tasks.values()].every((task) => task.status === "cancelled"));
+});
+test("Codex preparation validates the selected sandbox without a prompt or permission downgrade", async () => {
+  const selected = { ...profile, protocol: "codex", executable: "codex" };
+  const denied = fixture({ sandboxFailure: true });
+  await assert.rejects(prepareAgent(denied, selected, { ...execution }, {}), /native sandbox.*Access was not widened.*native sandbox unavailable/);
+  const records = denied.calls.filter(call => call.method === "tasks.write").map(call => JSON.parse(call.params.data));
+  const thread = records.find(record => record.method === "thread/start");
+  assert.equal(thread.params.ephemeral, true);
+  assert.match(thread.params.permissions, /^tunnelde-[a-f0-9-]{36}$/);
+  assert.equal(thread.params.sandbox, undefined);
+  assert.equal(records.some(record => record.method === "turn/start"), false);
+  assert.ok([...denied.tasks.values()].every(task => task.status === "cancelled"));
+  const full = fixture();
+  await prepareAgent(full, selected, { ...execution }, {}, undefined, { mode: "full" });
+  const fullRecords = full.calls.filter(call => call.method === "tasks.write").map(call => JSON.parse(call.params.data));
+  assert.equal(fullRecords.find(record => record.method === "thread/start").params.sandbox, "danger-full-access");
 });
 
 test("declining initialization never probes Node, uploads files or starts an agent", async () => {

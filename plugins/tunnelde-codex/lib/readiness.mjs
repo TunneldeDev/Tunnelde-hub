@@ -1,5 +1,5 @@
 import path from "node:path";
-import { TaskConnection, cliArguments } from "./cli.mjs";
+import { TaskConnection, cliArguments, codexPolicy } from "./cli.mjs";
 import { CLI_PROTOCOLS } from "./config.mjs";
 import { delay } from "./tools.mjs";
 import { deployFiles, runtimeFiles } from "./deployment.mjs";
@@ -82,7 +82,7 @@ export async function probeNode(host, execution, signal) {
 }
 
 /** Exercise the agent's real structured protocol without sending a user prompt. */
-export async function probeCli(host, profile, execution, signal) {
+export async function probeCli(host, profile, execution, signal, mode = "ask") {
   const args = cliArguments(profile, "ask");
   if (profile.protocol === "pi") {
     // No prompts run in preflight; the permission extension is deployed only for
@@ -134,11 +134,25 @@ export async function probeCli(host, profile, execution, signal) {
   const timer = setTimeout(() => fail(new Error("Agent protocol initialization timed out")), 25000);
   try {
     if (profile.protocol === "codex") {
-      await Promise.race([connection.rpc("initialize", { clientInfo: { name: "tunnelde", title: "Tunnelde", version: "1.0.0" } }), response]);
+      await Promise.race([connection.rpc("initialize", { clientInfo: { name: "tunnelde", title: "Tunnelde", version: "1.0.0" }, capabilities: { experimentalApi: true } }), response]);
       await connection.write({ jsonrpc: "2.0", method: "initialized", params: {} });
       const auth = await Promise.race([connection.rpc("account/read", { refreshToken: false }), response]);
       if (auth?.requiresOpenaiAuth !== false && !auth?.account)
         throw new Error(`Codex is not signed in on ${execution.title}. Run ${profile.executable} login, then Initialize again.`);
+      const policy = codexPolicy(mode, execution.cwd);
+      try {
+        // Test the selected permission policy before enabling Send. Ephemeral
+        // threads do not append a conversation or submit a model prompt.
+        await Promise.race([connection.rpc("thread/start", {
+          cwd: execution.cwd, ephemeral: true,
+          approvalPolicy: policy.approvalPolicy,
+          ...(policy.permissions
+            ? { permissions: policy.permissions, config: policy.config }
+            : { sandbox: policy.sandbox }),
+        }), response]);
+      } catch (error) {
+        throw new Error(`Codex could not initialize the selected permission mode on ${execution.title}. Update Codex and configure its native sandbox on this machine, then Initialize again. Access was not widened. ${error.message}`);
+      }
     } else if (profile.protocol === "claude-code") {
       await connection.write({ type: "control_request", request_id: requestId, request: { subtype: "initialize", hooks: {} } });
       await response;
@@ -152,7 +166,7 @@ export async function probeCli(host, profile, execution, signal) {
   }
 }
 
-export async function prepareAgent(host, profile, execution, session, signal, { approved = false, checkpoint } = {}) {
+export async function prepareAgent(host, profile, execution, session, signal, { approved = false, checkpoint, mode = "ask" } = {}) {
   const cli = CLI_PROTOCOLS.has(profile.protocol);
   if (execution.kind === "local" && !cli) return { detail: "API provider configured" };
   const allowed = approved || await host.call("ui.confirm", {
@@ -173,7 +187,7 @@ export async function prepareAgent(host, profile, execution, session, signal, { 
       try { auth = JSON.parse(output); } catch { throw new Error("Claude Code did not return authentication status. Update Claude Code and run claude auth login on this machine."); }
       if (auth.loggedIn !== true) throw new Error(`Claude Code is not signed in on ${execution.title}. Run ${profile.executable} auth login, then Initialize again.`);
     }
-    await probeCli(host, profile, execution, signal);
+    await probeCli(host, profile, execution, signal, mode);
     return { detail: `${profile.protocol} protocol initialized` };
   }
   const version = await probeNode(host, execution, signal);

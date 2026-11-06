@@ -134,21 +134,20 @@ export function cliArguments(profile, mode, resume = {}) {
 }
 
 export function codexPolicy(mode, cwd) {
+  // Never inherit an unrelated user-configured profile with the same name.
+  const permissions = `tunnelde-${randomUUID()}`;
   return mode === "full"
     ? {
         approvalPolicy: "never",
-        sandbox: "dangerFullAccess",
+        sandbox: "danger-full-access",
         sandboxPolicy: { type: "dangerFullAccess" },
       }
     : {
-        approvalPolicy: mode === "readOnly" ? "never" : "unlessTrusted",
-        sandbox: "readOnly",
-        sandboxPolicy: {
-          type: "readOnly",
-          access: {
-            type: "restricted",
-            includePlatformDefaults: false,
-            readableRoots: [cwd],
+        approvalPolicy: mode === "readOnly" ? "never" : "untrusted",
+        permissions,
+        config: {
+          [`permissions.${permissions}`]: {
+            filesystem: { [cwd]: "read" },
           },
         },
       };
@@ -790,6 +789,7 @@ export async function runCli({
     if (!reattached) {
       if (profile.protocol === "codex") {
         await connection.rpc("initialize", {
+          capabilities: { experimentalApi: true },
           clientInfo: {
             name: PLUGIN_ID.replaceAll("-", "_"),
             title: PLUGIN_TITLE,
@@ -809,7 +809,9 @@ export async function runCli({
             cwd: profile.cwd,
             ...(profile.model ? { model: profile.model } : {}),
             approvalPolicy: policy.approvalPolicy,
-            sandbox: policy.sandbox,
+            ...(policy.permissions
+              ? { permissions: policy.permissions, config: policy.config }
+              : { sandbox: policy.sandbox }),
           },
         );
         session.cli.threadId = thread?.thread?.id;
@@ -821,7 +823,9 @@ export async function runCli({
           input: [{ type: "text", text: message }],
           cwd: profile.cwd,
           approvalPolicy: policy.approvalPolicy,
-          sandboxPolicy: policy.sandboxPolicy,
+          ...(policy.permissions
+            ? { permissions: policy.permissions }
+            : { sandboxPolicy: policy.sandboxPolicy }),
         });
         session.cli.turnId = result?.turn?.id;
       } else if (profile.protocol === "claude-code") {
