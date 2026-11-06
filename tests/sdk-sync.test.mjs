@@ -6,10 +6,32 @@ import { test } from "node:test";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
-import { checkMethodTypes, syncSdk } from "../scripts/sync-sdk.mjs";
+import { checkMethodTypes, parseRustCatalogue, syncSdk } from "../scripts/sync-sdk.mjs";
 
 const run = promisify(execFile);
 const releaseCheck = fileURLToPath(new URL("../scripts/ci/check-release-sdk.mjs", import.meta.url));
+
+test("catalogue parser rejects unrecognized entries instead of silently dropping them", () => {
+  const source = `pub const METHODS: &[ApiMethod] = &[
+    // method!("commented.out", [], "{}", "Not a method."),
+    method!("api.describe", [], "{}", "Text mentioning method!( or // is harmless."),
+    /* The stable method has an explicit introduction version. */
+    stable_method!("other", ["app.read"], "{}", "Read.", "0.29.0"),
+];`;
+  const catalogue = parseRustCatalogue(source);
+  assert.deepEqual(catalogue.methods.map(({ name }) => name), ["api.describe", "other"]);
+  assert.equal(catalogue.methods[1].stability, "stable");
+  assert.equal(catalogue.methods[1].since, "0.29.0");
+
+  for (const entry of [
+    'deprecated_method!("old", [], "{}", "Old.", "0.29.0"),',
+    'future_macro!("new", [], "{}", "New."),',
+    'ApiMethod { name: "new" },',
+    'method!("broken", [], "{}"),',
+  ]) {
+    assert.throws(() => parseRustCatalogue(source.replace('\n];', `\n    ${entry}\n];`)), /Unparsed host method/);
+  }
+});
 
 test("SDK check detects host and documentation drift without changing files", async () => {
   const root = await mkdtemp(join(tmpdir(), "tunnelde-sdk-check-"));
