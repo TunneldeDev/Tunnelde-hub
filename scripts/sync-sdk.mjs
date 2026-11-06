@@ -10,16 +10,31 @@ export function parseRustCatalogue(source) {
   assert.ok(body, "Rust METHODS catalogue was not found");
   const literal = '"(?:\\\\.|[^"\\\\])*"';
   const pattern = new RegExp(
-    `method!\\(\\s*(${literal})\\s*,\\s*\\[([^\\]]*)\\]\\s*,\\s*(${literal})\\s*,\\s*(${literal})\\s*\\)`,
+    `(stable_method|method)!\\(\\s*(${literal})\\s*,\\s*\\[([^\\]]*)\\]\\s*,\\s*(${literal})\\s*,\\s*(${literal})(?:\\s*,\\s*(${literal}))?\\s*\\)`,
     "g",
   );
-  const methods = [...body.matchAll(pattern)].map((entry) => ({
-    name: JSON.parse(entry[1]),
-    permissions: JSON.parse(`[${entry[2]}]`),
-    params: JSON.parse(entry[3]),
-    description: JSON.parse(entry[4]),
-  }));
-  assert.equal(methods.length, (body.match(/method!\(/g) ?? []).length, "Unparsed host method");
+  const methods = [...body.matchAll(pattern)].map((entry) => {
+    const stability = entry[1] === "stable_method" ? "stable" : "experimental";
+    assert.equal(
+      stability === "stable",
+      Boolean(entry[6]),
+      `${entry[2]}: stable methods must declare since`,
+    );
+    return {
+      name: JSON.parse(entry[2]),
+      permissions: JSON.parse(`[${entry[3]}]`),
+      params: JSON.parse(entry[4]),
+      description: JSON.parse(entry[5]),
+      stability,
+      since: entry[6] ? JSON.parse(entry[6]) : null,
+      deprecated: null,
+    };
+  });
+  assert.equal(
+    methods.length,
+    (body.match(/(?:stable_method|(?<!stable_)method)!\(/g) ?? []).length,
+    "Unparsed host method",
+  );
   assert.ok(methods.length > 0, "Host catalogue is empty");
   assert.equal(
     new Set(methods.map(({ name }) => name)).size,
@@ -57,9 +72,9 @@ export async function syncSdk(applicationDirectory, { check = false, sdkDirector
   const escape = (value) => value.replaceAll("|", "\\|").replaceAll("\n", " ");
   const rows = catalogue.methods.map(
     (method) =>
-      `| \`${method.name}\` | ${method.permissions.map((permission) => `\`${permission}\``).join(", ") || "Approved execution"} | \`${escape(method.params)}\` | ${escape(method.description)} |`,
+      `| \`${method.name}\` | ${method.permissions.map((permission) => `\`${permission}\``).join(", ") || "Approved execution"} | \`${escape(method.params)}\` | \`${method.stability}\` | ${method.since ?? ""} | ${method.deprecated ?? ""} | ${escape(method.description)} |`,
   );
-  const markdown = `# Host API v1\n\nGenerated from the host method catalogue for Tunnelde ${version}. All calls require an approved executable plugin, including calls without domain permissions. \`host.describe()\` reports the running version. Regenerate with \`npm run sdk:sync -- ../Tunnelde\`.\n\n| Method | Permissions | Parameters | Behavior |\n| --- | --- | --- | --- |\n${rows.join("\n")}\n`;
+  const markdown = `# Host API v1\n\nGenerated from the host method catalogue for Tunnelde ${version}. All calls require an approved executable plugin, including calls without domain permissions. \`host.describe()\` reports the running version. Regenerate with \`npm run sdk:sync -- ../Tunnelde\`.\n\nStability is part of the compatibility contract: \`stable\` methods include their first host version in \`since\`; \`experimental\` methods may evolve; \`deprecated\` methods include migration guidance.\n\n| Method | Permissions | Parameters | Stability | Since | Deprecated | Behavior |\n| --- | --- | --- | --- | --- | --- | --- |\n${rows.join("\n")}\n`;
   for (const [name, expected] of [["api.json", json], ["api.md", markdown]]) {
     const path = join(sdkDirectory, name);
     if (check) {

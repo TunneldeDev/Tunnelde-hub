@@ -92,6 +92,10 @@ export interface MethodDescription {
   permissions: string[];
   params: string;
   description: string;
+  /** Missing on hosts released before stability metadata was introduced. */
+  stability?: "stable" | "experimental" | "deprecated";
+  since?: string | null;
+  deprecated?: string | null;
 }
 
 /** Snapshot of a ready open editor. Excludes transport credentials and internal state. */

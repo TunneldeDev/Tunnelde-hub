@@ -7,7 +7,10 @@
         "editor.read"
       ],
       "params": "{}",
-      "description": "Read the active ready editor document or null. Returns tabId, documentId, version, path, name, content and dirty. Maximum UTF-8 content 128KiB. Does not read files from disk."
+      "description": "Read the active ready editor document or null. Returns tabId, documentId, version, path, name, content and dirty. Maximum UTF-8 content 128KiB. Does not read files from disk.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "editor.replace",
@@ -15,7 +18,10 @@
         "editor.write"
       ],
       "params": "{tabId:string,documentId:string,version:number,text:string}",
-      "description": "Replace an open editor buffer only if the document identity and version still match. Maximum UTF-8 text 128KiB. Undoable; never saves automatically. Rejects stale, closed, loading or disconnected documents."
+      "description": "Replace an open editor buffer only if the document identity and version still match. Maximum UTF-8 text 128KiB. Undoable; never saves automatically. Rejects stale, closed, loading or disconnected documents.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "mounts.browse",
@@ -23,7 +29,10 @@
         "mounts.read"
       ],
       "params": "{sessionId:string,path?:string}",
-      "description": "Browse directories through an authenticated SFTP session for the mount chooser."
+      "description": "Browse directories through an authenticated SFTP session for the mount chooser.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "mounts.open",
@@ -31,7 +40,10 @@
         "mounts.write"
       ],
       "params": "{id:string}",
-      "description": "Open this plugin's mount in the system file manager."
+      "description": "Open this plugin's mount in the system file manager.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "mounts.documentation",
@@ -39,7 +51,10 @@
         "mounts.read"
       ],
       "params": "{}",
-      "description": "Open platform SSHFS installation instructions in the system browser."
+      "description": "Open platform SSHFS installation instructions in the system browser.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "mounts.dependencies",
@@ -47,7 +62,10 @@
         "mounts.read"
       ],
       "params": "{}",
-      "description": "Detect SSHFS and FUSE compatibility; never install software or drivers."
+      "description": "Detect SSHFS and FUSE compatibility; never install software or drivers.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "mounts.list",
@@ -55,7 +73,10 @@
         "mounts.read"
       ],
       "params": "{}",
-      "description": "List this plugin's own SSHFS mounts."
+      "description": "List this plugin's own SSHFS mounts.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "mounts.mount",
@@ -63,7 +84,10 @@
         "mounts.write"
       ],
       "params": "{sessionId:string,remotePath:string,mountPoint:string,readOnly?:boolean}",
-      "description": "Mount using an authenticated SSH subsystem and the host's proxy/jump route. Defaults read-only."
+      "description": "Mount using an authenticated SSH subsystem and the host's proxy/jump route. Defaults read-only.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "mounts.unmount",
@@ -71,7 +95,10 @@
         "mounts.write"
       ],
       "params": "{id:string,force?:boolean}",
-      "description": "Unmount this plugin's own SSHFS filesystem; never terminate unrelated processes."
+      "description": "Unmount this plugin's own SSHFS filesystem; never terminate unrelated processes.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "forwards.list",
@@ -79,7 +106,10 @@
         "forwards.read"
       ],
       "params": "{}",
-      "description": "Read saved TCP forwarding rules and running status."
+      "description": "Read saved TCP forwarding rules and running status.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "forwards.save",
@@ -87,7 +117,10 @@
         "forwards.write"
       ],
       "params": "{rule:ForwardRule}",
-      "description": "Create or update a validated TCP forwarding rule; active rules must be stopped first."
+      "description": "Create or update a validated TCP forwarding rule; active rules must be stopped first.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "forwards.remove",
@@ -95,7 +128,10 @@
         "forwards.write"
       ],
       "params": "{id:string}",
-      "description": "Remove a saved forwarding rule and stop its active connections."
+      "description": "Remove a saved forwarding rule and stop its active connections.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "forwards.start",
@@ -103,7 +139,10 @@
         "forwards.write"
       ],
       "params": "{id:string,sessionId:string}",
-      "description": "Start a saved forward through its host's active authenticated session; stopped on plugin revocation."
+      "description": "Start a saved forward through its host's active authenticated session; stopped on plugin revocation.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "forwards.stop",
@@ -111,7 +150,10 @@
         "forwards.write"
       ],
       "params": "{id:string}",
-      "description": "Stop a forwarding listener and its active connections."
+      "description": "Stop a forwarding listener and its active connections.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "runners.deploy",
@@ -121,7 +163,10 @@
         "sftp.write"
       ],
       "params": "{sessionId:string,platform:posix|windows,directory:string,runnerPath:string,executable:string}",
-      "description": "After explicit confirmation, deploy an optional selected native helper and this plugin into a fresh user directory. Never install Node or modify services."
+      "description": "After explicit confirmation, deploy an optional selected native helper and this plugin into a fresh user directory. Never install Node or modify services.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "runners.start",
@@ -129,7 +174,10 @@
         "ssh.exec"
       ],
       "params": "{sessionId:string,directory:string,config:object,secrets?:object}",
-      "description": "Start a durable plugin runner using a previously approved deployment; secrets travel over SSH stdin, not files or argv."
+      "description": "Start a durable plugin runner using a previously approved deployment; secrets travel over SSH stdin, not files or argv.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "runners.list",
@@ -137,7 +185,10 @@
         "ssh.exec"
       ],
       "params": "{}",
-      "description": "Read this plugin's durable runner records, including stopPending for unreachable revoked tasks."
+      "description": "Read this plugin's durable runner records, including stopPending for unreachable revoked tasks.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "runners.send",
@@ -145,7 +196,10 @@
         "ssh.exec"
       ],
       "params": "{sessionId:string,runnerId:string,message:object}",
-      "description": "Enqueue an RPC request or approval response for this plugin's own remote runner."
+      "description": "Enqueue an RPC request or approval response for this plugin's own remote runner.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "runners.poll",
@@ -153,7 +207,10 @@
         "ssh.exec"
       ],
       "params": "{sessionId:string,runnerId:string,afterSeq?:number}",
-      "description": "Read sequenced durable runner events and pending approvals after reconnect."
+      "description": "Read sequenced durable runner events and pending approvals after reconnect.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "runners.status",
@@ -161,7 +218,10 @@
         "ssh.exec"
       ],
       "params": "{sessionId:string,runnerId:string}",
-      "description": "Read this plugin's remote runner status."
+      "description": "Read this plugin's remote runner status.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "runners.stop",
@@ -169,13 +229,19 @@
         "ssh.exec"
       ],
       "params": "{sessionId:string,runnerId:string}",
-      "description": "Persist and request stopping a remote runner; does not claim that an unreachable process has stopped."
+      "description": "Persist and request stopping a remote runner; does not claim that an unreachable process has stopped.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "events.publish",
       "permissions": [],
       "params": "{event:string,payload:JSON}",
-      "description": "Publish a bounded plugin-identified UI event; the host supplies identity and runtime generation."
+      "description": "Publish a bounded plugin-identified UI event; the host supplies identity and runtime generation.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "secrets.get",
@@ -183,7 +249,10 @@
         "secrets"
       ],
       "params": "{key:string}",
-      "description": "Read this plugin's own OS-keyring secret; return string or null. Never exposes SSH credentials."
+      "description": "Read this plugin's own OS-keyring secret; return string or null. Never exposes SSH credentials.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "secrets.set",
@@ -191,7 +260,10 @@
         "secrets"
       ],
       "params": "{key:string,value:string}",
-      "description": "Store this plugin's own secret in the operating system keyring, at most 16KiB."
+      "description": "Store this plugin's own secret in the operating system keyring, at most 16KiB.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "secrets.delete",
@@ -199,73 +271,109 @@
         "secrets"
       ],
       "params": "{key:string}",
-      "description": "Delete this plugin's own keyring secret."
+      "description": "Delete this plugin's own keyring secret.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "tasks.start",
       "permissions": [],
       "params": "{executable:string,args?:string[],cwd?:string,sessionId?:string,platform?:posix|windows,timeoutMs?:number}",
-      "description": "Start an explicitly selected executable; requires process.exec locally or ssh.exec remotely. Return taskId. Separate bounded stdout/stderr; default 30 minutes, maximum 24 hours."
+      "description": "Start an explicitly selected executable; requires process.exec locally or ssh.exec remotely. Return taskId. Separate bounded stdout/stderr; default 30 minutes, maximum 24 hours.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "tasks.list",
       "permissions": [],
       "params": "{}",
-      "description": "List this runtime's own background processes."
+      "description": "List this runtime's own background processes.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "tasks.status",
       "permissions": [],
       "params": "{taskId:string}",
-      "description": "Read this runtime's own process status and exit code."
+      "description": "Read this runtime's own process status and exit code.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "tasks.readOutput",
       "permissions": [],
       "params": "{taskId:string,afterSeq?:number}",
-      "description": "Read bounded sequenced stdout/stderr events; truncated reports expired output."
+      "description": "Read bounded sequenced stdout/stderr events; truncated reports expired output.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "tasks.write",
       "permissions": [],
       "params": "{taskId:string,data:string}",
-      "description": "Write UTF-8 to this runtime's own process stdin; at most 128KiB."
+      "description": "Write UTF-8 to this runtime's own process stdin; at most 128KiB.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "tasks.closeInput",
       "permissions": [],
       "params": "{taskId:string}",
-      "description": "Close this runtime's own process stdin."
+      "description": "Close this runtime's own process stdin.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "tasks.cancel",
       "permissions": [],
       "params": "{taskId:string}",
-      "description": "Stop this runtime's own process; local process trees are terminated, remote server signal support may vary."
+      "description": "Stop this runtime's own process; local process trees are terminated, remote server signal support may vary.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "tools.invoke",
       "permissions": [],
       "params": "{method:string,params:object,mode:ask|approve|full|readOnly,scope:{sessionIds?:string[],hostIds?:string[],localRoots?:string[],remoteRoots?:{sessionId:string,path:string}[]},review?:{approved:boolean,reason:string},clientId?:string,requestId?:string}",
-      "description": "Execute an allowlisted AI/MCP tool after permission, target scope and approval checks. ReadOnly rejects every command and mutation. Review may only be supplied by a trusted plugin's independent reviewer."
+      "description": "Execute an allowlisted AI/MCP tool after permission, target scope and approval checks. ReadOnly rejects every command and mutation. Review may only be supplied by a trusted plugin's independent reviewer.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "tools.cancel",
       "permissions": [],
       "params": "{requestId:string}",
-      "description": "Cancel this plugin runtime's pending tool invocation; already completed operations cannot be rolled back."
+      "description": "Cancel this plugin runtime's pending tool invocation; already completed operations cannot be rolled back.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "tools.revokeClient",
       "permissions": [],
       "params": "{clientId:string}",
-      "description": "Cancel pending tool invocations owned by this plugin runtime's client."
+      "description": "Cancel pending tool invocations owned by this plugin runtime's client.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "api.describe",
       "permissions": [],
       "params": "{}",
-      "description": "List the fixed versioned host API; every request still checks runtime authorization."
+      "description": "List the fixed versioned host API; every request still checks runtime authorization.",
+      "stability": "stable",
+      "since": "0.21.0",
+      "deprecated": null
     },
     {
       "name": "log",
@@ -273,7 +381,10 @@
         "log"
       ],
       "params": "{message:string,level?:string}",
-      "description": "Write a bounded plugin-tagged log message."
+      "description": "Write a bounded plugin-tagged log message.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "app.info",
@@ -281,7 +392,10 @@
         "app.read"
       ],
       "params": "{}",
-      "description": "Read application metadata, platform and preference schema; no credentials."
+      "description": "Read application metadata, platform and preference schema; no credentials.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "app.openExternal",
@@ -289,7 +403,10 @@
         "app.openExternal"
       ],
       "params": "{url:string}",
-      "description": "Open an http/https URL with the system browser."
+      "description": "Open an http/https URL with the system browser.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "settings.get",
@@ -297,7 +414,10 @@
         "settings.read"
       ],
       "params": "{}",
-      "description": "Read application preferences."
+      "description": "Read application preferences.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "settings.update",
@@ -305,7 +425,10 @@
         "settings.write"
       ],
       "params": "{patch:object}",
-      "description": "Update and sanitize preferences through the normal settings service."
+      "description": "Update and sanitize preferences through the normal settings service.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "hosts.snapshot",
@@ -313,7 +436,10 @@
         "hosts.read"
       ],
       "params": "{}",
-      "description": "Read saved host and group metadata; authentication secrets are never returned."
+      "description": "Read saved host and group metadata; authentication secrets are never returned.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "hosts.create",
@@ -321,7 +447,10 @@
         "hosts.write"
       ],
       "params": "{input:HostInput}",
-      "description": "Create a validated saved host."
+      "description": "Create a validated saved host.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "hosts.update",
@@ -329,7 +458,10 @@
         "hosts.write"
       ],
       "params": "{id:string,input:HostInput}",
-      "description": "Replace a saved host's validated metadata."
+      "description": "Replace a saved host's validated metadata.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "hosts.delete",
@@ -337,7 +469,10 @@
         "hosts.write"
       ],
       "params": "{id:string}",
-      "description": "Delete a saved host and forget its stored credential."
+      "description": "Delete a saved host and forget its stored credential.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "hosts.markUsed",
@@ -345,7 +480,10 @@
         "hosts.write"
       ],
       "params": "{id:string}",
-      "description": "Update a saved host's last-used time."
+      "description": "Update a saved host's last-used time.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "hosts.reorder",
@@ -353,7 +491,10 @@
         "hosts.write"
       ],
       "params": "{ids:string[]}",
-      "description": "Persist the order of saved hosts; at most 500 IDs."
+      "description": "Persist the order of saved hosts; at most 500 IDs.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "groups.create",
@@ -361,7 +502,10 @@
         "hosts.write"
       ],
       "params": "{input:GroupInput}",
-      "description": "Create a validated host group."
+      "description": "Create a validated host group.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "groups.update",
@@ -369,7 +513,10 @@
         "hosts.write"
       ],
       "params": "{id:string,input:GroupInput}",
-      "description": "Update a validated host group."
+      "description": "Update a validated host group.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "groups.delete",
@@ -377,7 +524,10 @@
         "hosts.write"
       ],
       "params": "{id:string}",
-      "description": "Delete a host group through the normal group service."
+      "description": "Delete a host group through the normal group service.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "sessions.list",
@@ -385,7 +535,10 @@
         "sessions.read"
       ],
       "params": "{}",
-      "description": "List active SSH session metadata; no passwords or private keys."
+      "description": "List active SSH session metadata; no passwords or private keys.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "sessions.connect",
@@ -393,7 +546,10 @@
         "ssh.exec"
       ],
       "params": "{request:SshConnectRequest}",
-      "description": "Connect a saved host with normal host-key verification; never auto-trust a server."
+      "description": "Connect a saved host with normal host-key verification; never auto-trust a server.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "sessions.disconnect",
@@ -401,7 +557,10 @@
         "ssh.exec"
       ],
       "params": "{sessionId:string}",
-      "description": "Disconnect an active SSH session."
+      "description": "Disconnect an active SSH session.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "sessions.exec",
@@ -409,7 +568,10 @@
         "ssh.exec"
       ],
       "params": "{sessionId:string,command:string,timeoutMs?:number}",
-      "description": "Execute in a separate SSH channel; return stdout/stderr/exitCode/signal. Timeout 100–60000ms, output at most 1MiB."
+      "description": "Execute in a separate SSH channel; return stdout/stderr/exitCode/signal. Timeout 100–60000ms, output at most 1MiB.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "terminal.write",
@@ -417,7 +579,10 @@
         "ssh.exec"
       ],
       "params": "{sessionId:string,data:string}",
-      "description": "Write plain UTF-8 terminal input, including remote shell commands; the host handles transport encoding."
+      "description": "Write plain UTF-8 terminal input, including remote shell commands; the host handles transport encoding.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "terminal.resize",
@@ -425,7 +590,10 @@
         "ssh.exec"
       ],
       "params": "{sessionId:string,cols:number,rows:number}",
-      "description": "Resize the remote terminal through the validated session service."
+      "description": "Resize the remote terminal through the validated session service.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "files.local.home",
@@ -433,7 +601,10 @@
         "fs.read"
       ],
       "params": "{}",
-      "description": "Read the local home directory path."
+      "description": "Read the local home directory path.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "files.local.list",
@@ -441,7 +612,10 @@
         "fs.read"
       ],
       "params": "{path?:string}",
-      "description": "List a local directory."
+      "description": "List a local directory.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "files.local.readText",
@@ -449,7 +623,10 @@
         "fs.read"
       ],
       "params": "{path:string}",
-      "description": "Read a UTF-8 local text file, at most 512KiB; reject binary data."
+      "description": "Read a UTF-8 local text file, at most 512KiB; reject binary data.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "files.local.writeText",
@@ -457,7 +634,10 @@
         "fs.write"
       ],
       "params": "{path:string,content:string}",
-      "description": "Replace an existing local UTF-8 file, at most 512KiB."
+      "description": "Replace an existing local UTF-8 file, at most 512KiB.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "files.local.createFile",
@@ -465,7 +645,10 @@
         "fs.write"
       ],
       "params": "{path:string}",
-      "description": "Create an empty local file without replacing an existing file."
+      "description": "Create an empty local file without replacing an existing file.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "files.local.mkdir",
@@ -473,7 +656,10 @@
         "fs.write"
       ],
       "params": "{path:string}",
-      "description": "Create a local directory."
+      "description": "Create a local directory.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "files.local.rename",
@@ -481,7 +667,10 @@
         "fs.write"
       ],
       "params": "{from:string,to:string,overwrite?:boolean}",
-      "description": "Rename a local file or directory; overwriting is opt-in."
+      "description": "Rename a local file or directory; overwriting is opt-in.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "files.local.copy",
@@ -490,7 +679,10 @@
         "fs.write"
       ],
       "params": "{from:string,to:string,overwrite?:boolean}",
-      "description": "Copy local files/directories through the existing copy service."
+      "description": "Copy local files/directories through the existing copy service.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "files.local.delete",
@@ -498,7 +690,10 @@
         "fs.write"
       ],
       "params": "{path:string,isDir:boolean}",
-      "description": "Delete a local file or directory."
+      "description": "Delete a local file or directory.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "files.sftp.list",
@@ -506,7 +701,10 @@
         "sftp.read"
       ],
       "params": "{sessionId:string,path?:string}",
-      "description": "List a remote directory using an active SSH session."
+      "description": "List a remote directory using an active SSH session.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "files.sftp.resolveDirectory",
@@ -514,7 +712,10 @@
         "sftp.read"
       ],
       "params": "{sessionId:string,path?:string}",
-      "description": "Resolve the SSH account home and an optional working directory through SFTP without listing entries or executing a shell. Return {home,path}. Supports ~ and relative paths."
+      "description": "Resolve the SSH account home and an optional working directory through SFTP without listing entries or executing a shell. Return {home,path}. Supports ~ and relative paths.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "files.sftp.readText",
@@ -522,7 +723,10 @@
         "sftp.read"
       ],
       "params": "{sessionId:string,path:string}",
-      "description": "Read remote UTF-8 text through the editor service; API response size limits apply."
+      "description": "Read remote UTF-8 text through the editor service; API response size limits apply.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "files.sftp.writeText",
@@ -530,7 +734,10 @@
         "sftp.write"
       ],
       "params": "{sessionId:string,path:string,content:string}",
-      "description": "Replace existing remote text through the editor service."
+      "description": "Replace existing remote text through the editor service.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "files.sftp.createFile",
@@ -538,7 +745,10 @@
         "sftp.write"
       ],
       "params": "{sessionId:string,path:string}",
-      "description": "Create an empty remote file without replacing an existing file."
+      "description": "Create an empty remote file without replacing an existing file.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "files.sftp.mkdir",
@@ -546,7 +756,10 @@
         "sftp.write"
       ],
       "params": "{sessionId:string,path:string}",
-      "description": "Create a remote directory."
+      "description": "Create a remote directory.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "files.sftp.rename",
@@ -554,7 +767,10 @@
         "sftp.write"
       ],
       "params": "{sessionId:string,from:string,to:string,overwrite?:boolean}",
-      "description": "Rename a remote file/directory; overwriting is opt-in."
+      "description": "Rename a remote file/directory; overwriting is opt-in.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "files.sftp.copy",
@@ -563,7 +779,10 @@
         "sftp.write"
       ],
       "params": "{sessionId:string,from:string,to:string,overwrite?:boolean}",
-      "description": "Copy remote files/directories within a session."
+      "description": "Copy remote files/directories within a session.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "files.sftp.delete",
@@ -571,7 +790,10 @@
         "sftp.write"
       ],
       "params": "{sessionId:string,path:string,isDir:boolean}",
-      "description": "Delete a remote file or directory."
+      "description": "Delete a remote file or directory.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "files.upload",
@@ -580,7 +802,10 @@
         "sftp.write"
       ],
       "params": "{sessionId:string,localPath:string,remotePath:string,overwrite?:boolean}",
-      "description": "Copy a local file or directory to a remote path. Return transferId; cancellation, progress and file refresh use the normal transfer service. Revoking access or stopping this runtime cancels its active transfers."
+      "description": "Copy a local file or directory to a remote path. Return transferId; cancellation, progress and file refresh use the normal transfer service. Revoking access or stopping this runtime cancels its active transfers.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "files.download",
@@ -589,19 +814,28 @@
         "fs.write"
       ],
       "params": "{sessionId:string,remotePath:string,localPath:string,overwrite?:boolean}",
-      "description": "Copy a remote file or directory to a local path. Return transferId; never remove the source. Revoking access or stopping this runtime cancels its active transfers."
+      "description": "Copy a remote file or directory to a local path. Return transferId; never remove the source. Revoking access or stopping this runtime cancels its active transfers.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "files.cancelTransfer",
       "permissions": [],
       "params": "{transferId:string}",
-      "description": "Cancel only a transfer owned by this plugin's current runtime. Return true if its active transfer was found; false for completed, missing or other owners' transfers."
+      "description": "Cancel only a transfer owned by this plugin's current runtime. Return true if its active transfer was found; false for completed, missing or other owners' transfers.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "files.transferStatus",
       "permissions": [],
       "params": "{transferId:string}",
-      "description": "Read progress or the final TransferEvent for this runtime's own transfer; return null for missing, other-owner or expired IDs. The latest 256 completed plugin transfers are retained in memory."
+      "description": "Read progress or the final TransferEvent for this runtime's own transfer; return null for missing, other-owner or expired IDs. The latest 256 completed plugin transfers are retained in memory.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "monitor.system",
@@ -609,7 +843,10 @@
         "monitor.read"
       ],
       "params": "{}",
-      "description": "Read local CPU, memory, disk and network statistics."
+      "description": "Read local CPU, memory, disk and network statistics.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "monitor.stats",
@@ -617,7 +854,10 @@
         "monitor.read"
       ],
       "params": "{sessionId:string}",
-      "description": "Sample remote system statistics."
+      "description": "Sample remote system statistics.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "monitor.processes",
@@ -625,7 +865,10 @@
         "monitor.read"
       ],
       "params": "{sessionId:string}",
-      "description": "List remote processes."
+      "description": "List remote processes.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "monitor.kill",
@@ -633,7 +876,10 @@
         "monitor.write"
       ],
       "params": "{sessionId:string,pid:number}",
-      "description": "Send TERM to a remote process; protected process validation still applies."
+      "description": "Send TERM to a remote process; protected process validation still applies.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "history.list",
@@ -641,7 +887,10 @@
         "history.read"
       ],
       "params": "{hostId:string,limit?:number}",
-      "description": "Read saved command history, at most 500 rows."
+      "description": "Read saved command history, at most 500 rows.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "history.record",
@@ -649,7 +898,10 @@
         "history.write"
       ],
       "params": "{hostId:string,command:string}",
-      "description": "Record a command for an existing saved host."
+      "description": "Record a command for an existing saved host.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "history.delete",
@@ -657,7 +909,10 @@
         "history.write"
       ],
       "params": "{id:number}",
-      "description": "Delete one command-history entry."
+      "description": "Delete one command-history entry.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "history.clear",
@@ -665,7 +920,10 @@
         "history.write"
       ],
       "params": "{hostId:string}",
-      "description": "Clear a saved host's command history."
+      "description": "Clear a saved host's command history.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "workspace.snapshot",
@@ -673,7 +931,10 @@
         "workspace.read"
       ],
       "params": "{}",
-      "description": "Read the live tabs, panes, active group and split layout."
+      "description": "Read the live tabs, panes, active group and split layout.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "workspace.openPage",
@@ -681,7 +942,10 @@
         "workspace.write"
       ],
       "params": "{kind:welcome|settings|about|updates|knownHosts}",
-      "description": "Open or focus an existing application page."
+      "description": "Open or focus an existing application page.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "workspace.openHost",
@@ -690,7 +954,10 @@
         "hosts.read"
       ],
       "params": "{hostId:string}",
-      "description": "Open a saved host's details; never reveal an authentication secret."
+      "description": "Open a saved host's details; never reveal an authentication secret.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "workspace.openTerminal",
@@ -699,7 +966,10 @@
         "sessions.read"
       ],
       "params": "{sessionId:string}",
-      "description": "Open a terminal tab for an already-connected session."
+      "description": "Open a terminal tab for an already-connected session.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "workspace.openFiles",
@@ -708,7 +978,10 @@
         "sessions.read"
       ],
       "params": "{sessionId:string}",
-      "description": "Open a file browser for an already-connected session."
+      "description": "Open a file browser for an already-connected session.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "workspace.openSidebar",
@@ -716,7 +989,10 @@
         "workspace.write"
       ],
       "params": "{view:hosts|plugins|knownHosts}",
-      "description": "Dock a list into the current workspace group."
+      "description": "Dock a list into the current workspace group.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "workspace.activate",
@@ -724,7 +1000,10 @@
         "workspace.write"
       ],
       "params": "{tabId:string}",
-      "description": "Activate an existing tab and its group."
+      "description": "Activate an existing tab and its group.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "workspace.close",
@@ -732,7 +1011,10 @@
         "workspace.write"
       ],
       "params": "{tabId:string}",
-      "description": "Close a tab; dirty editors retain the normal user confirmation. Result reports pending confirmation."
+      "description": "Close a tab; dirty editors retain the normal user confirmation. Result reports pending confirmation.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "workspace.split",
@@ -740,7 +1022,10 @@
         "workspace.write"
       ],
       "params": "{tabId:string,direction:row|column,position?:before|after,targetPaneId?:string}",
-      "description": "Move a tab into a split group."
+      "description": "Move a tab into a split group.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "workspace.move",
@@ -748,7 +1033,10 @@
         "workspace.write"
       ],
       "params": "{tabId:string,paneId:string,beforeTabId?:string|null}",
-      "description": "Move or reorder an existing tab."
+      "description": "Move or reorder an existing tab.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "workspace.showQuickAccess",
@@ -756,7 +1044,10 @@
         "workspace.write"
       ],
       "params": "{query?:string}",
-      "description": "Open Quick Access with an optional query. Never execute a command automatically."
+      "description": "Open Quick Access with an optional query. Never execute a command automatically.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "workspace.setPaneLocked",
@@ -764,7 +1055,10 @@
         "workspace.write"
       ],
       "params": "{paneId:string,locked:boolean}",
-      "description": "Set the destination lock on an existing pane."
+      "description": "Set the destination lock on an existing pane.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "workspace.resizeSplit",
@@ -772,7 +1066,10 @@
         "workspace.write"
       ],
       "params": "{splitId:string,ratio:number}",
-      "description": "Resize an existing split with a ratio between 0.1 and 0.9."
+      "description": "Resize an existing split with a ratio between 0.1 and 0.9.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "workspace.returnSidebar",
@@ -780,7 +1077,10 @@
         "workspace.write"
       ],
       "params": "{view:hosts|plugins|knownHosts}",
-      "description": "Return a docked list to the sidebar."
+      "description": "Return a docked list to the sidebar.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "clipboard.readText",
@@ -788,7 +1088,10 @@
         "clipboard.read"
       ],
       "params": "{}",
-      "description": "Read the system text clipboard."
+      "description": "Read the system text clipboard.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "clipboard.writeText",
@@ -796,37 +1099,55 @@
         "clipboard.write"
       ],
       "params": "{text:string}",
-      "description": "Replace the system text clipboard."
+      "description": "Replace the system text clipboard.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "storage.get",
       "permissions": [],
       "params": "{key:string}",
-      "description": "Read plugin-scoped JSON data. Keys use 1–128 ASCII letters, digits, dot, hyphen or underscore."
+      "description": "Read plugin-scoped JSON data. Keys use 1–128 ASCII letters, digits, dot, hyphen or underscore.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "storage.set",
       "permissions": [],
       "params": "{key:string,value:JSON}",
-      "description": "Persist plugin-scoped JSON data, at most 256KiB total per plugin."
+      "description": "Persist plugin-scoped JSON data, at most 256KiB total per plugin.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "storage.delete",
       "permissions": [],
       "params": "{key:string}",
-      "description": "Remove a key from plugin-scoped JSON data."
+      "description": "Remove a key from plugin-scoped JSON data.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "ui.showMessage",
       "permissions": [],
       "params": "{message:string,kind?:info|success|error}",
-      "description": "Show a bounded notification prefixed with the installed plugin's identity."
+      "description": "Show a bounded notification prefixed with the installed plugin's identity.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "ui.confirm",
       "permissions": [],
       "params": "{message:string}",
-      "description": "Ask the user a plugin-identified confirmation; never replace an existing dialog."
+      "description": "Ask the user a plugin-identified confirmation; never replace an existing dialog.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     }
   ]
 }

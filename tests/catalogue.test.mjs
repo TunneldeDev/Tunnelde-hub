@@ -24,6 +24,19 @@ test("Rust catalogue import rejects silently omitted method declarations", () =>
     permissions: ["ssh.exec"],
     params: "{mode:ask|full}",
     description: 'Call "sample" safely.',
+    stability: "experimental",
+    since: null,
+    deprecated: null,
+  });
+  const stable = `pub const METHODS: &[ApiMethod] = &[\nstable_method!("sample.stable", [], "{}", "Stable call.", "0.30.0"),\n];`;
+  assert.deepEqual(parseRustCatalogue(stable).methods[0], {
+    name: "sample.stable",
+    permissions: [],
+    params: "{}",
+    description: "Stable call.",
+    stability: "stable",
+    since: "0.30.0",
+    deprecated: null,
   });
   assert.throws(
     () => parseRustCatalogue(valid.replace('"{mode:ask|full}"', "DYNAMIC_PARAMS")),
