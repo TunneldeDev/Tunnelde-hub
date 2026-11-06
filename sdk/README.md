@@ -31,8 +31,11 @@ createPlugin({
 Declare `hosts.read` in `tunnelde-plugin.json` before calling `hosts.snapshot`. Every host
 method is checked against the installed plugin's declarations, user grants, package
 fingerprint and current restricted-mode generation. `host.describe()` returns the live,
-versioned method catalogue, permissions, parameter names and descriptions. Unknown methods
-are rejected. There is no generic application-command invocation. The `secrets` permission
+versioned method catalogue, permissions, parameter names, descriptions and compatibility
+metadata. Each method is marked `stable`, `experimental` or `deprecated`; only stable methods
+are compatibility commitments, and stable/deprecated entries include `since` or migration
+guidance respectively. Older hosts omit these fields, so treat missing stability as unknown.
+Unknown methods are rejected. There is no generic application-command invocation. The `secrets` permission
 allows access only to the plugin's own keyring namespace; SSH credentials remain private.
 
 `host.call(method, params, {signal, timeoutMs})` returns the host result, rejects on denial/error,
