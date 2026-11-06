@@ -1,7 +1,7 @@
 {
   "id": "tunnelde-pi",
   "name": "Pi",
-  "version": "1.19.5",
+  "version": "1.19.6",
   "apiVersion": 1,
   "runtime": "node",
   "main": "index.mjs",

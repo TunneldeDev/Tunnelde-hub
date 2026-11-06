@@ -58,7 +58,9 @@ export async function checkedTask(host, execution, executable, args, timeoutMs =
         if (status.status === "cancelled")
           throw Object.assign(new Error("Initialization was cancelled or access was revoked."), { code: "agent.prepare.cancelled" });
         if (status.status !== "completed" || status.exitCode !== 0)
-          throw new Error(`${executable} could not initialize (exit ${status.exitCode ?? "unknown"}). ${status.error || stderr.slice(-2000) || "Install or select this executable on the chosen machine."}`);
+          throw Object.assign(new Error(`${executable} could not initialize (exit ${status.exitCode ?? "unknown"}). ${status.error || stderr.slice(-2000) || "Install or select this executable on the chosen machine."}`), {
+            code: "agent.prepare.exit", exitCode: status.exitCode, stdout,
+          });
         return stdout;
       }
       await delay(75, signal);
@@ -181,6 +183,15 @@ export async function prepareAgent(host, profile, execution, session, signal, { 
       catch (error) {
         signal?.throwIfAborted();
         if (error?.code === "agent.prepare.timeout" || error?.code === "agent.prepare.cancelled") throw error;
+        // Claude's normal signed-out response is JSON on stdout with exit 1.
+        // Only that exact outcome is a login failure; never accept nonzero exit
+        // codes as successful authentication or discard startup diagnostics.
+        if (error?.code === "agent.prepare.exit" && error.exitCode === 1) {
+          let auth;
+          try { auth = JSON.parse(error.stdout); } catch { /* Keep the original initialization error. */ }
+          if (auth?.loggedIn === false)
+            throw new Error(`Claude Code is not signed in on ${execution.title}. Run ${profile.executable} auth login, then Initialize again.`);
+        }
         throw new Error(`Claude Code sign-in status could not be verified on ${execution.title}. Check the executable and connection; if needed, run ${profile.executable} auth login, then Initialize again. ${error.message}`);
       }
       let auth;
