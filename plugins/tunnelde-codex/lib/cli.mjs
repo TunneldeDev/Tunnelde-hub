@@ -155,7 +155,7 @@ export function codexPolicy(mode, cwd) {
 }
 
 export class TaskConnection {
-  constructor(host, taskId, { signal, onRecord, onCheckpoint, afterSeq = 0, pendingOutput = "" }) {
+  constructor(host, taskId, { signal, onRecord, onCheckpoint, afterSeq = 0, pendingOutput = "", outputOnly = false }) {
     this.host = host;
     this.taskId = taskId;
     this.signal = signal;
@@ -168,6 +168,7 @@ export class TaskConnection {
     this.pending = new Map();
     this.writeTail = Promise.resolve();
     this.closed = false;
+    this.outputOnly = outputOnly;
     this.error = null;
     this.onFailure = null;
     this.done = this.pump().catch((error) => {
@@ -179,6 +180,7 @@ export class TaskConnection {
   }
   async write(record) {
     this.signal?.throwIfAborted();
+    if (this.outputOnly) throw new Error("The agent process has ended; pending requests cannot be approved or sent");
     if (this.error) throw this.error;
     if (this.closed) throw new Error("CLI task is closed");
     const data = JSON.stringify(record) + "\n";
@@ -309,6 +311,7 @@ export class TaskConnection {
     for (const pending of this.pending.values())
       pending.reject(new Error("CLI task closed"));
     this.pending.clear();
+    if (this.outputOnly) return;
     await this.host
       .call("tasks.cancel", { taskId: this.taskId })
       .catch(() => {});
@@ -343,7 +346,7 @@ export async function runCli({
       "Remote Pi requires its approved permission extension on the selected server",
     );
   const saved = session.cli ?? {};
-  let taskId;
+  let taskId, outputOnly = false;
   if (recover) {
     if (!saved.taskId)
       throw new Error("The previous agent task has no live process to reconnect to. Inspect the conversation and start a new message explicitly.");
@@ -354,9 +357,10 @@ export async function runCli({
       if (error?.message !== "plugin.tasks.notFound") throw error;
       throw new Error("The previous agent process is no longer available. Inspect the conversation and start a new message explicitly.");
     }
-    if (!task || !["running", "starting"].includes(task.status))
+    if (!task || !["running", "starting", "completed", "failed", "cancelled"].includes(task.status))
       throw new Error("The previous agent process is no longer running. Inspect the conversation and start a new message explicitly.");
     taskId = saved.taskId;
+    outputOnly = !["running", "starting"].includes(task.status);
   }
   const reattached = !!taskId;
   if (reattached && saved.outputRecoveryUnavailable)
@@ -436,6 +440,7 @@ export async function runCli({
   };
   const connection = new TaskConnection(host, taskId, {
     signal,
+    outputOnly,
     afterSeq: reattached ? (saved.afterSeq ?? 0) : 0,
     pendingOutput: reattached ? (saved.pendingOutput ?? "") : "",
     onCheckpoint: (value) => {
@@ -446,6 +451,7 @@ export async function runCli({
       if (profile.protocol === "codex") {
         const params = record.params ?? {};
         if (record.id != null && record.method) {
+          if (channel.outputOnly) throw new Error("The agent process ended with an unanswered request; inspect the conversation before continuing");
           if (
             [
               "item/commandExecution/requestApproval",
@@ -640,6 +646,7 @@ export async function runCli({
               .join(""),
           );
         if (record.type === "control_request") {
+          if (channel.outputOnly) throw new Error("The agent process ended with an unanswered request; inspect the conversation before continuing");
           const request = record.request ?? {};
           if (request.subtype !== "can_use_tool") {
             await channel.write({
@@ -725,6 +732,7 @@ export async function runCli({
         )
           append(record.assistantMessageEvent.delta);
         if (record.type === "extension_ui_request") {
+          if (channel.outputOnly) throw new Error("The agent process ended with an unanswered request; inspect the conversation before continuing");
           const allowed =
             record.method === "confirm" &&
             (await authorize({
