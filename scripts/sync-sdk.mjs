@@ -8,12 +8,15 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 export function parseRustCatalogue(source) {
   const body = source.match(/pub const METHODS:[\s\S]*?=\s*&\[([\s\S]*?)\n\];/)?.[1];
   assert.ok(body, "Rust METHODS catalogue was not found");
+  const entries = body.replace(/"(?:\\.|[^"\\])*"|\/\/[^\r\n]*|\/\*[\s\S]*?\*\//g, (token) =>
+    token.startsWith('"') ? token : " ",
+  );
   const literal = '"(?:\\\\.|[^"\\\\])*"';
   const pattern = new RegExp(
-    `(stable_method|method)!\\(\\s*(${literal})\\s*,\\s*\\[([^\\]]*)\\]\\s*,\\s*(${literal})\\s*,\\s*(${literal})(?:\\s*,\\s*(${literal}))?\\s*\\)`,
+    `(?<![\\w])(stable_method|method)!\\(\\s*(${literal})\\s*,\\s*\\[([^\\]]*)\\]\\s*,\\s*(${literal})\\s*,\\s*(${literal})(?:\\s*,\\s*(${literal}))?\\s*\\)`,
     "g",
   );
-  const methods = [...body.matchAll(pattern)].map((entry) => {
+  const methods = [...entries.matchAll(pattern)].map((entry) => {
     const stability = entry[1] === "stable_method" ? "stable" : "experimental";
     assert.equal(
       stability === "stable",
@@ -30,11 +33,11 @@ export function parseRustCatalogue(source) {
       deprecated: null,
     };
   });
-  assert.equal(
-    methods.length,
-    (body.match(/(?:stable_method|(?<!stable_)method)!\(/g) ?? []).length,
-    "Unparsed host method",
-  );
+  // Reject every unrecognized catalogue entry, not just malformed known macros.
+  const remainder = entries
+    .replace(pattern, "")
+    .replace(/[\s,]/g, "");
+  assert.equal(remainder, "", "Unparsed host method or unsupported catalogue entry");
   assert.ok(methods.length > 0, "Host catalogue is empty");
   assert.equal(
     new Set(methods.map(({ name }) => name)).size,
