@@ -84,3 +84,9 @@ recorded source files, so reconnect that host before deleting it. Modified or un
 files are preserved and cleanup reports the reason. Known legacy deployment directories
 move into `Chats` on the next approved initialization. Existing runtime paths remain
 usable; untracked legacy directories are never deleted by a name-only sweep.
+
+Remote deployment reuse and cleanup bind both host ID and captured address. Older records
+require explicit identity review before cleanup. See the
+[English guide](https://github.com/TunneldeDev/Tunnelde-hub/blob/main/docs/assistant-deployments.en-us.md) /
+[中文说明](https://github.com/TunneldeDev/Tunnelde-hub/blob/main/docs/assistant-deployments.zh-cn.md)
+for recovery and limitations.

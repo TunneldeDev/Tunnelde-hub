@@ -1,6 +1,7 @@
 import { readFile, readdir } from "node:fs/promises";
 import { createHash, randomUUID } from "node:crypto";
 import path from "node:path";
+import { connectedTargets, resolveExecution } from "./targets.mjs";
 
 export function assistantDirectories(execution) {
   const paths = execution.platform === "windows" ? path.win32 : path.posix;
@@ -26,16 +27,27 @@ export async function cleanupDeployment(host, execution, saved) {
   if (!saved) return;
   for (const previous of saved.retired ?? []) await cleanupDeployment(host, execution, previous);
   if (Array.isArray(saved.created) && saved.created.length === 0) return;
-  if (saved.hostId !== execution?.hostId) {
-    const sessions = await host.call("sessions.list", {});
-    const target = sessions.find((item) => item.hostId === saved.hostId);
-    if (!target) throw new Error("Reconnect the SSH host that owns these assistant files before cleanup");
-    const directory = await host.call("files.sftp.resolveDirectory", { sessionId: target.id });
-    execution = { hostId: saved.hostId, sessionId: target.id, home: directory.home, platform: "posix" };
+  if (!saved.hostId)
+    throw new Error("The saved remote deployment is missing its host identity; its files were preserved");
+  if (!saved.address) {
+    const matches = (await connectedTargets(host)).filter(item => item.hostId === saved.hostId);
+    if (new Set(matches.map(item => item.address)).size !== 1 || !matches[0]?.address)
+      throw new Error("Reconnect the original SSH destination before reviewing this older deployment; its files were preserved");
+    const address = matches[0].address;
+    const allowed = await host.call("ui.confirm", {
+      message: `This older remote deployment did not record its destination address.\n\nConfirm that ${address} is the original machine that owns these assistant files:\n${saved.directory}\n\nContinue only if this is the original destination. Cleanup will still verify the recorded files. Cancel preserves the files and conversation.`,
+    }, { timeoutMs: 120000 });
+    if (allowed !== true)
+      throw new Error("Remote deployment identity review was cancelled; files and conversation were preserved");
+    saved.address = address;
   }
+  execution = await resolveExecution(host, {
+    kind: "remote", hostId: saved.hostId, address: saved.address,
+    sessionId: execution?.hostId === saved.hostId ? execution.sessionId : "",
+  }, { scope: { remoteRoots: [] } }, {});
   const { paths, chats } = assistantDirectories(execution);
   const legacy = new RegExp("^\\.tunnelde-[a-z0-9-]+-[a-f0-9-]{36}$");
-  if (saved.hostId !== execution.hostId ||
+  if (saved.hostId !== execution.hostId || saved.address !== execution.address ||
       (paths.dirname(saved.directory) !== chats &&
        !(paths.dirname(saved.directory) === execution.home && legacy.test(paths.basename(saved.directory)))))
     throw new Error("Cannot verify ownership of the remote assistant directory");
@@ -116,6 +128,8 @@ export async function deployFiles(
     .update(JSON.stringify([...files]))
     .digest("hex");
   if (!/^[a-z0-9-]{1,80}$/.test(label ?? "")) throw new Error("Invalid deployment label");
+  if (!execution?.hostId || !execution.address || !execution.sessionId)
+    throw new Error("Select a connected SSH destination before deploying assistant files");
   const { paths, root, chats } = assistantDirectories(execution);
   if (saved?.incomplete) {
     const previous = saved.retired?.[0] ?? null;
@@ -126,7 +140,8 @@ export async function deployFiles(
   if (
     saved &&
     saved.fingerprint === fingerprint &&
-    saved.hostId === execution.hostId && paths.dirname(saved.directory) === chats
+    saved.hostId === execution.hostId && saved.address === execution.address &&
+    paths.dirname(saved.directory) === chats
   )
     return saved;
   signal?.throwIfAborted();
@@ -145,14 +160,14 @@ export async function deployFiles(
     throw new Error("Remote runtime deployment was cancelled");
   const params = { sessionId: execution.sessionId };
   const created = [];
-  const record = { directory, fingerprint, hostId: execution.hostId, created,
+  const record = { directory, fingerprint, hostId: execution.hostId, address: execution.address, created,
     hashes: {}, pendingWrites: {}, incomplete: true, retired: saved ? [saved] : [] };
   try {
     await ensureDirectory(host, execution.sessionId, root, signal);
     await ensureDirectory(host, execution.sessionId, chats, signal);
     // Migrate only directories tied to this conversation's ownership record.
     // Unknown old directories are never swept from the user's home.
-    if (saved && saved.hostId === execution.hostId &&
+    if (saved && saved.hostId === execution.hostId && saved.address === execution.address &&
         paths.dirname(saved.directory) === execution.home &&
         new RegExp(`^\\.tunnelde-${label}-[a-f0-9-]{36}$`).test(paths.basename(saved.directory)) &&
         saved.created?.some((entry) => entry.path === saved.directory && entry.isDir)) {

@@ -17,6 +17,8 @@ async function fixture(t) {
   };
   const host = { async call(method, params) {
     calls.push({ method, params });
+    if (method === "sessions.list") return host.sessions;
+    if (method === "files.sftp.resolveDirectory") return { home: "/home/test", path: "/home/test" };
     if (method === "ui.confirm") return true;
     if (method === "files.sftp.mkdir") return mkdir(local(params.path));
     if (method === "files.sftp.createFile") return writeFile(local(params.path), "", { flag: "wx" });
@@ -30,7 +32,8 @@ async function fixture(t) {
     if (method === "files.sftp.rename") return rename(local(params.from), local(params.to));
     throw new Error(`Unexpected ${method}`);
   } };
-  return { root, host, calls, local, execution: { home: "/home/test", platform: "posix", hostId: "host", sessionId: "ssh", title: "Test" } };
+  host.sessions = [{ id: "ssh", hostId: "host", address: "test@server:22", title: "Test" }];
+  return { root, host, calls, local, execution: { kind: "remote", home: "/home/test", platform: "posix", hostId: "host", sessionId: "ssh", title: "Test", address: "test@server:22" } };
 }
 
 test("deployments share an application parent, reuse sources and clean only their own files", async (t) => {
@@ -65,7 +68,7 @@ test("owned legacy deployment moves under Chats and its original fingerprint per
   const directory = "/home/test/.tunnelde-tunnelde-ai-4cc36dc4-fefb-49a8-a0c6-a2238115e144";
   await mkdir(f.local(directory));
   await writeFile(f.local(directory + "/index.mjs"), "legacy code");
-  const saved = { directory, hostId: "host", fingerprint: createHash("sha256").update(JSON.stringify([...files])).digest("hex"),
+  const saved = { directory, hostId: "host", address: f.execution.address, fingerprint: createHash("sha256").update(JSON.stringify([...files])).digest("hex"),
     created: [{ path: directory, isDir: true }, { path: directory + "/index.mjs", isDir: false }] };
   const migrated = await deployFiles(f.host, f.execution, files, { label: "tunnelde-ai", saved });
   assert.equal(migrated, saved);
@@ -165,4 +168,137 @@ test("failed replacement cleanup preserves the previous reusable deployment", as
   assert.equal(await readFile(f.local(old.directory + "/index.mjs"), "utf8"), "old");
   f.host.call = call;
   await cleanupDeployment(f.host, f.execution, old);
+});
+
+test("deployment cleanup refuses a changed address even when host ID and session ID match", async (t) => {
+  const f = await fixture(t);
+  const saved = await deployFiles(f.host, f.execution, new Map([["index.mjs", "code"]]), { label: "tunnelde-ai" });
+  assert.equal(saved.address, f.execution.address);
+  f.host.sessions[0].address = "test@changed:22";
+  f.calls.length = 0;
+  await assert.rejects(cleanupDeployment(f.host, f.execution, saved), /disconnected/);
+  assert.deepEqual(f.calls.map(x => x.method), ["sessions.list"]);
+  assert.equal(await readFile(f.local(saved.directory + "/index.mjs"), "utf8"), "code");
+});
+
+test("cleanup reconnects only to the captured address among a host's multiple sessions", async (t) => {
+  const f = await fixture(t);
+  const saved = await deployFiles(f.host, f.execution, new Map([["index.mjs", "code"]]), { label: "tunnelde-ai" });
+  f.host.sessions = [
+    { ...f.host.sessions[0], id: "wrong", address: "test@changed:22" },
+    { ...f.host.sessions[0], id: "right" },
+  ];
+  f.calls.length = 0;
+  await cleanupDeployment(f.host, f.execution, saved);
+  const operations = f.calls.filter(x => x.method.startsWith("files.sftp."));
+  assert.ok(operations.length > 0);
+  assert.ok(operations.every(x => x.params.sessionId === "right"));
+  assert.equal(await stat(f.local(saved.directory)).then(() => true, () => false), false);
+});
+
+test("legacy deployment identity review can be declined before any filesystem access", async (t) => {
+  const f = await fixture(t);
+  const saved = await deployFiles(f.host, f.execution, new Map([["index.mjs", "code"]]), { label: "tunnelde-ai" });
+  delete saved.address;
+  const original = f.host.call.bind(f.host);
+  f.host.call = (method, params) => method === "ui.confirm" ? false : original(method, params);
+  f.calls.length = 0;
+  await assert.rejects(cleanupDeployment(f.host, f.execution, saved), /identity review was cancelled/);
+  assert.deepEqual(f.calls.map(x => x.method), ["sessions.list"]);
+  assert.equal(saved.address, undefined);
+  assert.equal(await readFile(f.local(saved.directory + "/index.mjs"), "utf8"), "code");
+});
+
+test("legacy deployment requires explicit identity approval before verifying and cleaning files", async (t) => {
+  const f = await fixture(t);
+  const saved = await deployFiles(f.host, f.execution, new Map([["index.mjs", "code"]]), { label: "tunnelde-ai" });
+  delete saved.address;
+  f.calls.length = 0;
+  await cleanupDeployment(f.host, f.execution, saved);
+  assert.equal(saved.address, f.execution.address);
+  const approval = f.calls.findIndex(x => x.method === "ui.confirm");
+  const firstFilesystem = f.calls.findIndex(x => x.method.startsWith("files.sftp."));
+  assert.ok(approval >= 0 && firstFilesystem > approval);
+  assert.match(f.calls[approval].params.message, /test@server:22/);
+  assert.equal(await stat(f.local(saved.directory)).then(() => true, () => false), false);
+});
+
+test("legacy deployment cannot choose between multiple addresses for the same host", async (t) => {
+  const f = await fixture(t);
+  const saved = await deployFiles(f.host, f.execution, new Map([["index.mjs", "code"]]), { label: "tunnelde-ai" });
+  delete saved.address;
+  f.host.sessions.push({ ...f.host.sessions[0], id: "other", address: "test@second:22" });
+  f.calls.length = 0;
+  await assert.rejects(cleanupDeployment(f.host, f.execution, saved), /original SSH destination/);
+  assert.deepEqual(f.calls.map(x => x.method), ["sessions.list"]);
+  assert.equal(saved.address, undefined);
+});
+
+test("cleanup rechecks the captured destination after legacy identity approval", async (t) => {
+  const f = await fixture(t);
+  const saved = await deployFiles(f.host, f.execution, new Map([["index.mjs", "code"]]), { label: "tunnelde-ai" });
+  delete saved.address;
+  const original = f.host.call.bind(f.host);
+  f.host.call = async (method, params) => {
+    if (method === "ui.confirm") {
+      f.host.sessions[0].address = "test@changed:22";
+      return true;
+    }
+    return original(method, params);
+  };
+  f.calls.length = 0;
+  await assert.rejects(cleanupDeployment(f.host, f.execution, saved), /disconnected/);
+  assert.ok(!f.calls.some(x => x.method.startsWith("files.sftp.")));
+  assert.equal(await readFile(f.local(saved.directory + "/index.mjs"), "utf8"), "code");
+});
+
+test("matching source code never reuses a deployment on a changed destination", async (t) => {
+  const f = await fixture(t);
+  const files = new Map([["index.mjs", "code"]]);
+  const old = await deployFiles(f.host, f.execution, files, { label: "tunnelde-ai" });
+  const changed = { ...f.execution, address: "test@changed:22" };
+  const next = await deployFiles(f.host, changed, files, { label: "tunnelde-ai", saved: old });
+  assert.notEqual(next.directory, old.directory);
+  assert.equal(next.address, changed.address);
+  assert.equal(next.retired[0], old);
+  assert.equal(await readFile(f.local(old.directory + "/index.mjs"), "utf8"), "code");
+});
+
+test("conversation deletion keeps history and ownership when its remote destination changed", async (t) => {
+  const f = await fixture(t);
+  const storage = new Map();
+  const original = f.host.call.bind(f.host);
+  f.host.call = async (method, params) => {
+    if (method === "storage.get") return storage.get(params.key) ?? null;
+    if (method === "storage.set") { storage.set(params.key, structuredClone(params.value)); return null; }
+    return original(method, params);
+  };
+  const engine = new AiPlugin(f.host);
+  await engine.initialize();
+  const conversation = engine.newSession();
+  conversation.execution = f.execution;
+  conversation.remoteStdio = await deployFiles(f.host, f.execution, new Map([["index.mjs", "code"]]), { label: "tunnelde-ai" });
+  f.host.sessions[0].address = "test@changed:22";
+  f.calls.length = 0;
+  await assert.rejects(engine.command("ai.session", { action: "delete", sessionId: conversation.id }), /disconnected/);
+  assert.equal(engine.session(conversation.id), conversation);
+  assert.ok(storage.get("ai.sessions").sessions.some(x => x.id === conversation.id && x.remoteStdio));
+  assert.ok(!f.calls.some(x => x.method.startsWith("files.sftp.")));
+  await engine.shutdown();
+});
+
+test("retired deployments retain independent destination identities during cleanup", async (t) => {
+  const f = await fixture(t);
+  const first = await deployFiles(f.host, f.execution, new Map([["index.mjs", "old"]]), { label: "tunnelde-ai" });
+  const changed = { ...f.execution, sessionId: "second", address: "test@second:22" };
+  f.host.sessions.push({ id: changed.sessionId, hostId: changed.hostId, address: changed.address });
+  const next = await deployFiles(f.host, changed, new Map([["index.mjs", "new"]]), { label: "tunnelde-ai", saved: first });
+  f.calls.length = 0;
+  await cleanupDeployment(f.host, changed, next);
+  for (const call of f.calls.filter(x => x.method === "files.sftp.delete")) {
+    const original = call.params.path === first.directory || call.params.path.startsWith(first.directory + "/");
+    assert.equal(call.params.sessionId, original ? "ssh" : "second");
+  }
+  assert.equal(await stat(f.local(first.directory)).then(() => true, () => false), false);
+  assert.equal(await stat(f.local(next.directory)).then(() => true, () => false), false);
 });

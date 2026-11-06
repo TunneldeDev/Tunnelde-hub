@@ -4,7 +4,7 @@ import { AiPlugin } from "../lib/engine.mjs";
 import { checkedTask, prepareAgent } from "../lib/readiness.mjs";
 import { installAgent, nodeInstallScript } from "../lib/installation.mjs";
 
-const execution = { kind: "remote", sessionId: "ssh", hostId: "server", title: "Server", home: "/home/test", cwd: "/home/test", runtime: "/opt/node", platform: "posix" };
+const execution = { kind: "remote", sessionId: "ssh", hostId: "server", address: "test:22", title: "Server", home: "/home/test", cwd: "/home/test", runtime: "/opt/node", platform: "posix" };
 const profile = { id: "api", name: "API", protocol: "openai-chat", model: "test" };
 
 function fixture({ consent = true, failNode = false, authenticated = true, waiting = false, authStatus } = {}) {

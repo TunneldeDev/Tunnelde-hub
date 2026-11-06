@@ -1474,12 +1474,9 @@ export class AiPlugin {
           if (this.runs.has(session.id))
             throw new Error("Stop this agent before deleting its conversation");
           if (session.remoteStdio || session.piDeployment) {
-            const targets = await this.host.call("sessions.list", {});
             for (const saved of [session.remoteStdio, session.piDeployment].filter(Boolean)) {
-              const target = targets.find((item) => item.hostId === saved.hostId);
-              if (!target) throw new Error("Reconnect this conversation's SSH host before deleting its remote assistant files");
               try {
-                await cleanupDeployment(this.host, { ...session.execution, sessionId: target.id }, saved);
+                await cleanupDeployment(this.host, session.execution, saved);
               } finally {
                 // Retain the remaining ownership entries if cleanup is interrupted.
                 await this.persist();
