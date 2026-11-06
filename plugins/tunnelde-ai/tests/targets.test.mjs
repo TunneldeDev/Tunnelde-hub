@@ -121,6 +121,45 @@ test("reconnect binds by saved host identity; disconnected targets never fall ba
   );
 });
 
+test("reconnect selects an equivalent connection deterministically with multiple host sessions", async () => {
+  const host = fixture();
+  const saved = await resolveExecution(host, { kind: "remote", sessionId: "one" }, config, {});
+  const original = host.sessions[0];
+  for (const entries of [
+    [{ ...original, id: "older", connectedAt: 1 }, { ...original, id: "newer", connectedAt: 2 }],
+    [{ ...original, id: "newer", connectedAt: 2 }, { ...original, id: "older", connectedAt: 1 }],
+  ]) {
+    host.sessions = entries;
+    assert.equal((await resolveExecution(host, saved, config, {})).sessionId, "newer");
+  }
+  host.sessions.push(original);
+  assert.equal((await resolveExecution(host, saved, config, {})).sessionId, "one");
+});
+
+test("saved targets do not rebind to a changed host address or identity", async () => {
+  const host = fixture();
+  const saved = await resolveExecution(host, { kind: "remote", sessionId: "one" }, config, {});
+  const original = host.sessions[0];
+  for (const replacement of [
+    { ...original, id: "new", address: "different:22" },
+    { ...original, address: "different:22" },
+    { ...original, hostId: "different" },
+  ]) {
+    host.sessions = [replacement];
+    await assert.rejects(resolveExecution(host, saved, config, {}), /disconnected/);
+  }
+});
+
+test("legacy host targets reject ambiguous addresses but accept equivalent connections", async () => {
+  const host = fixture();
+  const saved = { kind: "remote", hostId: "host-one", sessionId: "gone" };
+  const original = host.sessions[0];
+  host.sessions = [original, { ...original, id: "other", address: "other:22" }];
+  await assert.rejects(resolveExecution(host, saved, config, {}), /disconnected/);
+  host.sessions[1].address = original.address;
+  assert.ok((await resolveExecution(host, saved, config, {})).sessionId);
+});
+
 test("a remote CLI uses its own installed binary and never the local executable path", async () => {
   const remote = await resolveExecution(
     fixture(),

@@ -5,11 +5,12 @@ export async function connectedTargets(host) {
   const sessions = await host.call("sessions.list", {});
   if (!Array.isArray(sessions))
     throw new Error("Unable to read connected SSH hosts");
-  return sessions.slice(0, 64).map(({ id, hostId, title, address }) => ({
+  return sessions.slice(0, 64).map(({ id, hostId, title, address, connectedAt }) => ({
     id: boundedString(id, "SSH session", 128),
     hostId: boundedString(hostId, "host ID", 128),
     title: String(title || address || id).slice(0, 256),
     address: String(address || "").slice(0, 256),
+    connectedAt: Number.isFinite(connectedAt) ? connectedAt : 0,
   }));
 }
 
@@ -32,10 +33,18 @@ export async function resolveExecution(host, selected, config, profile) {
   let execution;
   if (selection.kind === "remote") {
     const sessions = await connectedTargets(host);
-    const matches = sessions.filter((item) => item.hostId === selection.hostId);
-    const session =
-      sessions.find((item) => item.id === selection.sessionId) ??
-      (selection.hostId && matches.length === 1 ? matches[0] : null);
+    const matches = sessions.filter((item) =>
+      (!selection.hostId || item.hostId === selection.hostId) &&
+      (!selection.address || item.address === selection.address)
+    );
+    const exact = matches.find((item) => item.id === selection.sessionId);
+    // One saved host can have terminal, file and forwarding connections. They
+    // are interchangeable only when their captured destination also matches.
+    // Legacy targets without an address must never choose between machines.
+    const addresses = new Set(matches.map((item) => item.address));
+    const session = exact ?? (selection.hostId && addresses.size === 1
+      ? matches.sort((a, b) => b.connectedAt - a.connectedAt || a.id.localeCompare(b.id))[0]
+      : null);
     if (!session)
       throw new Error(
         "The selected SSH host is disconnected. Connect it in Hosts, then select it again.",
