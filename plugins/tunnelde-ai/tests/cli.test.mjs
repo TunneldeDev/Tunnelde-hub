@@ -277,7 +277,7 @@ test("agent output drains after process exit without losing split final records"
   assert.equal(reads, 3);
 });
 
-function fixture(protocol, { truncated = false, handled = false, piRecords } = {}) {
+function fixture(protocol, { truncated = false, handled = false, piRecords, claudeRecords } = {}) {
   const queue = [],
     writes = [],
     calls = [];
@@ -384,6 +384,10 @@ function fixture(protocol, { truncated = false, handled = false, piRecords } = {
               },
             });
           if (record.type === "user") {
+            if (claudeRecords) {
+              for (const item of claudeRecords) push(item);
+              return true;
+            }
             push({
               type: "stream_event",
               event: { type: "message_start", message: { id: "msg" } },
@@ -699,6 +703,27 @@ for (const protocol of ["codex", "claude-code", "pi"]) {
       );
   });
 }
+test("Claude provider retries remain visible and settle on recovery or the real terminal error", async () => {
+  for (const success of [true, false]) {
+    const { host, calls } = fixture("claude-code", { claudeRecords: [
+      { type: "system", subtype: "api_retry", attempt: 1, max_retries: 10, retry_delay_ms: 500, error_status: 401, error: "authentication_failed" },
+      { type: "system", subtype: "api_retry", attempt: 2, max_retries: 10, retry_delay_ms: 1000, error_status: 401, error: "authentication_failed" },
+      { type: "result", subtype: success ? "success" : "error_during_execution", is_error: !success, result: success ? "recovered" : "401: synthetic credentials rejected" },
+    ] });
+    const activities = [];
+    const turn = runCli({ host, profile: { protocol: "claude-code", executable: "claude", cwd: "C:\\work" },
+      config: { mode: "ask", scope: { localRoots: ["C:\\work"] } }, session: {}, message: "hello",
+      signal: new AbortController().signal, onDelta() {}, onActivity: item => activities.push(item), approve: async () => false });
+    if (success) assert.equal((await turn).text, "recovered");
+    else await assert.rejects(turn, /401: synthetic credentials rejected/);
+    assert.equal(activities.length, 3);
+    assert.ok(activities.every(item => item.id === "claude:provider-retry"));
+    assert.equal(JSON.parse(activities[1].content).attempt, 2);
+    assert.equal(activities[2].status, success ? "done" : "error");
+    assert.ok(calls.some(call => call.method === "tasks.cancel"));
+  }
+});
+
 for (const stopReason of ["error", "aborted"]) {
   test(`Pi reports a final ${stopReason} instead of an empty successful turn`, async () => {
     const { host, calls } = fixture("pi", { piRecords: [

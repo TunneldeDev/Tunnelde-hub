@@ -398,6 +398,7 @@ export async function runCli({
   let piFailure = reattached && typeof saved.piFailure === "string" ? saved.piFailure : null;
   const initializationId = randomUUID();
   let claudeMessage = 0;
+  let claudeRetry = false;
   const streamedThinking = new Set();
   const printable = (value) =>
     typeof value === "string" ? value : JSON.stringify(value ?? {}, null, 2);
@@ -556,6 +557,17 @@ export async function runCli({
           );
       } else if (profile.protocol === "claude-code") {
         const event = record.event ?? {};
+        if (record.type === "system" && record.subtype === "api_retry") {
+          claudeRetry = true;
+          onActivity({
+            id: "claude:provider-retry",
+            kind: "tool",
+            title: "Retrying Claude Code request",
+            content: printable({ attempt: record.attempt, maxRetries: record.max_retries,
+              delayMs: record.retry_delay_ms, status: record.error_status, error: record.error }),
+            status: "running",
+          });
+        }
         if (record.type === "stream_event") {
           if (event.type === "message_start") claudeMessage++;
           const key = `claude:${claudeMessage}:${event.index ?? 0}`;
@@ -679,6 +691,10 @@ export async function runCli({
         }
         if (record.type === "result") {
           complete = true;
+          if (claudeRetry) onActivity({
+            id: "claude:provider-retry", kind: "tool",
+            status: record.is_error || (record.subtype && record.subtype !== "success") ? "error" : "done",
+          });
           if (!text) append(record.result);
           if (
             record.is_error ||
@@ -687,6 +703,7 @@ export async function runCli({
             fail(
               new Error(
                 (record.errors ?? []).join("\n") ||
+                  record.result ||
                   `Claude Code ${record.subtype}`,
               ),
             );

@@ -7,7 +7,7 @@ import { installAgent, nodeInstallScript } from "../lib/installation.mjs";
 const execution = { kind: "remote", sessionId: "ssh", hostId: "server", address: "test:22", title: "Server", home: "/home/test", cwd: "/home/test", runtime: "/opt/node", platform: "posix" };
 const profile = { id: "api", name: "API", protocol: "openai-chat", model: "test" };
 
-function fixture({ consent = true, failNode = false, authenticated = true, waiting = false, authStatus, sandboxFailure = false } = {}) {
+function fixture({ consent = true, failNode = false, authenticated = true, waiting = false, authStatus, authExitCode = 0, authOutput, sandboxFailure = false } = {}) {
   const calls = [], tasks = new Map(), storage = new Map();
   let seq = 0;
   const host = {
@@ -27,8 +27,8 @@ function fixture({ consent = true, failNode = false, authenticated = true, waiti
         const id = `task-${tasks.size}`;
         const node = params.args.includes("--eval");
         const finite = node || params.args.includes("--version") || params.args.includes("auth");
-        const text = node ? JSON.stringify({ version: "24.0.0", path: "/opt/node" }) : params.args.includes("auth") ? JSON.stringify({ loggedIn: authenticated }) : "1.0.0";
-        tasks.set(id, { status: params.args.includes("auth") && authStatus ? authStatus : waiting || !finite ? "running" : "completed", exitCode: failNode && node ? 127 : 0,
+        const text = node ? JSON.stringify({ version: "24.0.0", path: "/opt/node" }) : params.args.includes("auth") ? authOutput ?? JSON.stringify({ loggedIn: authenticated }) : "1.0.0";
+        tasks.set(id, { status: params.args.includes("auth") && authStatus ? authStatus : waiting || !finite ? "running" : "completed", exitCode: failNode && node ? 127 : params.args.includes("auth") ? authExitCode : 0,
           events: finite ? [{ seq: ++seq, stream: failNode && node ? "stderr" : "stdout", data: failNode && node ? "node: not found" : text }] : [] });
         return { taskId: id };
       }
@@ -55,6 +55,30 @@ function fixture({ consent = true, failNode = false, authenticated = true, waiti
   };
   return host;
 }
+
+test("Claude native exit 1 with loggedIn false gives a login action without starting a prompt", async () => {
+  const host = fixture({ authenticated: false, authExitCode: 1 });
+  await assert.rejects(prepareAgent(host, { protocol: "claude-code", name: "Claude Code", executable: "claude" }, { ...execution }, {}), (error) => {
+    assert.match(error.message, /Claude Code is not signed in.*claude auth login/);
+    assert.doesNotMatch(error.message, /Install or select|could not be verified/);
+    return true;
+  });
+  assert.equal(host.calls.filter(call => call.method === "tasks.start").length, 2);
+  assert.equal(host.calls.some(call => call.method === "tasks.write"), false);
+  assert.ok([...host.tasks.values()].every(task => task.status === "cancelled"));
+});
+
+test("Claude malformed auth output and nonzero authenticated claims never enable Send", async () => {
+  for (const options of [
+    { authExitCode: 1, authOutput: "not JSON" },
+    { authExitCode: 1, authenticated: true },
+    { authExitCode: 127, authenticated: false },
+  ]) {
+    const host = fixture(options);
+    await assert.rejects(prepareAgent(host, { protocol: "claude-code", name: "Claude Code", executable: "claude" }, { ...execution }, {}), /sign-in status could not be verified/);
+    assert.equal(host.calls.some(call => call.method === "tasks.write"), false);
+  }
+});
 
 test("initialization reports timeouts and cancellations without suggesting an install", async () => {
   for (const status of ["timedOut", "cancelled"]) {

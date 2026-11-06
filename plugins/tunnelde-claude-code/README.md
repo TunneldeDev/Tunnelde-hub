@@ -29,6 +29,9 @@ Opening the view or selecting a target does not start an agent or discover user 
 Before the first message on a machine, **Initialize** replaces Send. Initialization asks
 for consent, checks the selected runtime and the agent's native structured protocol,
 and sends no model prompt. Errors appear beside the composer and keep your draft.
+Signed-out native responses show the selected machine's login command. Provider
+retries appear as one expandable activity with the attempt, delay and HTTP status;
+the agent retains control of retry policy and reports its final error.
 You can cancel initialization. Changing the provider, executable, workspace or machine
 requires another check; readiness is not persisted across plugin restarts.
 
@@ -77,6 +80,13 @@ Shared source lives in `plugins/tunnelde-ai`. After changing common entry points
 `npm run package`. Checked-in copies keep folders and ZIPs independently installable.
 Tests use isolated API servers and simulated CLI/SSH transports; they do not authenticate
 the user's coding agents or contact paid providers.
+
+An opt-in native regression test also uses a fresh isolated configuration and a
+loopback-only provider with synthetic credentials. Set `TUNNELDE_TEST_CLAUDE` to
+the explicitly selected native binary and, if required on Windows,
+`TUNNELDE_TEST_GIT_BASH` to Git Bash, then run
+`node --test plugins/tunnelde-ai/tests/claude-native.test.mjs`. No agent is
+discovered automatically, and the test does not use personal login credentials.
 
 Private remote runtimes live under `~/.TunneldeAI/Runtimes/`; deployments live under
 `~/.TunneldeAI/Chats/`. Deleting a remote conversation first verifies and cleans its
