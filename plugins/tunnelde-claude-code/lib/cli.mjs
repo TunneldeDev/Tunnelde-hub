@@ -396,6 +396,7 @@ export async function runCli({
     fail,
     text = "",
     complete = false;
+  let piFailure = null;
   const initializationId = randomUUID();
   let claudeMessage = 0;
   const streamedThinking = new Set();
@@ -693,6 +694,12 @@ export async function runCli({
           else finish();
         }
       } else {
+        if (record.type === "message_end" && record.message?.role === "assistant") {
+          const message = record.message;
+          piFailure = ["error", "aborted"].includes(message.stopReason)
+            ? message.errorMessage || `Pi response ${message.stopReason}`
+            : null;
+        }
         if (
           record.type === "message_update" &&
           record.assistantMessageEvent?.type === "thinking_delta"
@@ -766,7 +773,10 @@ export async function runCli({
         }
         if (record.type === "agent_settled") {
           complete = true;
-          finish();
+          // Pi can retry a failed assistant message before settling. Only the
+          // final assistant outcome decides whether the turn succeeded.
+          if (piFailure) fail(new Error(piFailure));
+          else finish();
         }
       }
     },
