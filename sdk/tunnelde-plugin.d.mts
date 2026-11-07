@@ -51,6 +51,7 @@ export interface SshSession {
   address: string;
   cols: number;
   rows: number;
+  /** Unix epoch milliseconds; internal connection-purpose fields are not exposed. */
   connectedAt: number;
 }
 

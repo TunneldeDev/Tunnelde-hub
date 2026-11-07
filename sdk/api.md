@@ -56,7 +56,7 @@ Stability is part of the compatibility contract: `stable` methods include their 
 | `groups.create` | `hosts.write` | `{input:GroupInput}` | `experimental` |  |  | Create a validated host group. |
 | `groups.update` | `hosts.write` | `{id:string,input:GroupInput}` | `experimental` |  |  | Update a validated host group. |
 | `groups.delete` | `hosts.write` | `{id:string}` | `experimental` |  |  | Delete a host group through the normal group service. |
-| `sessions.list` | `sessions.read` | `{}` | `experimental` |  |  | List active SSH session metadata; no passwords or private keys. |
+| `sessions.list` | `sessions.read` | `{}` | `stable` | 0.21.0 |  | List active SSH session metadata; no passwords or private keys. |
 | `sessions.connect` | `ssh.exec` | `{request:SshConnectRequest}` | `experimental` |  |  | Connect a saved host with normal host-key verification; never auto-trust a server. |
 | `sessions.disconnect` | `ssh.exec` | `{sessionId:string}` | `experimental` |  |  | Disconnect an active SSH session. |
 | `sessions.exec` | `ssh.exec` | `{sessionId:string,command:string,timeoutMs?:number}` | `experimental` |  |  | Execute in a separate SSH channel; return stdout/stderr/exitCode/signal. Timeout 100–60000ms, output at most 1MiB. |
@@ -108,8 +108,8 @@ Stability is part of the compatibility contract: `stable` methods include their 
 | `workspace.returnSidebar` | `workspace.write` | `{view:hosts\|plugins\|knownHosts}` | `experimental` |  |  | Return a docked list to the sidebar. |
 | `clipboard.readText` | `clipboard.read` | `{}` | `experimental` |  |  | Read the system text clipboard. |
 | `clipboard.writeText` | `clipboard.write` | `{text:string}` | `experimental` |  |  | Replace the system text clipboard. |
-| `storage.get` | Approved execution | `{key:string}` | `experimental` |  |  | Read plugin-scoped JSON data. Keys use 1–128 ASCII letters, digits, dot, hyphen or underscore. |
-| `storage.set` | Approved execution | `{key:string,value:JSON}` | `experimental` |  |  | Persist plugin-scoped JSON data, at most 256KiB total per plugin. |
-| `storage.delete` | Approved execution | `{key:string}` | `experimental` |  |  | Remove a key from plugin-scoped JSON data. |
+| `storage.get` | Approved execution | `{key:string}` | `stable` | 0.21.0 |  | Read plugin-scoped JSON data. Keys use 1–128 ASCII letters, digits, dot, hyphen or underscore. |
+| `storage.set` | Approved execution | `{key:string,value:JSON}` | `stable` | 0.21.0 |  | Persist plugin-scoped JSON data, at most 256KiB total per plugin. |
+| `storage.delete` | Approved execution | `{key:string}` | `stable` | 0.21.0 |  | Remove a key from plugin-scoped JSON data. |
 | `ui.showMessage` | Approved execution | `{message:string,kind?:info\|success\|error}` | `experimental` |  |  | Show a bounded notification prefixed with the installed plugin's identity. |
 | `ui.confirm` | Approved execution | `{message:string}` | `experimental` |  |  | Ask the user a plugin-identified confirmation; never replace an existing dialog. |
