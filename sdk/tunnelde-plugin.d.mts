@@ -459,7 +459,7 @@ export interface HostMethodMap {
   "files.local.home": [Record<string, never>, string];
   "files.local.list": [{ path?: string }, Listing];
   "files.local.readText": [{ path: string }, { content: string; size: number }];
-  "files.local.writeText": [{ path: string; content: string }, null];
+  "files.local.writeText": [{ path: string; content: string; baseline?: string }, null];
   "files.local.createFile": [{ path: string }, null];
   "files.local.mkdir": [{ path: string }, null];
   "files.local.rename": [{ from: string; to: string; overwrite?: boolean }, null];

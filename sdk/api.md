@@ -65,7 +65,7 @@ Stability is part of the compatibility contract: `stable` methods include their 
 | `files.local.home` | `fs.read` | `{}` | `experimental` |  |  | Read the local home directory path. |
 | `files.local.list` | `fs.read` | `{path?:string}` | `experimental` |  |  | List a local directory. |
 | `files.local.readText` | `fs.read` | `{path:string}` | `experimental` |  |  | Read a UTF-8 local text file, at most 512KiB; reject binary data. |
-| `files.local.writeText` | `fs.write` | `{path:string,content:string}` | `experimental` |  |  | Replace an existing local UTF-8 file, at most 512KiB. |
+| `files.local.writeText` | `fs.write` | `{path:string,content:string,baseline?:string}` | `experimental` |  |  | Atomically replace existing local UTF-8 text, at most 512KiB; optional baseline detects external edits. |
 | `files.local.createFile` | `fs.write` | `{path:string}` | `experimental` |  |  | Create an empty local file without replacing an existing file. |
 | `files.local.mkdir` | `fs.write` | `{path:string}` | `experimental` |  |  | Create a local directory. |
 | `files.local.rename` | `fs.write` | `{from:string,to:string,overwrite?:boolean}` | `experimental` |  |  | Rename a local file or directory; overwriting is opt-in. |

@@ -633,8 +633,8 @@
       "permissions": [
         "fs.write"
       ],
-      "params": "{path:string,content:string}",
-      "description": "Replace an existing local UTF-8 file, at most 512KiB.",
+      "params": "{path:string,content:string,baseline?:string}",
+      "description": "Atomically replace existing local UTF-8 text, at most 512KiB; optional baseline detects external edits.",
       "stability": "experimental",
       "since": null,
       "deprecated": null
