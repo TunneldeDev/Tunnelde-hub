@@ -1,6 +1,6 @@
 const MAX_INPUT = 128 * 1024;
 const MAX_OUTPUT = 256 * 1024;
-const levels = { 10: "TRACE", 20: "DEBUG", 30: "INFO", 40: "WARN", 50: "ERROR", 60: "FATAL" };
+const levels = new Map([[10, "TRACE"], [20, "DEBUG"], [30, "INFO"], [40, "WARN"], [50, "ERROR"], [60, "FATAL"]]);
 // Log data cannot inject terminal escapes or imitate a second record header.
 function safe(value) {
   return String(value).replace(/[\u0000-\u0008\u000b-\u001f\u007f-\u009f\u202a-\u202e\u2066-\u2069]/g,
@@ -38,7 +38,8 @@ export function formatJSONL(source) {
       for (const [key, value] of Object.entries(record)) if (!used.has(key)) extras.push(`${safe(key)}=${valueText(value)}`);
       if (record.fields !== undefined && !object(record.fields)) extras.push(`fields=${valueText(record.fields)}`);
       for (const [key, value] of Object.entries(fields)) if (key !== "message") extras.push(`${safe(key)}=${valueText(value)}`);
-      formatted = `${valueText(timestamp)} [${levels[level] ?? valueText(level).toUpperCase()}]${target ? ` ${valueText(target)}:` : ""} ${valueText(message)}${extras.length ? ` | ${extras.join(" ")}` : ""}`;
+      const numericLevel = typeof level === "number" ? level : typeof level === "string" && /^\d+$/.test(level) ? Number(level) : undefined;
+      formatted = `${valueText(timestamp)} [${levels.get(numericLevel) ?? valueText(level).toUpperCase()}]${target ? ` ${valueText(target)}:` : ""} ${valueText(message)}${extras.length ? ` | ${extras.join(" ")}` : ""}`;
       parsed++;
     } catch {
       invalidLines.push(index + 1);

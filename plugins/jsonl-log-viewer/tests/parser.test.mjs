@@ -19,6 +19,16 @@ test("retains large numeric literals and indents multiline messages without term
   assert.match(result.text, /id=900719925474099312345/);
 });
 
+test("unknown and structured severity values cannot read object prototype properties", () => {
+  for (const level of ["__proto__", "constructor", { toString: "custom" }, ["WARN"]]) {
+    const result = formatJSONL(JSON.stringify({ level, message: "retained" }));
+    assert.deepEqual(result.invalidLines, []);
+    assert.ok(result.text.includes("[" + (typeof level === "string" ? level : JSON.stringify(level)).toUpperCase() + "]"));
+    assert.ok(result.text.includes("retained"));
+  }
+  assert.match(formatJSONL('{"level":"30","msg":"ok"}').text, /\[INFO\]/);
+});
+
 test("invalid lines remain visible in preview and prevent any editor replacement", () => {
   const source = '{"msg":"ok"}\n{broken\nnull\n';
   const result = formatJSONL(source);
