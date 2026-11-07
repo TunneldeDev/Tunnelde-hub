@@ -1,5 +1,15 @@
 # Editor commands and formatters
 
+For direct remote disk writes, inspect `api.describe` for
+`files.sftp.writeText` and its optional `baseline` parameter. Pass the last text
+read as `baseline` to detect external edits. Current hosts stage and verify the
+new text before atomic publication; older callers without a baseline remain
+supported but cannot detect changes made before their save call. A conflict or
+transport error must leave the plugin's draft available for review or retry.
+Do not blindly retry an unacknowledged write: it may already have committed.
+SFTP conflict checks are optimistic, and replacing an inode cannot guarantee
+preservation of hard-link relationships or extended ACL/xattr metadata.
+
 An installed plugin can contribute commands that act directly on the open editor.
 Press **Ctrl+Shift+F** (**Cmd+Shift+F** on macOS), use **Format document** in the
 editor toolbar, or find a command with **F1**. Outside the editor, Ctrl+Shift+F

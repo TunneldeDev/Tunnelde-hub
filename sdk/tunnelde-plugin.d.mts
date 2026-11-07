@@ -471,7 +471,7 @@ export interface HostMethodMap {
     { home: string; path: string },
   ];
   "files.sftp.readText": [{ sessionId: string; path: string }, { content: string; size: number }];
-  "files.sftp.writeText": [{ sessionId: string; path: string; content: string }, null];
+  "files.sftp.writeText": [{ sessionId: string; path: string; content: string; baseline?: string }, null];
   "files.sftp.createFile": [{ sessionId: string; path: string }, null];
   "files.sftp.mkdir": [{ sessionId: string; path: string }, null];
   "files.sftp.rename": [{ sessionId: string; from: string; to: string; overwrite?: boolean }, null];
