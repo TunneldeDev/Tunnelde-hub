@@ -35,6 +35,10 @@ versioned method catalogue, permissions, parameter names, descriptions and compa
 metadata. Each method is marked `stable`, `experimental` or `deprecated`; only stable methods
 are compatibility commitments, and stable/deprecated entries include `since` or migration
 guidance respectively. Older hosts omit these fields, so treat missing stability as unknown.
+Stable methods may also expose an optional `contract` containing versioned JSON Schemas
+for parameters, results and errors, plus their known errors and event behavior. The SDK
+copies these definitions from the selected application's embedded contract file; it does
+not infer schemas from the descriptive parameter string. Older hosts can omit `contract`.
 Unknown methods are rejected. There is no generic application-command invocation. The `secrets` permission
 allows access only to the plugin's own keyring namespace; SSH credentials remain private.
 

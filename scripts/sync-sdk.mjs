@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
-export function parseRustCatalogue(source) {
+export function parseRustCatalogue(source, contracts) {
   const body = source.match(/pub const METHODS:[\s\S]*?=\s*&\[([\s\S]*?)\n\];/)?.[1];
   assert.ok(body, "Rust METHODS catalogue was not found");
   const entries = body.replace(/"(?:\\.|[^"\\])*"|\/\/[^\r\n]*|\/\*[\s\S]*?\*\//g, (token) =>
@@ -44,7 +44,35 @@ export function parseRustCatalogue(source) {
     methods.length,
     "Duplicate host method",
   );
+  const expectsContracts = /include_str!\(\s*"contracts\/core-v1\.json"\s*\)/.test(source);
+  assert.equal(expectsContracts, contracts !== undefined, "Host core contracts are missing or unexpected");
+  if (expectsContracts) {
+    assert.equal(contracts?.version, 1, "Unsupported core contract version");
+    assert.ok(contracts.methods && typeof contracts.methods === "object" && !Array.isArray(contracts.methods), "Invalid core contract methods");
+    for (const [name, contract] of Object.entries(contracts.methods)) {
+      const method = methods.find((entry) => entry.name === name);
+      assert.equal(method?.stability, "stable", `Contract for unknown or non-stable method: ${name}`);
+      assert.equal(contract.version, 1, `Invalid contract version: ${name}`);
+      for (const field of ["inputSchema", "resultSchema", "errorSchema"]) {
+        assert.ok(contract[field] && typeof contract[field] === "object" && !Array.isArray(contract[field]), `Missing ${field}: ${name}`);
+      }
+      assert.ok(Array.isArray(contract.events) && Array.isArray(contract.knownErrors), `Missing event/error behavior: ${name}`);
+      method.contract = contract;
+    }
+    for (const method of methods.filter((entry) => entry.stability === "stable"))
+      assert.ok(method.contract, `Stable method has no core contract: ${method.name}`);
+  }
   return { version: 1, methods };
+}
+
+/** Read exactly the schema file embedded by the selected host, never a cached SDK copy. */
+export async function loadRustCatalogue(applicationDirectory) {
+  const directory = join(resolve(applicationDirectory), "src-tauri/src/plugins");
+  const source = await readFile(join(directory, "api.rs"), "utf8");
+  const contracts = /include_str!\(\s*"contracts\/core-v1\.json"\s*\)/.test(source)
+    ? JSON.parse(await readFile(join(directory, "contracts/core-v1.json"), "utf8"))
+    : undefined;
+  return parseRustCatalogue(source, contracts);
 }
 
 export function checkMethodTypes(source, catalogue) {
@@ -67,9 +95,7 @@ export function checkMethodTypes(source, catalogue) {
 
 export async function syncSdk(applicationDirectory, { check = false, sdkDirectory = join(root, "sdk") } = {}) {
   const source = resolve(applicationDirectory);
-  const catalogue = parseRustCatalogue(
-    await readFile(join(source, "src-tauri/src/plugins/api.rs"), "utf8"),
-  );
+  const catalogue = await loadRustCatalogue(source);
   const { version } = JSON.parse(await readFile(join(source, "package.json"), "utf8"));
   const json = JSON.stringify(catalogue, null, 2) + "\n";
   const escape = (value) => value.replaceAll("|", "\\|").replaceAll("\n", " ");

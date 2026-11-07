@@ -6,10 +6,36 @@ import { test } from "node:test";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
-import { checkMethodTypes, parseRustCatalogue, syncSdk } from "../scripts/sync-sdk.mjs";
+import { checkMethodTypes, loadRustCatalogue, parseRustCatalogue, syncSdk } from "../scripts/sync-sdk.mjs";
 
 const run = promisify(execFile);
 const releaseCheck = fileURLToPath(new URL("../scripts/ci/check-release-sdk.mjs", import.meta.url));
+
+test("core contracts are copied completely and fail closed on missing or unmatched schemas", () => {
+  const source = 'const CORE_CONTRACTS: &str = include_str!("contracts/core-v1.json");\npub const METHODS: &[ApiMethod] = &[\n stable_method!("example", [], "{}", "Example.", "0.31.0"),\n];';
+  const contract = { version: 1, inputSchema: { type: "object" }, resultSchema: { type: "null" }, errorSchema: { type: "object" }, knownErrors: [], events: [] };
+  const contracts = { version: 1, methods: { example: contract } };
+  assert.deepEqual(parseRustCatalogue(source, contracts).methods[0].contract, contract);
+  assert.throws(() => parseRustCatalogue(source), /contracts are missing/);
+  assert.throws(() => parseRustCatalogue(source, { ...contracts, version: 2 }), /contract version/);
+  assert.throws(() => parseRustCatalogue(source, { version: 1, methods: {} }), /no core contract/);
+  assert.throws(() => parseRustCatalogue(source, { version: 1, methods: { missing: contract } }), /unknown or non-stable/);
+  assert.throws(() => parseRustCatalogue(source, { version: 1, methods: { example: { ...contract, resultSchema: [] } } }), /resultSchema/);
+  assert.throws(() => parseRustCatalogue(source.replace('stable_method!("example", [], "{}", "Example.", "0.31.0")', 'method!("example", [], "{}", "Example.")'), contracts), /unknown or non-stable/);
+});
+
+test("catalogue loading requires the schema embedded by the chosen application checkout", async () => {
+  const root = await mkdtemp(join(tmpdir(), "tunnelde-core-contract-"));
+  const directory = join(root, "src-tauri/src/plugins");
+  try {
+    await mkdir(join(directory, "contracts"), { recursive: true });
+    await writeFile(join(directory, "api.rs"), 'const CORE_CONTRACTS: &str = include_str!("contracts/core-v1.json");\npub const METHODS: &[ApiMethod] = &[\n stable_method!("example", [], "{}", "Example.", "0.31.0"),\n];');
+    await assert.rejects(loadRustCatalogue(root), /ENOENT/);
+    const contract = { version: 1, inputSchema: {}, resultSchema: {}, errorSchema: {}, knownErrors: [], events: [] };
+    await writeFile(join(directory, "contracts/core-v1.json"), JSON.stringify({ version: 1, methods: { example: contract } }));
+    assert.deepEqual((await loadRustCatalogue(root)).methods[0].contract, contract);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
 
 test("catalogue parser rejects unrecognized entries instead of silently dropping them", () => {
   const source = `pub const METHODS: &[ApiMethod] = &[

@@ -96,6 +96,20 @@ export interface MethodDescription {
   stability?: "stable" | "experimental" | "deprecated";
   since?: string | null;
   deprecated?: string | null;
+  /** Optional machine-readable contract, absent on older hosts and experimental methods. */
+  contract?: MethodContract;
+}
+
+export interface MethodContract {
+  version: 1;
+  /** JSON Schema draft-07; encoded byte limits are documented separately. */
+  inputSchema: Record<string, unknown>;
+  resultSchema: Record<string, unknown>;
+  errorSchema: Record<string, unknown>;
+  /** Stable application error messages; IO/internal error text remains platform-specific. */
+  knownErrors: string[];
+  /** Events emitted by this method; an empty list means snapshot/RPC behavior only. */
+  events: string[];
 }
 
 /** Snapshot of a ready open editor. Excludes transport credentials and internal state. */
