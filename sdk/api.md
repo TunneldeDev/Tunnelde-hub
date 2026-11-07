@@ -74,7 +74,7 @@ Stability is part of the compatibility contract: `stable` methods include their 
 | `files.sftp.list` | `sftp.read` | `{sessionId:string,path?:string}` | `experimental` |  |  | List a remote directory using an active SSH session. |
 | `files.sftp.resolveDirectory` | `sftp.read` | `{sessionId:string,path?:string}` | `experimental` |  |  | Resolve the SSH account home and an optional working directory through SFTP without listing entries or executing a shell. Return {home,path}. Supports ~ and relative paths. |
 | `files.sftp.readText` | `sftp.read` | `{sessionId:string,path:string}` | `experimental` |  |  | Read remote UTF-8 text through the editor service; API response size limits apply. |
-| `files.sftp.writeText` | `sftp.write` | `{sessionId:string,path:string,content:string}` | `experimental` |  |  | Replace existing remote text through the editor service. |
+| `files.sftp.writeText` | `sftp.write` | `{sessionId:string,path:string,content:string,baseline?:string}` | `experimental` |  |  | Atomically replace existing remote text; optional baseline detects external edits. |
 | `files.sftp.createFile` | `sftp.write` | `{sessionId:string,path:string}` | `experimental` |  |  | Create an empty remote file without replacing an existing file. |
 | `files.sftp.mkdir` | `sftp.write` | `{sessionId:string,path:string}` | `experimental` |  |  | Create a remote directory. |
 | `files.sftp.rename` | `sftp.write` | `{sessionId:string,from:string,to:string,overwrite?:boolean}` | `experimental` |  |  | Rename a remote file/directory; overwriting is opt-in. |

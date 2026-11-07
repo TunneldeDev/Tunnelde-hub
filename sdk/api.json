@@ -733,8 +733,8 @@
       "permissions": [
         "sftp.write"
       ],
-      "params": "{sessionId:string,path:string,content:string}",
-      "description": "Replace existing remote text through the editor service.",
+      "params": "{sessionId:string,path:string,content:string,baseline?:string}",
+      "description": "Atomically replace existing remote text; optional baseline detects external edits.",
       "stability": "experimental",
       "since": null,
       "deprecated": null
