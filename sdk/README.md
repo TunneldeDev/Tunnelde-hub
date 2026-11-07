@@ -39,6 +39,10 @@ Stable methods may also expose an optional `contract` containing versioned JSON 
 for parameters, results and errors, plus their known errors and event behavior. The SDK
 copies these definitions from the selected application's embedded contract file; it does
 not infer schemas from the descriptive parameter string. Older hosts can omit `contract`.
+
+The first stable core covers discovery, authenticated session listing and plugin-scoped
+JSON storage. See [Core API compatibility](../docs/plugin-api.en-us.md)
+([简体中文](../docs/plugin-api.zh-cn.md)) for permissions, quotas and error handling.
 Unknown methods are rejected. There is no generic application-command invocation. The `secrets` permission
 allows access only to the plugin's own keyring namespace; SSH credentials remain private.
 
