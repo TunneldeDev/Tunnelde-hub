@@ -11,11 +11,16 @@ SFTP conflict checks are optimistic, and replacing an inode cannot guarantee
 preservation of hard-link relationships or extended ACL/xattr metadata.
 
 An installed plugin can contribute commands that act directly on the open editor.
-Press **Ctrl+Shift+F** (**Cmd+Shift+F** on macOS), use **Format document** in the
-editor toolbar, or find a command with **F1**. Outside the editor, Ctrl+Shift+F
-continues to search workspace contents. Settings → Keyboard Shortcuts lists host
-and installed plugin commands, including plugin defaults; users can change or
-disable each binding. Profiles preserve those changes.
+Use **Format document** in the editor toolbar or find an installed command with
+**F1**. Plugins can contribute default shortcuts; **Settings → Keyboard Shortcuts**
+lists their actual bindings and lets users change or disable each one. No formatting
+shortcut is registered without a provider. Profiles preserve customized bindings.
+
+When a new plugin binding conflicts with another command, keep one, keep both, or
+open the filtered shortcut settings. Retained conflicts are highlighted in red;
+matching commands run in sequence, with editor commands applying only to declared
+file extensions. Check bindings before keeping a conflict: `Ctrl+Shift+F` already
+opens workspace content search.
 
 When multiple formatters match, choose a provider. Running a formatter follows
 the existing plugin permission and runtime consent steps. A declined prompt never
@@ -81,3 +86,22 @@ API version 1 and do not change older plugin calls. See the independent marketpl
 SDK for the generated method catalogue and TypeScript interfaces.
 
 [中文](editor-plugins.zh-cn.md) · [Plugin SDK](../sdk/README.md)
+
+## Direct local text saves
+
+`files.local.writeText` accepts `{path, content, baseline?}` and returns `null`.
+Use `api.describe` to check optional parameter support. Pass the last text read
+as `baseline` to detect changes before the call. Omitting it remains supported;
+the host snapshots the file at the start and checks it before publication.
+The host writes, flushes and verifies private sibling staging, preserves supported
+metadata and atomically replaces the existing file. Failures preserve the original.
+Both versions must be UTF-8 text without NUL bytes and at most 512 KiB; the existing
+256 KiB serialized RPC request limit also applies. Only `fs.write` is required.
+The parent must allow private staging; deleted files are not recreated.
+
+Tool calls also recheck the approved path, resolved grant roots and original hash
+inside the transaction. Authorization, client revocation and cancellation are
+checked before staging and just before replacement. An operation already past the
+last check cannot be rolled back. Cleanup failures appear in background tasks and
+are retried on startup. Path comparisons are optimistic; hard links/open readers
+retain the old file object, and power-loss directory durability is not guaranteed.
