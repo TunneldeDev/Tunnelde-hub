@@ -65,6 +65,29 @@
       "sha256": "f420a1b7f8a0eae5719b756ed0a4647e7de3ecca78c245340a019168a16551c7"
     },
     {
+      "id": "jsonl-log-viewer",
+      "name": "JSONL Log Viewer",
+      "version": "1.20.0",
+      "description": "Read structured JSONL and NDJSON logs as conventional timestamped log lines, directly in the active editor.",
+      "author": "TunneldeDev",
+      "runtime": "node",
+      "apiVersion": 1,
+      "engines": {
+        "node": ">=22",
+        "tunnelde": ">=0.29.0-beta.2"
+      },
+      "tags": [
+        "logs",
+        "jsonl",
+        "json",
+        "formatter",
+        "developer-tools"
+      ],
+      "readme": "# JSONL Log Viewer\n\n[English](README.en-us.md) · [简体中文](README.zh-cn.md)\n\nRead JSONL and NDJSON as conventional log lines directly in the active editor.\n",
+      "url": "https://github.com/TunneldeDev/tunnelde-hub/releases/download/plugins-v1.20.0/jsonl-log-viewer-1.20.0.zip",
+      "sha256": "316bd9521993282376e3c95b654ad1adfaf75800c51644f656dee06be1e5d09a"
+    },
+    {
       "id": "sshfs",
       "name": "SSHFS",
       "version": "1.9.0",
