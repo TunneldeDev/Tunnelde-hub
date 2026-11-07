@@ -159,3 +159,22 @@ test("SDK supports per-call deadlines and output failure cancels pending RPC", a
     t.close();
   }
 });
+
+test("status bar helpers use versioned host calls without implicit execution", async () => {
+  const t = transport();
+  try {
+    const item = { id: "connection", text: "Ready", alignment: "right", command: "open" };
+    const pending = t.plugin.host.statusBar.set(item);
+    const request = await t.next();
+    assert.equal(request.method, "statusBar.set");
+    assert.deepEqual(request.params, item);
+    t.send({ jsonrpc: "2.0", id: request.id, result: null });
+    assert.equal(await pending, null);
+    const removing = t.plugin.host.statusBar.remove("connection");
+    const removal = await t.next();
+    assert.equal(removal.method, "statusBar.remove");
+    assert.deepEqual(removal.params, { id: "connection" });
+    t.send({ jsonrpc: "2.0", id: removal.id, result: true });
+    assert.equal(await removing, true);
+  } finally { t.close(); }
+});

@@ -63,6 +63,10 @@ export function createPlugin(
   }
   const host = Object.freeze({
     call,
+    statusBar: Object.freeze({
+      set: (item) => call("statusBar.set", item),
+      remove: (id) => call("statusBar.remove", { id }),
+    }),
     describe: () => call("api.describe"),
     log: (message, level = "info") => call("log", { message, level }),
   });
