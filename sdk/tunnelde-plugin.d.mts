@@ -7,6 +7,16 @@ export interface TabBarItem {
   id: string;
   title: string;
   kind: "button" | "select" | "text";
+  /** Default trailing. Leading controls appear before the tabs. */
+  placement?: "leading" | "trailing";
+  /** Plugin-scoped group ID; adjacent groups have subtle separators. */
+  group?: string;
+  /** Plain-text hover description, at most 512 characters. */
+  tooltip?: string;
+  /** Keep button text next to its icon. */
+  showLabel?: boolean;
+  /** Button-only toggle state. Update with set() after a successful command. */
+  checked?: boolean;
   priority?: number;
   icon?:
     | "activity"
