@@ -12,7 +12,7 @@ The first stable core consists of `api.describe`, `sessions.list`, `storage.get`
 Stable method descriptions include an optional version-1 `contract` containing draft-07
 `inputSchema`, `resultSchema`, `errorSchema`, `knownErrors` and `events`. Older hosts can
 omit this metadata. Ignore additional fields, discover methods before use and handle
-unknown failures. Settings, workspace, chat and remote runners remain experimental.
+unknown failures. Settings, workspace mutations, chat and remote runners remain experimental.
 Stable contracts also cover status bar contributions and `editor.active`/`editor.replace`.
 The editor methods have been available since 0.29.0-beta.2; `since` is their first
 availability, not the date the v1 contract was frozen.
@@ -47,6 +47,26 @@ include `plugin.api.missing:<field>`, `plugin.api.invalid:<field>`,
 `plugin.api.invalidStorageKey`, `plugin.api.invalidStorage` and
 `plugin.api.storageTooLarge`. `knownErrors` is not an exhaustive list of OS errors.
 The transport can reject an oversized response with `-32002` and no `data`.
+
+## Workspace snapshot contract
+
+`workspace.snapshot` requires `workspace.read` and has existed since 0.21.0. Its frozen
+v1 result is the independent `PluginWorkspaceSnapshot`: `tabs`, `panes`, `activeId`,
+`activePaneId` and recursive `layout`. The host explicitly copies documented fields;
+new internal store fields, editor contents, drafts and credentials are excluded.
+File-pane metadata preserves source/session IDs, path, view preferences, remote identity
+and offline status. Optional fields remain optional, including explicit `false` or `null`.
+Tab kinds and view option strings are open vocabularies; tolerate new values.
+
+Hidden panel tabs may remain in their remembered pane. A split's `row` is horizontal,
+`column` vertical, with a ratio from 0 to 1. Each request reads current state; the result
+does not reserve tabs or sessions or grant file/SSH access. No events are emitted.
+Authorization is checked before dispatch and after the reply. Bridge timeout/closure,
+busy, expired request and response byte-limit failures remain possible.
+
+`npm run sdk:sync -- ../Tunnelde` copies the workspace DTO declarations from the host's
+independent projection. Check mode detects missing/changed declarations without writing
+SDK files. Workspace mutations remain experimental even when returning this snapshot.
 
 ## Editor buffer contract
 

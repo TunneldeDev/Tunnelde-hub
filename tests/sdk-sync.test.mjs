@@ -97,3 +97,46 @@ test("SDK method types must cover precisely the host method names", () => {
   assert.throws(() => checkMethodTypes(types.replace('  log:', '  [key: string]:'), catalogue), /Unsupported HostMethodMap entry/);
   assert.throws(() => checkMethodTypes("", catalogue), /HostMethodMap was not found/);
 });
+
+test("stable workspace DTOs synchronize and detect drift without mutating SDK files in check mode", async () => {
+  const root = await mkdtemp(join(tmpdir(), "tunnelde-workspace-dto-"));
+  const app = join(root, "app");
+  const sdk = join(root, "sdk");
+  const dtoPath = join(app, "src/lib/plugins/workspace.ts");
+  const sdkPath = join(sdk, "tunnelde-plugin.d.mts");
+  const declaration = '// BEGIN GENERATED WORKSPACE V1 TYPES\nexport interface PluginWorkspaceSnapshot { tabs: string[] }\n// END GENERATED WORKSPACE V1 TYPES';
+  const types = 'export interface HostMethodMap {\n  "workspace.snapshot": [Record<string, never>, PluginWorkspaceSnapshot];\n}\n';
+  try {
+    await mkdir(join(app, "src-tauri/src/plugins"), { recursive: true });
+    await mkdir(join(app, "src/lib/plugins"), { recursive: true });
+    await mkdir(sdk);
+    await writeFile(join(app, "package.json"), JSON.stringify({ version: "0.21.0" }));
+    await writeFile(join(app, "src-tauri/src/plugins/api.rs"), 'pub const METHODS: &[ApiMethod] = &[\n stable_method!("workspace.snapshot", ["workspace.read"], "{}", "Snapshot.", "0.21.0"),\n];');
+    await writeFile(sdkPath, types);
+    await assert.rejects(syncSdk(app, { sdkDirectory: sdk }), /ENOENT/);
+    await writeFile(dtoPath, declaration + '\nexport function projectPluginWorkspace() {}\n');
+    await syncSdk(app, { sdkDirectory: sdk });
+    const expected = await readFile(sdkPath, "utf8");
+    assert.equal(expected, declaration + '\n\n' + types);
+    assert.ok(!expected.includes("projectPluginWorkspace"));
+    await syncSdk(app, { sdkDirectory: sdk, check: true });
+    // Removing or changing a generated declaration must fail before any write.
+    for (const changed of [types, expected.replace('tabs: string[]', 'tabs: number[]')]) {
+      await writeFile(sdkPath, changed);
+      await assert.rejects(syncSdk(app, { sdkDirectory: sdk, check: true }), /DTO/);
+      assert.equal(await readFile(sdkPath, "utf8"), changed);
+    }
+    await syncSdk(app, { sdkDirectory: sdk });
+    assert.equal(await readFile(sdkPath, "utf8"), expected);
+    await writeFile(sdkPath, expected.replace('never>, PluginWorkspaceSnapshot', 'never>, unknown'));
+    await assert.rejects(syncSdk(app, { sdkDirectory: sdk, check: true }), /must return PluginWorkspaceSnapshot/);
+    await writeFile(sdkPath, expected);
+    for (const invalid of [declaration.replace('END GENERATED', 'BROKEN'), declaration + '\n' + declaration]) {
+      await writeFile(dtoPath, invalid);
+      await assert.rejects(syncSdk(app, { sdkDirectory: sdk }), /marker/);
+      assert.equal(await readFile(sdkPath, "utf8"), expected);
+    }
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

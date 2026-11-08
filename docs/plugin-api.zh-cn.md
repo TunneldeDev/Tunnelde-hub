@@ -9,7 +9,7 @@
 `storage.delete`。这些方法自 0.21.0 提供；`since` 表示首次可用版本，不表示稳定承诺建立
 的版本。稳定方法通过可选的版本 1 `contract` 提供 draft-07 的 `inputSchema`、
 `resultSchema`、`errorSchema`，以及 `knownErrors` 和 `events`。旧宿主可能没有这些元数据。
-请忽略新增字段，使用前发现方法，并处理未知错误。设置、工作区、聊天和远端运行器仍为实验接口。
+请忽略新增字段，使用前发现方法，并处理未知错误。设置、工作区修改、聊天和远端运行器仍为实验接口。
 稳定范围还包括状态栏贡献和 `editor.active`/`editor.replace`。编辑器方法自
 0.29.0-beta.2 起可用；`since` 表示首次提供方法的版本，不是冻结 v1 契约的版本。
 
@@ -37,6 +37,22 @@
 `-32000`。已知存储消息包括 `plugin.api.missing:<field>`、`plugin.api.invalid:<field>`、
 `plugin.api.invalidStorageKey`、`plugin.api.invalidStorage` 和 `plugin.api.storageTooLarge`。
 `knownErrors` 不穷举操作系统错误。传输层可能以 `-32002` 拒绝过大的响应且不附带 `data`。
+
+## 工作区快照契约
+
+`workspace.snapshot` 需要 `workspace.read`，自 0.21.0 起提供。冻结的 v1 结果使用独立的
+`PluginWorkspaceSnapshot`：`tabs`、`panes`、`activeId`、`activePaneId` 和递归的
+`layout`。宿主逐字段复制已有数据，不暴露以后新增的内部状态、编辑器内容、草稿或凭据。
+文件窗格元数据保留来源和会话标识、路径、视图设置、远端身份及离线状态。可选字段保持
+可选，并保留显式的 `false` 或 `null`。标签类型及视图选项字符串是开放值，必须容忍新值。
+
+隐藏的面板标签可留在记忆的窗格中。布局分支的 `row` 为水平、`column` 为垂直，比例在
+0 到 1 之间。每次请求读取当前状态，不保留标签或会话，也不授予文件或 SSH 访问权限。
+本方法不产生事件。宿主在分发前和回复后检查授权；仍可能出现前端超时、关闭、繁忙、
+请求过期和响应超过字节限制等错误。
+
+`npm run sdk:sync -- ../Tunnelde` 从宿主独立投影模块复制工作区类型声明。检查模式检测
+声明缺失或漂移，不写 SDK 文件。返回相同快照的工作区修改方法仍为实验接口。
 
 ## 编辑器缓冲区契约
 
