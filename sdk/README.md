@@ -43,6 +43,9 @@ not infer schemas from the descriptive parameter string. Older hosts can omit `c
 The first stable core covers discovery, authenticated session listing and plugin-scoped
 JSON storage. See [Core API compatibility](../docs/plugin-api.en-us.md)
 ([简体中文](../docs/plugin-api.zh-cn.md)) for permissions, quotas and error handling.
+Stable contracts also cover status bar contributions and the versioned editor buffer
+API. `EditorDocument` and `EditorWriteResult` are independent DTOs; buffer replacement
+requires a matching document identity/revision, supports undo and never saves to disk.
 Unknown methods are rejected. There is no generic application-command invocation. The `secrets` permission
 allows access only to the plugin's own keyring namespace; SSH credentials remain private.
 

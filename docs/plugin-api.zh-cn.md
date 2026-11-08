@@ -10,6 +10,8 @@
 的版本。稳定方法通过可选的版本 1 `contract` 提供 draft-07 的 `inputSchema`、
 `resultSchema`、`errorSchema`，以及 `knownErrors` 和 `events`。旧宿主可能没有这些元数据。
 请忽略新增字段，使用前发现方法，并处理未知错误。设置、工作区、聊天和远端运行器仍为实验接口。
+稳定范围还包括状态栏贡献和 `editor.active`/`editor.replace`。编辑器方法自
+0.29.0-beta.2 起可用；`since` 表示首次提供方法的版本，不是冻结 v1 契约的版本。
 
 | 方法             | 权限            | 行为                                                                      |
 | ---------------- | --------------- | ------------------------------------------------------------------------- |
@@ -35,6 +37,28 @@
 `-32000`。已知存储消息包括 `plugin.api.missing:<field>`、`plugin.api.invalid:<field>`、
 `plugin.api.invalidStorageKey`、`plugin.api.invalidStorage` 和 `plugin.api.storageTooLarge`。
 `knownErrors` 不穷举操作系统错误。传输层可能以 `-32002` 拒绝过大的响应且不附带 `data`。
+
+## 编辑器缓冲区契约
+
+`editor.active` 需要 `editor.read`，返回当前聚焦的就绪编辑器快照
+`{tabId, documentId, version, path, name, content, dirty}`。当前不是编辑器，或文档
+加载中、失败、断线、已关闭时返回 `null`。快照包含未保存修改，不会重新读取任意文件。
+内容超过 128 KiB UTF-8 字节时报告 `plugin.api.frontend:editor.documentTooLarge`。
+
+`editor.replace` 需要 `editor.write`，参数为 `{tabId, documentId, version, text}`，
+返回独立的 `EditorWriteResult`：`{tabId, documentId, version, dirty}`。替换是一次
+可撤销的缓冲区操作，不自动保存。内容改变时递增版本，内容相同时保留版本和撤销历史；
+撤销、重做也会递增版本。过期、已关闭再打开或不可用的文档报告
+`plugin.api.frontend:editor.documentChanged`。应重新读取并让用户重试，不能覆盖更新的
+修改。`dirty` 比较替换后的内容与已保存基线。
+
+ID 必须非空、不含 NUL，且不超过 1,024 个 UTF-16 码元；版本是非负安全整数。文本
+允许为空，UTF-8 编码后最多 128 KiB。未知输入字段会被忽略，调用方必须忽略未来新增的
+返回字段。结构中的字符长度独立于字节限制和状态检查。字段错误报告
+`plugin.api.frontend:invalid:<field>`，代码为 `-32000`；授权失败使用 `-32001`。
+前端桥还可能报告 `plugin.api.busy`、`plugin.api.frontendTimeout`、
+`plugin.api.frontendClosed` 和 `plugin.api.requestExpired`。这两个方法不产生插件事件，
+也不会自动订阅文档变化。另见[编辑器插件](editor-plugins.zh-cn.md)。
 
 应用会用冻结的契约底线校验宿主生成的响应，并通过冻结的契约引入前 SDK 回放。兼容性
 探针还完成了隔离的 Windows 桌面验收，覆盖持久化、隔离、配额与授权撤销。这覆盖明确

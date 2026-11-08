@@ -72,6 +72,11 @@ precedence over matching workbench shortcuts while the editor has focus.
 
 ## Host API
 
+These are stable v1 buffer APIs, available since host 0.29.0-beta.2. Discover
+`contract` through `host.describe()`; older hosts may support the methods without
+the stability metadata. See [Core API compatibility](plugin-api.en-us.md) for
+error identifiers, limits and the compatibility policy.
+
 - `editor.active` (`editor.read`): the ready active document snapshot, or `null`.
   The snapshot contains `tabId`, `documentId`, `version`, `path`, `name`, `content`
   and `dirty`. It excludes session details, saved credentials and baseline data.
@@ -79,6 +84,8 @@ precedence over matching workbench shortcuts while the editor has focus.
   Returns `{tabId, documentId, version, dirty}` after an undoable replacement.
   Stale, closed, loading and disconnected documents are rejected. An unchanged
   replacement preserves the version. Successful changes increment it.
+  Undo/redo also advance the version. `dirty` compares the result with the saved
+  baseline. Re-read after a stale-document error rather than overwriting newer edits.
 
 Both methods use the existing authorized frontend bridge and runtime-generation
 checks. The host exposes open buffers only, never arbitrary files. They retain
