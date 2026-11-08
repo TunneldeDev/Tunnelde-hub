@@ -7,7 +7,7 @@
       "params": "{id:string,text:string,alignment?:left|right,priority?:number,tooltip?:string,icon?:activity|check|alert|info|sync|terminal|cloud|code|plug,command?:string}",
       "description": "Register or replace this runtime's status item. Eight per plugin, 128 total; plain text only. Click commands must be this plugin's non-editor, non-file-menu manifest commands. Items disappear on stop, revocation, crash or restart.",
       "stability": "stable",
-      "since": "0.31.1",
+      "since": "0.32.0-beta.1",
       "deprecated": null,
       "contract": {
         "version": 1,
@@ -142,7 +142,7 @@
       "params": "{id:string}",
       "description": "Remove this runtime's status item; return false when absent. IDs are scoped to the plugin and runtime generation.",
       "stability": "stable",
-      "since": "0.31.1",
+      "since": "0.32.0-beta.1",
       "deprecated": null,
       "contract": {
         "version": 1,
