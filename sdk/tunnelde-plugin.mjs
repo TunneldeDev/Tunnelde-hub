@@ -63,6 +63,10 @@ export function createPlugin(
   }
   const host = Object.freeze({
     call,
+    tabBar: Object.freeze({
+      set: (item) => call("tabBar.set", item),
+      remove: (id) => call("tabBar.remove", { id }),
+    }),
     statusBar: Object.freeze({
       set: (item) => call("statusBar.set", item),
       remove: (id) => call("statusBar.remove", { id }),

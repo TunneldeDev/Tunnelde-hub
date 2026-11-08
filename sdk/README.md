@@ -197,3 +197,5 @@ such a result as `void` should use `null` or ignore the result instead. This
 correction does not change the runtime protocol.
 
 Stable status bar contributions: [English](../docs/status-bar.en-us.md) · [简体中文](../docs/status-bar.zh-cn.md).
+
+Tab bar controls (experimental): [English](../docs/tab-bar.en-us.md) · [简体中文](../docs/tab-bar.zh-cn.md).
