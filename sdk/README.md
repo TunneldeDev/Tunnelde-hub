@@ -50,6 +50,12 @@ requires a matching document identity/revision, supports undo and never saves to
 `PluginWorkspaceSnapshot` declarations are synchronized from the host projection and
 checked for drift; layout metadata grants no file or session permissions. Workspace
 mutations remain experimental.
+Tab-bar registration and removal also have stable v1 contracts. Registrations replace
+the entire item; removal returns whether an item was removed. The optional
+`contract.commandContextSchema` describes the `_locale` / `_tabBar` input delivered
+to a declared command. `TabBarCommandInput` exposes those advisory fields without
+granting file, editor or SSH access. Rendering and internal snapshot events remain
+host implementation details.
 Unknown methods are rejected. There is no generic application-command invocation. The `secrets` permission
 allows access only to the plugin's own keyring namespace; SSH credentials remain private.
 
@@ -214,4 +220,4 @@ correction does not change the runtime protocol.
 
 Stable status bar contributions: [English](../docs/status-bar.en-us.md) · [简体中文](../docs/status-bar.zh-cn.md).
 
-Tab bar controls (experimental): [English](../docs/tab-bar.en-us.md) · [简体中文](../docs/tab-bar.zh-cn.md).
+Stable tab bar controls: [English](../docs/tab-bar.en-us.md) · [简体中文](../docs/tab-bar.zh-cn.md).

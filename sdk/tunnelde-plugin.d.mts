@@ -2,7 +2,7 @@ import type { Readable, Writable } from "node:stream";
 
 export type AuthMethod = "password" | "key" | "agent" | "keyboardInteractive";
 
-/** Experimental declarative tab-bar controls. No HTML or CSS is accepted. */
+/** Stable v1 tab-bar controls, available since 0.32.0-beta.6. Set replaces the whole item. */
 export interface TabBarItem {
   id: string;
   title: string;
@@ -10,13 +10,13 @@ export interface TabBarItem {
   /** Default trailing. Leading controls appear before the tabs. */
   placement?: "leading" | "trailing";
   /** Plugin-scoped group ID; adjacent groups have subtle separators. */
-  group?: string;
+  group?: string | null;
   /** Plain-text hover description, at most 512 characters. */
-  tooltip?: string;
+  tooltip?: string | null;
   /** Keep button text next to its icon. */
   showLabel?: boolean;
   /** Button-only toggle state. Update with set() after a successful command. */
-  checked?: boolean;
+  checked?: boolean | null;
   priority?: number;
   icon?:
     | "activity"
@@ -36,13 +36,14 @@ export interface TabBarItem {
     | "follow"
     | "play"
     | "pause"
-    | "filter";
-  command?: string;
+    | "filter"
+    | null;
+  command?: string | null;
   disabled?: boolean;
   /** Omit to target own plugin views; {} targets all tabs. IDs are opaque. */
-  when?: { tabKind?: string; tabId?: string };
+  when?: { tabKind?: string | null; tabId?: string | null } | null;
   options?: Array<{ value: string; label: string }>;
-  value?: string;
+  value?: string | null;
 }
 /** Advisory command input; does not grant editor, file or SSH permissions. */
 export interface TabBarCommandContext {
@@ -51,6 +52,11 @@ export interface TabBarCommandContext {
   tabKind: string;
   paneId: string;
   value: string | null;
+}
+/** Input passed to the manifest command; context never grants resource permissions. */
+export interface TabBarCommandInput {
+  _locale: string | null;
+  _tabBar: TabBarCommandContext;
 }
 
 export interface Group {
@@ -161,6 +167,8 @@ export interface MethodContract {
   inputSchema: Record<string, unknown>;
   resultSchema: Record<string, unknown>;
   errorSchema: Record<string, unknown>;
+  /** Optional schema of advisory input passed to a contribution's manifest command. */
+  commandContextSchema?: Record<string, unknown>;
   /** Stable application error messages; IO/internal error text remains platform-specific. */
   knownErrors: string[];
   /** Events emitted by this method; an empty list means snapshot/RPC behavior only. */
@@ -788,7 +796,7 @@ export interface HostMethodMap {
   log: [{ message: string; level?: string }, null];
 }
 export interface Host {
-  /** Experimental; use describe() to detect support before registering. */
+  /** Stable v1; use describe() to detect support and contracts on older hosts. */
   readonly tabBar: {
     set(item: TabBarItem): Promise<null>;
     remove(id: string): Promise<boolean>;
