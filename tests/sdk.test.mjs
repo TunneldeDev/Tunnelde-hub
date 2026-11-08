@@ -197,3 +197,18 @@ test("tab bar helpers register declarative controls and remove them through the 
     assert.equal(await pendingRemoval, true);
   } finally { t.close(); }
 });
+
+test("tab-bar commands preserve nullable and Unicode advisory input without implicit host calls", async () => {
+  const t = transport({ run: (command, input) => ({ command, input }) });
+  try {
+    for (const value of [null, "远端"]) {
+      const input = { _locale: null, _tabBar: { itemId: "run", tabId: "opaque", tabKind: "future", paneId: "p", value } };
+      t.send({ jsonrpc: "2.0", id: 42, method: "command.run", params: { command: "go", input } });
+      assert.deepEqual(await t.next(), { jsonrpc: "2.0", id: 42, result: { command: "go", input } });
+    }
+    const removing = t.plugin.host.tabBar.remove("absent");
+    const request = await t.next();
+    t.send({ jsonrpc: "2.0", id: request.id, result: false });
+    assert.equal(await removing, false);
+  } finally { t.close(); }
+});

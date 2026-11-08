@@ -16,6 +16,9 @@ unknown failures. Settings, workspace mutations, chat and remote runners remain 
 Stable contracts also cover status bar contributions and `editor.active`/`editor.replace`.
 The editor methods have been available since 0.29.0-beta.2; `since` is their first
 availability, not the date the v1 contract was frozen.
+Tab-bar registration and removal have stable v1 contracts, including the optional
+`commandContextSchema` for advisory `_locale` / `_tabBar` command input. See
+[Tab bar contributions](tab-bar.en-us.md) for replacement, lifecycle and scope rules.
 
 | Method           | Permission      | Behavior                                                                                                 |
 | ---------------- | --------------- | -------------------------------------------------------------------------------------------------------- |
