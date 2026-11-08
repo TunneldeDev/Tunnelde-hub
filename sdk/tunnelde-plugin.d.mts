@@ -2,6 +2,47 @@ import type { Readable, Writable } from "node:stream";
 
 export type AuthMethod = "password" | "key" | "agent" | "keyboardInteractive";
 
+/** Experimental declarative tab-bar controls. No HTML or CSS is accepted. */
+export interface TabBarItem {
+  id: string;
+  title: string;
+  kind: "button" | "select" | "text";
+  priority?: number;
+  icon?:
+    | "activity"
+    | "check"
+    | "alert"
+    | "info"
+    | "sync"
+    | "terminal"
+    | "cloud"
+    | "code"
+    | "plug"
+    | "copy"
+    | "clear"
+    | "folder"
+    | "file"
+    | "wrap"
+    | "follow"
+    | "play"
+    | "pause"
+    | "filter";
+  command?: string;
+  disabled?: boolean;
+  /** Omit to target own plugin views; {} targets all tabs. IDs are opaque. */
+  when?: { tabKind?: string; tabId?: string };
+  options?: Array<{ value: string; label: string }>;
+  value?: string;
+}
+/** Advisory command input; does not grant editor, file or SSH permissions. */
+export interface TabBarCommandContext {
+  itemId: string;
+  tabId: string;
+  tabKind: string;
+  paneId: string;
+  value: string | null;
+}
+
 export interface Group {
   id: string;
   name: string;
@@ -153,7 +194,10 @@ export interface FileMenuCommandInput {
 }
 export interface EditorCommandInput {
   source: string;
-  document: Pick<EditorDocument, "tabId" | "documentId" | "version" | "path" | "name">;
+  document: Pick<
+    EditorDocument,
+    "tabId" | "documentId" | "version" | "path" | "name"
+  >;
   indent: string;
   _locale: string;
 }
@@ -218,7 +262,8 @@ export interface RunnerRecord {
   stopPending: boolean;
 }
 export interface RunnerState {
-  status: "starting" | "running" | "stopping" | "stopped" | "failed" | "unresponsive";
+  status:
+    "starting" | "running" | "stopping" | "stopped" | "failed" | "unresponsive";
   error?: string | null;
 }
 export interface RunnerApproval {
@@ -250,7 +295,13 @@ export interface PluginView {
   icon?: string;
 }
 export type ChatProtocol =
-  "openai-chat" | "openai-responses" | "anthropic" | "gemini" | "codex" | "claude-code" | "pi";
+  | "openai-chat"
+  | "openai-responses"
+  | "anthropic"
+  | "gemini"
+  | "codex"
+  | "claude-code"
+  | "pi";
 export interface ChatProfilePolicy {
   primaryProtocols: ChatProtocol[];
   reviewerProtocols: ChatProtocol[];
@@ -313,7 +364,14 @@ export interface PluginChatBlock {
   }[];
   run?: {
     id: string;
-    status: "idle" | "running" | "waiting" | "done" | "cancelled" | "failed" | "interrupted";
+    status:
+      | "idle"
+      | "running"
+      | "waiting"
+      | "done"
+      | "cancelled"
+      | "failed"
+      | "interrupted";
     seq: number;
   } | null;
   approvals?: {
@@ -327,7 +385,8 @@ export interface PluginChatBlock {
   tasks?: {
     id: string;
     title?: string;
-    status: "queued" | "running" | "done" | "failed" | "cancelled" | "interrupted";
+    status:
+      "queued" | "running" | "done" | "failed" | "cancelled" | "interrupted";
     output?: string;
     recoverable?: boolean;
   }[];
@@ -380,12 +439,24 @@ export interface StatusBarItem {
   alignment?: "left" | "right";
   priority?: number;
   tooltip?: string | null;
-  icon?: "activity" | "check" | "alert" | "info" | "sync" | "terminal" | "cloud" | "code" | "plug" | null;
+  icon?:
+    | "activity"
+    | "check"
+    | "alert"
+    | "info"
+    | "sync"
+    | "terminal"
+    | "cloud"
+    | "code"
+    | "plug"
+    | null;
   /** This plugin's manifest command; editor/file-menu commands require context and are excluded. */
   command?: string | null;
 }
 
 export interface HostMethodMap {
+  "tabBar.set": [TabBarItem, null];
+  "tabBar.remove": [{ id: string }, boolean];
   "statusBar.set": [StatusBarItem, null];
   "statusBar.remove": [{ id: string }, boolean];
   "forwards.list": [Record<string, never>, ForwardInfo[]];
@@ -396,7 +467,12 @@ export interface HostMethodMap {
   "mounts.dependencies": [Record<string, never>, MountDependencies];
   "mounts.list": [Record<string, never>, MountInfo[]];
   "mounts.mount": [
-    { sessionId: string; remotePath: string; mountPoint: string; readOnly?: boolean },
+    {
+      sessionId: string;
+      remotePath: string;
+      mountPoint: string;
+      readOnly?: boolean;
+    },
     MountInfo,
   ];
   "mounts.unmount": [{ id: string; force?: boolean }, null];
@@ -459,7 +535,10 @@ export interface HostMethodMap {
     { sessionId: string; runnerId: string; message: Record<string, unknown> },
     { accepted: boolean },
   ];
-  "runners.poll": [{ sessionId: string; runnerId: string; afterSeq?: number }, RunnerPoll];
+  "runners.poll": [
+    { sessionId: string; runnerId: string; afterSeq?: number },
+    RunnerPoll,
+  ];
   "runners.status": [{ sessionId: string; runnerId: string }, RunnerState];
   "runners.stop": [
     { sessionId: string; runnerId: string },
@@ -488,10 +567,16 @@ export interface HostMethodMap {
   "files.local.home": [Record<string, never>, string];
   "files.local.list": [{ path?: string }, Listing];
   "files.local.readText": [{ path: string }, { content: string; size: number }];
-  "files.local.writeText": [{ path: string; content: string; baseline?: string }, null];
+  "files.local.writeText": [
+    { path: string; content: string; baseline?: string },
+    null,
+  ];
   "files.local.createFile": [{ path: string }, null];
   "files.local.mkdir": [{ path: string }, null];
-  "files.local.rename": [{ from: string; to: string; overwrite?: boolean }, null];
+  "files.local.rename": [
+    { from: string; to: string; overwrite?: boolean },
+    null,
+  ];
   "files.local.copy": [{ from: string; to: string; overwrite?: boolean }, null];
   "files.local.delete": [{ path: string; isDir: boolean }, null];
   "files.sftp.list": [{ sessionId: string; path?: string }, Listing];
@@ -499,34 +584,64 @@ export interface HostMethodMap {
     { sessionId: string; path?: string },
     { home: string; path: string },
   ];
-  "files.sftp.readText": [{ sessionId: string; path: string }, { content: string; size: number }];
-  "files.sftp.writeText": [{ sessionId: string; path: string; content: string; baseline?: string }, null];
+  "files.sftp.readText": [
+    { sessionId: string; path: string },
+    { content: string; size: number },
+  ];
+  "files.sftp.writeText": [
+    { sessionId: string; path: string; content: string; baseline?: string },
+    null,
+  ];
   "files.sftp.createFile": [{ sessionId: string; path: string }, null];
   "files.sftp.mkdir": [{ sessionId: string; path: string }, null];
-  "files.sftp.rename": [{ sessionId: string; from: string; to: string; overwrite?: boolean }, null];
-  "files.sftp.copy": [{ sessionId: string; from: string; to: string; overwrite?: boolean }, null];
-  "files.sftp.delete": [{ sessionId: string; path: string; isDir: boolean }, null];
+  "files.sftp.rename": [
+    { sessionId: string; from: string; to: string; overwrite?: boolean },
+    null,
+  ];
+  "files.sftp.copy": [
+    { sessionId: string; from: string; to: string; overwrite?: boolean },
+    null,
+  ];
+  "files.sftp.delete": [
+    { sessionId: string; path: string; isDir: boolean },
+    null,
+  ];
   "monitor.system": [Record<string, never>, unknown];
   "monitor.stats": [{ sessionId: string }, unknown];
   "monitor.processes": [{ sessionId: string }, unknown];
   "monitor.kill": [{ sessionId: string; pid: number }, null];
   "history.list": [{ hostId: string; limit?: number }, unknown];
-  "history.record": [{ hostId: string; command: string }, Record<string, unknown> | null];
+  "history.record": [
+    { hostId: string; command: string },
+    Record<string, unknown> | null,
+  ];
   "history.delete": [{ id: number }, null];
   "history.clear": [{ hostId: string }, null];
 
-  "api.describe": [Record<string, never>, { version: number; methods: MethodDescription[] }];
+  "api.describe": [
+    Record<string, never>,
+    { version: number; methods: MethodDescription[] },
+  ];
   "app.info": [Record<string, never>, Record<string, unknown>];
   "app.openExternal": [{ url: string }, null];
   "settings.get": [Record<string, never>, Record<string, unknown>];
-  "settings.update": [{ patch: Record<string, unknown> }, Record<string, unknown>];
-  "hosts.snapshot": [Record<string, never>, { hosts: SavedHost[]; groups: Group[] }];
+  "settings.update": [
+    { patch: Record<string, unknown> },
+    Record<string, unknown>,
+  ];
+  "hosts.snapshot": [
+    Record<string, never>,
+    { hosts: SavedHost[]; groups: Group[] },
+  ];
   "hosts.create": [{ input: HostInput }, SavedHost];
   "hosts.update": [{ id: string; input: HostInput }, SavedHost];
   "hosts.delete": [{ id: string }, null];
   "hosts.markUsed": [{ id: string }, null];
   "hosts.reorder": [{ ids: string[] }, null];
-  "groups.create": [{ input: { name: string; parentId?: string | null } }, Record<string, unknown>];
+  "groups.create": [
+    { input: { name: string; parentId?: string | null } },
+    Record<string, unknown>,
+  ];
   "groups.update": [
     { id: string; input: { name: string; parentId?: string | null } },
     Record<string, unknown>,
@@ -557,7 +672,10 @@ export interface HostMethodMap {
   "workspace.openHost": [{ hostId: string }, unknown];
   "workspace.openTerminal": [{ sessionId: string }, unknown];
   "workspace.openFiles": [{ sessionId: string }, unknown];
-  "workspace.openSidebar": [{ view: "hosts" | "knownHosts" | "plugins" }, unknown];
+  "workspace.openSidebar": [
+    { view: "hosts" | "knownHosts" | "plugins" },
+    unknown,
+  ];
   "workspace.activate": [{ tabId: string }, unknown];
   "workspace.close": [{ tabId: string }, unknown];
   "workspace.split": [
@@ -569,15 +687,29 @@ export interface HostMethodMap {
     },
     unknown,
   ];
-  "workspace.move": [{ tabId: string; paneId: string; beforeTabId?: string | null }, unknown];
-  "workspace.returnSidebar": [{ view: "hosts" | "knownHosts" | "plugins" }, unknown];
+  "workspace.move": [
+    { tabId: string; paneId: string; beforeTabId?: string | null },
+    unknown,
+  ];
+  "workspace.returnSidebar": [
+    { view: "hosts" | "knownHosts" | "plugins" },
+    unknown,
+  ];
   "clipboard.readText": [Record<string, never>, string];
   "clipboard.writeText": [{ text: string }, null];
-  "ui.showMessage": [{ message: string; kind?: "info" | "success" | "error" }, null];
+  "ui.showMessage": [
+    { message: string; kind?: "info" | "success" | "error" },
+    null,
+  ];
   "ui.confirm": [{ message: string }, boolean];
   log: [{ message: string; level?: string }, null];
 }
 export interface Host {
+  /** Experimental; use describe() to detect support before registering. */
+  readonly tabBar: {
+    set(item: TabBarItem): Promise<null>;
+    remove(id: string): Promise<boolean>;
+  };
   readonly statusBar: {
     set(item: StatusBarItem): Promise<null>;
     remove(id: string): Promise<boolean>;
@@ -601,8 +733,16 @@ export interface PluginHandlers {
     params: { apiVersion: number; pluginId: string },
     host: Host,
   ): unknown | Promise<unknown>;
-  run?(command: string, input: Record<string, unknown>, host: Host): unknown | Promise<unknown>;
-  render?(view: string, locale: string | undefined, host: Host): unknown | Promise<unknown>;
+  run?(
+    command: string,
+    input: Record<string, unknown>,
+    host: Host,
+  ): unknown | Promise<unknown>;
+  render?(
+    view: string,
+    locale: string | undefined,
+    host: Host,
+  ): unknown | Promise<unknown>;
   shutdown?(host: Host): unknown | Promise<unknown>;
 }
 export function createPlugin(

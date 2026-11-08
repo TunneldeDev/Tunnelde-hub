@@ -178,3 +178,22 @@ test("status bar helpers use versioned host calls without implicit execution", a
     assert.equal(await removing, true);
   } finally { t.close(); }
 });
+
+test("tab bar helpers register declarative controls and remove them through the host", async () => {
+  const t = transport();
+  try {
+    const item = { id: "target", title: "Run", kind: "button", command: "run", when: { tabKind: "editor" } };
+    const pending = t.plugin.host.tabBar.set(item);
+    const frame = await t.next();
+    assert.equal(frame.method, "tabBar.set");
+    assert.deepEqual(frame.params, item);
+    t.send({ jsonrpc: "2.0", id: frame.id, result: null });
+    assert.equal(await pending, null);
+    const pendingRemoval = t.plugin.host.tabBar.remove("target");
+    const removal = await t.next();
+    assert.equal(removal.method, "tabBar.remove");
+    assert.deepEqual(removal.params, { id: "target" });
+    t.send({ jsonrpc: "2.0", id: removal.id, result: true });
+    assert.equal(await pendingRemoval, true);
+  } finally { t.close(); }
+});

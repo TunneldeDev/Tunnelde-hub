@@ -2,6 +2,24 @@
   "version": 1,
   "methods": [
     {
+      "name": "tabBar.set",
+      "permissions": [],
+      "params": "{id:string,title:string,kind:button|select|text,priority?:number,icon?:string,command?:string,disabled?:boolean,when?:{tabKind?:string,tabId?:string},options?:{value:string,label:string}[],value?:string}",
+      "description": "Register a bounded declarative tab-bar control owned by this runtime. Defaults to own plugin views; when:{} targets all tabs. Commands must belong to this plugin. Eight items per plugin, 128 total; removed on stop or revocation. Click context is advisory, never authorization.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "tabBar.remove",
+      "permissions": [],
+      "params": "{id:string}",
+      "description": "Remove this runtime's tab-bar control; return false if absent.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
       "name": "statusBar.set",
       "permissions": [],
       "params": "{id:string,text:string,alignment?:left|right,priority?:number,tooltip?:string,icon?:activity|check|alert|info|sync|terminal|cloud|code|plug,command?:string}",
