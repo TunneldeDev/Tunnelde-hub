@@ -96,7 +96,7 @@ Stability is part of the compatibility contract: `stable` methods include their 
 | `history.record` | `history.write` | `{hostId:string,command:string}` | `experimental` |  |  | Record a command for an existing saved host. |
 | `history.delete` | `history.write` | `{id:number}` | `experimental` |  |  | Delete one command-history entry. |
 | `history.clear` | `history.write` | `{hostId:string}` | `experimental` |  |  | Clear a saved host's command history. |
-| `workspace.snapshot` | `workspace.read` | `{}` | `experimental` |  |  | Read the live tabs, panes, active group and split layout. |
+| `workspace.snapshot` | `workspace.read` | `{}` | `stable` | 0.21.0 |  | Read a detached v1 snapshot of live tabs, panes, active IDs and split layout, including hidden panels and file-pane metadata. No file contents, credentials or arbitrary store fields. Tab kinds and file-view option values are open vocabularies; tolerate unfamiliar values. The snapshot neither reserves resources nor grants their permissions. |
 | `workspace.openPage` | `workspace.write` | `{kind:welcome\|settings\|about\|updates\|knownHosts}` | `experimental` |  |  | Open or focus an existing application page. |
 | `workspace.openHost` | `workspace.write`, `hosts.read` | `{hostId:string}` | `experimental` |  |  | Open a saved host's details; never reveal an authentication secret. |
 | `workspace.openTerminal` | `workspace.write`, `sessions.read` | `{sessionId:string}` | `experimental` |  |  | Open a terminal tab for an already-connected session. |

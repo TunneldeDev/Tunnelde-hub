@@ -93,9 +93,41 @@ export function checkMethodTypes(source, catalogue) {
   assert.deepEqual({ missing, extra }, { missing: [], extra: [] }, "SDK method types differ from host catalogue");
 }
 
+const workspaceBegin = "// BEGIN GENERATED WORKSPACE V1 TYPES";
+const workspaceEnd = "// END GENERATED WORKSPACE V1 TYPES";
+
+function workspaceTypes(source) {
+  assert.equal(source.split(workspaceBegin).length, 2, "Missing or duplicate workspace DTO start marker");
+  assert.equal(source.split(workspaceEnd).length, 2, "Missing or duplicate workspace DTO end marker");
+  const start = source.indexOf(workspaceBegin);
+  const end = source.indexOf(workspaceEnd);
+  assert.ok(end > start, "Invalid workspace DTO marker order");
+  return source.slice(start, end + workspaceEnd.length).replaceAll("\r\n", "\n");
+}
+
+/** Stable wire types come from the host projection, never its internal store. */
+async function syncWorkspaceTypes(applicationDirectory, sdkSource, catalogue, check) {
+  if (!catalogue.methods.some(({ name, stability }) => name === "workspace.snapshot" && stability === "stable"))
+    return sdkSource;
+  const host = await readFile(join(applicationDirectory, "src/lib/plugins/workspace.ts"), "utf8");
+  const expected = workspaceTypes(host);
+  assert.match(sdkSource, /"workspace\.snapshot":\s*\[\s*Record<string,\s*never>,\s*PluginWorkspaceSnapshot,?\s*\]/, "Stable workspace.snapshot must return PluginWorkspaceSnapshot");
+  if (check) {
+    assert.equal(workspaceTypes(sdkSource), expected, "Workspace DTOs differ from the selected host; run npm run sdk:sync");
+    return sdkSource;
+  }
+  if (!sdkSource.includes(workspaceBegin) && !sdkSource.includes(workspaceEnd))
+    return sdkSource.replace(/^export interface HostMethodMap \{/m, `${expected}\n\nexport interface HostMethodMap {`);
+  const previous = workspaceTypes(sdkSource);
+  return sdkSource.replaceAll("\r\n", "\n").replace(previous, expected);
+}
+
 export async function syncSdk(applicationDirectory, { check = false, sdkDirectory = join(root, "sdk") } = {}) {
   const source = resolve(applicationDirectory);
   const catalogue = await loadRustCatalogue(source);
+  const typesPath = join(sdkDirectory, "tunnelde-plugin.d.mts");
+  const types = await readFile(typesPath, "utf8");
+  const projectedTypes = await syncWorkspaceTypes(source, types, catalogue, check);
   const { version } = JSON.parse(await readFile(join(source, "package.json"), "utf8"));
   const json = JSON.stringify(catalogue, null, 2) + "\n";
   const escape = (value) => value.replaceAll("|", "\\|").replaceAll("\n", " ");
@@ -113,7 +145,9 @@ export async function syncSdk(applicationDirectory, { check = false, sdkDirector
     }
   }
   if (check) {
-    checkMethodTypes(await readFile(join(sdkDirectory, "tunnelde-plugin.d.mts"), "utf8"), catalogue);
+    checkMethodTypes(types, catalogue);
+  } else if (projectedTypes !== types) {
+    await writeFile(typesPath, projectedTypes);
   }
   return catalogue;
 }
