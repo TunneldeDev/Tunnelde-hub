@@ -110,6 +110,15 @@ and process exit cancel its active transfers. The host retains 256 completed res
 and permits 8 concurrent transfers per plugin. These calls transfer binary files and
 directories without the text-file API's content-size limits.
 
+Hosts with journaled plugin transfers stage data before publishing each destination.
+The optional `pluginId` identifies the initiating plugin. `cleanupPending` is a terminal
+execution result: disposal must wait for the destination to reconnect or for the user
+to review a preserved backup. Never treat it as success or automatically retry the write.
+Cancellation and revocation stop new work, drain active writers and clean only owned
+staging. Incomplete plugin jobs are disposed after an application restart; the task list
+cannot pause or resume work under a former runtime's permissions. Completed files and
+source files are retained. Older hosts can omit attribution and phase fields.
+
 The transport consumes stdin and writes protocol frames to stdout. Write diagnostics to
 stderr or use `host.log` with the `log` permission. Requests from the host are handled while
 plugin-to-host calls are waiting, so a command can safely await API results.
