@@ -164,7 +164,7 @@ export interface MethodContract {
   events: string[];
 }
 
-/** Snapshot of a ready open editor. Excludes transport credentials and internal state. */
+/** Stable editor v1 DTO. UTF-8 content is bounded to 128 KiB; excludes internal state. */
 export interface EditorDocument {
   tabId: string;
   documentId: string;
@@ -174,6 +174,14 @@ export interface EditorDocument {
   content: string;
   dirty: boolean;
 }
+/** Stable result of one undoable buffer replacement; no automatic disk save. */
+export interface EditorWriteResult {
+  tabId: string;
+  documentId: string;
+  version: number;
+  dirty: boolean;
+}
+
 export interface PluginCommand {
   id: string;
   title: string;
@@ -492,7 +500,7 @@ export interface HostMethodMap {
   "editor.active": [Record<string, never>, EditorDocument | null];
   "editor.replace": [
     { tabId: string; documentId: string; version: number; text: string },
-    Pick<EditorDocument, "tabId" | "documentId" | "version" | "dirty">,
+    EditorWriteResult,
   ];
   "workspace.showQuickAccess": [{ query?: string }, unknown];
   "workspace.setPaneLocked": [{ paneId: string; locked: boolean }, unknown];

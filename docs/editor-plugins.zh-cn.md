@@ -59,12 +59,17 @@ SFTP 冲突检查属于乐观检测，替换 inode 也不能保证保留硬链�
 
 ## 宿主 API
 
+以下为稳定的 v1 缓冲区接口，自宿主 0.29.0-beta.2 起可用。通过 `host.describe()`
+发现 `contract`；旧宿主可能支持方法但不提供稳定性元数据。错误标识、限制及兼容规则
+见[核心 API 兼容性](plugin-api.zh-cn.md)。
+
 - `editor.active`（`editor.read`）：返回已就绪的当前文档快照，无可用文档时返回 `null`。
   字段为 `tabId`、`documentId`、`version`、`path`、`name`、`content`、`dirty`，
   不包含 SSH 会话细节、已保存凭据或基准内容。
 - `editor.replace`（`editor.write`）：参数 `{tabId, documentId, version, text}`，
   返回 `{tabId, documentId, version, dirty}`。替换可撤销，拒绝过期、已关闭、加载中或
   已断开的文档。内容不变时保留版本，实际修改后版本递增。
+  撤销和重做也会递增版本。`dirty` 比较结果与已保存基线；文档过期后应重新读取，不能覆盖更新的修改。
 
 两个接口沿用已授权的前端桥接与运行代次校验，只操作打开的缓冲区，不读取任意文件。
 协议仍为 API version 1，旧接口调用保持兼容。完整生成目录及 TypeScript 类型见独立市场 SDK。
