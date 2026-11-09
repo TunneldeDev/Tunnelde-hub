@@ -182,6 +182,23 @@ export async function syncSdk(applicationDirectory, { check = false, sdkDirector
       "Extension directory stability changed",
     );
     const ids = new Set();
+    if (catalogue.methods.some(method => method.name === "hostList.setColumn")) {
+      assert.ok(extensions.points.some(point => point.id === "hostList.columns"), "Missing host columns extension point");
+      assert.match(projectedTypes, /"hostList\.setColumn":\s*\[HostColumn,\s*null\]/, "hostList.setColumn must accept HostColumn and return null");
+      assert.match(projectedTypes, /"hostList\.removeColumn":\s*\[\{\s*id:\s*string\s*\},\s*boolean\]/, "hostList.removeColumn must return boolean");
+      const begin = "// BEGIN GENERATED HOST COLUMNS V1 TYPES", end = "// END GENERATED HOST COLUMNS V1 TYPES";
+      const block = text => {
+        assert.equal(text.split(begin).length, 2, "Missing or duplicate host columns DTO start");
+        assert.equal(text.split(end).length, 2, "Missing or duplicate host columns DTO end");
+        assert.ok(text.indexOf(end) > text.indexOf(begin), "Invalid host columns DTO marker order");
+        return text.slice(text.indexOf(begin), text.indexOf(end) + end.length).replaceAll("\r\n", "\n");
+      };
+      const expected=block(await readFile(join(source,"src/lib/hosts/columns.ts"),"utf8"));
+      assert.ok(!expected.includes("@/")&&!/\bimport\b/.test(expected),"Host columns DTO exposes private types");
+      if(check)assert.equal(block(projectedTypes),expected,"Host columns DTOs differ; run npm run sdk:sync");
+      else if(!projectedTypes.includes(begin)&&!projectedTypes.includes(end))projectedTypes=projectedTypes.replace(/^export interface HostMethodMap \{/m,`${expected}\n\nexport interface HostMethodMap {`);
+      else projectedTypes=projectedTypes.replaceAll("\r\n","\n").replace(block(projectedTypes),expected);
+    }
     for (const point of extensions.points) {
       assert.ok(!ids.has(point.id), `Duplicate extension point: ${point.id}`);
       ids.add(point.id);

@@ -8,8 +8,11 @@
   "readme": "README.md",
   "runtime": "frontend",
   "frontend": { "entry": "ui/index.mjs", "sdk": "^0.1.0" },
-  "permissions": ["ui.trusted", "hosts.read", "hosts.write"],
-  "commands": [{ "id": "toggle-managed", "title": "Toggle managed flag", "hostMenu": true }],
+  "permissions": ["ui.trusted", "hosts.read", "hosts.write", "workspace.write"],
+  "commands": [
+    { "id": "toggle-managed", "title": "Toggle managed flag", "hostMenu": true },
+    { "id": "show-budget-column", "title": "Show budget column", "hostMenu": true }
+  ],
   "hostFields": {
     "version": 1,
     "fields": [

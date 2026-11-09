@@ -1724,6 +1724,30 @@
       "deprecated": null
     },
     {
+      "name": "hostList.setColumn",
+      "permissions": [
+        "hosts.read",
+        "workspace.write"
+      ],
+      "params": "{id:string,label:string,type:text|number|boolean,width?:number,cells:array}",
+      "description": "Replace one runtime-owned host table column. Each cell is {hostId,value,tooltip?}; at most 256 distinct existing hosts, 512 code points per text value, finite numbers and booleans. At most 8 columns and 512 KiB serialized JSON per plugin, 128 columns and 4 MiB total. Width defaults to 140, range 64..480. Empty cells retain the column; missing cells display unset. Host identity and connection behavior stay host-owned. Stop, crash, replacement and revocation remove contributions; user display preferences remain.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "hostList.removeColumn",
+      "permissions": [
+        "hosts.read",
+        "workspace.write"
+      ],
+      "params": "{id:string}",
+      "description": "Remove this runtime's host table column. Returns whether the current generation owned a matching column.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
       "name": "hosts.getFields",
       "permissions": [
         "hosts.read"
