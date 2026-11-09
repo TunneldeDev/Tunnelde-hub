@@ -239,9 +239,19 @@ Stable tab bar controls: [English](../docs/tab-bar.en-us.md) · [简体中文](.
 
 With the `log` permission, `host.log("Failed", "error")` remains supported. New hosts also accept
 `host.log("Failed", { level: "error", domain: "connection", operation: "connect", requestId: "req-1", fields: { status: 403 } })`.
-Detect optional parameters through `host.describe()` before relying on this experimental extension.
+Detect the stable logging contract through `host.describe()` before relying on structured options.
 The host assigns plugin identity and runtime generation, prefixes domains with `plugins.<id>.`,
 and writes to the user's rotating local application log. Output supports plugin/domain/level filters.
 Fields are bounded and credential-like keys are redacted; free text must never contain secrets.
 Returned null means accepted, subject to log filtering and the bounded nonblocking writer.
 See the host's bilingual `docs/logging.en-us.md` and `docs/logging.zh-cn.md` for limits and semantics.
+
+### Notifications and confirmations
+
+Discover the stable v1 `ui.showMessage` and `ui.confirm` contracts before depending on
+their metadata. They identify the installed plugin and need no additional permission.
+Use `host.call("ui.showMessage", { message: "Finished", kind: "success" })` for transient
+plain text. For a confirmation that can wait for the host's 55-second UI deadline, use
+`host.call("ui.confirm", { message: "Continue?" }, { timeoutMs: 65000 })`; true means
+explicit confirmation, false means dismissal or UI expiry. Stop/revocation and transport
+errors can reject. See the bilingual API guide for limits and busy-dialog behavior.

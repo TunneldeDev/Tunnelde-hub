@@ -2966,19 +2966,167 @@
       "name": "ui.showMessage",
       "permissions": [],
       "params": "{message:string,kind?:info|success|error}",
-      "description": "Show a bounded notification prefixed with the installed plugin's identity.",
-      "stability": "experimental",
-      "since": null,
-      "deprecated": null
+      "description": "Show a bounded plain-text notification prefixed with the installed plugin's identity. Returns null on acceptance, not durable delivery. Nonempty message, no NUL, at most 4000 UTF-16 units. Omitted/null kind defaults to info. No events or actions; notifications may expire or be displaced.",
+      "stability": "stable",
+      "since": "0.21.0",
+      "deprecated": null,
+      "contract": {
+        "version": 1,
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "description": "Nonempty plain text without NUL. Runtime limits count UTF-16 code units; the shared 256KiB UTF-8 request budget also applies. Additional fields are ignored.",
+          "type": "object",
+          "required": [
+            "message"
+          ],
+          "properties": {
+            "message": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4000,
+              "pattern": "^[^\\u0000]*$(?![\\s\\S])"
+            },
+            "kind": {
+              "enum": [
+                "info",
+                "success",
+                "error",
+                null
+              ]
+            }
+          },
+          "additionalProperties": true
+        },
+        "resultSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "null",
+          "description": "Accepted for transient display, not durable delivery; no actions or events."
+        },
+        "errorSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "required": [
+            "code",
+            "message"
+          ],
+          "properties": {
+            "code": {
+              "type": "integer"
+            },
+            "message": {
+              "type": "string"
+            },
+            "data": {
+              "type": "object",
+              "required": [
+                "code"
+              ],
+              "properties": {
+                "code": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": true
+            }
+          },
+          "additionalProperties": true
+        },
+        "knownErrors": [
+          "plugin.api.invalidParams",
+          "plugin.api.frontend:invalid:message",
+          "plugin.api.frontend:invalid:kind",
+          "plugin.api.frontend:requestCancelled",
+          "plugin.api.requestExpired",
+          "plugin.api.frontendTimeout",
+          "plugin.api.frontendClosed",
+          "plugin.api.busy",
+          "pluginSecurity.blocked",
+          "pluginSecurity.changed",
+          "pluginSecurity.approvalRequired",
+          "pluginSecurity.permissionDenied",
+          "pluginSecurity.unavailable"
+        ],
+        "events": []
+      }
     },
     {
       "name": "ui.confirm",
       "permissions": [],
       "params": "{message:string}",
-      "description": "Ask the user a plugin-identified confirmation; never replace an existing dialog.",
-      "stability": "experimental",
-      "since": null,
-      "deprecated": null
+      "description": "Ask a plugin-identified plain-text confirmation without replacing an existing dialog. Returns true only on confirmation; dismiss, replacement or 55-second UI timeout returns false. Nonempty message, no NUL, at most 220Ki UTF-16 units and the shared 256KiB wire budget. Concurrent dialogs reject as busy; stopped/revoked/cancelled runtimes do not receive approval. No additional permissions are granted.",
+      "stability": "stable",
+      "since": "0.21.0",
+      "deprecated": null,
+      "contract": {
+        "version": 1,
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "description": "Nonempty plain text without NUL. Runtime limits count UTF-16 code units; the shared 256KiB UTF-8 request budget also applies. Additional fields are ignored.",
+          "type": "object",
+          "required": [
+            "message"
+          ],
+          "properties": {
+            "message": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 225280,
+              "pattern": "^[^\\u0000]*$(?![\\s\\S])"
+            }
+          },
+          "additionalProperties": true
+        },
+        "resultSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "boolean",
+          "description": "True only on confirmation; false on dismissal, replacement or 55-second UI expiry. Runtime expiry/revocation can instead reject."
+        },
+        "errorSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "required": [
+            "code",
+            "message"
+          ],
+          "properties": {
+            "code": {
+              "type": "integer"
+            },
+            "message": {
+              "type": "string"
+            },
+            "data": {
+              "type": "object",
+              "required": [
+                "code"
+              ],
+              "properties": {
+                "code": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": true
+            }
+          },
+          "additionalProperties": true
+        },
+        "knownErrors": [
+          "plugin.api.invalidParams",
+          "plugin.api.frontend:invalid:message",
+          "plugin.api.frontend:dialog.busy",
+          "plugin.api.frontend:requestCancelled",
+          "plugin.api.requestExpired",
+          "plugin.api.frontendTimeout",
+          "plugin.api.frontendClosed",
+          "plugin.api.busy",
+          "pluginSecurity.blocked",
+          "pluginSecurity.changed",
+          "pluginSecurity.approvalRequired",
+          "pluginSecurity.permissionDenied",
+          "pluginSecurity.unavailable"
+        ],
+        "events": []
+      }
     }
   ]
 }
