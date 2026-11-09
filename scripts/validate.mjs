@@ -7,6 +7,7 @@ import { packageOfficialPlugins } from "./plugins/package.mjs";
 import { validateFileIconThemes, validateTags } from "./plugins/file-icons.mjs";
 
 import { validateFilePreviews } from "./plugins/previews.mjs";
+import { validateHostFields } from "./plugins/host-fields.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const idPattern = /^[a-z0-9][a-z0-9_-]{0,63}$/;
@@ -34,6 +35,7 @@ export function validateManifest(manifest, id) {
     `${id}: document installation and permissions in README.md`,
   );
   assert.ok(Array.isArray(manifest.permissions), `${id}: declare permissions explicitly`);
+  validateHostFields(manifest.hostFields, manifest.permissions);
   const knownPermissions = new Set([
     "ui.trusted",
     "log",

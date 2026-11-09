@@ -186,6 +186,31 @@ export async function syncSdk(applicationDirectory, { check = false, sdkDirector
       assert.ok(!ids.has(point.id), `Duplicate extension point: ${point.id}`);
       ids.add(point.id);
       if (point.registration.manifest !== undefined) {
+        if (point.id === "hosts.fields") {
+          assert.equal(point.registration.manifest, "hostFields");
+          assert.equal(point.ownership, "manifest");
+          assert.equal(point.stability, "experimental");
+          assert.equal(point.concurrency, "revision-and-schema-digest");
+          for (const [key, permissions] of [["read",point.permissions],["replace",point.writePermissions]]) {
+            const method = catalogue.methods.find(method => method.name === point.registration[key]);
+            assert.ok(method, `Missing host field method: ${key}`);
+            assert.deepEqual(method.permissions, permissions);
+            assert.equal(method.stability, "experimental");
+          }
+          const begin = "// BEGIN GENERATED HOST FIELDS V1 TYPES", end = "// END GENERATED HOST FIELDS V1 TYPES";
+          const block = (text) => {
+            assert.equal(text.split(begin).length,2,"Missing or duplicate host fields DTO start");
+            assert.equal(text.split(end).length,2,"Missing or duplicate host fields DTO end");
+            assert.ok(text.indexOf(end) > text.indexOf(begin));
+            return text.slice(text.indexOf(begin),text.indexOf(end)+end.length).replaceAll("\r\n","\n");
+          };
+          const expected = block(await readFile(join(source,"src/lib/hosts/fields.ts"),"utf8"));
+          assert.ok(!expected.includes("@/") && !/\bimport\b/.test(expected),"Host fields DTO exposes private types");
+          if (check) assert.equal(block(projectedTypes),expected,"Host fields DTOs differ; run npm run sdk:sync");
+          else if (!projectedTypes.includes(begin) && !projectedTypes.includes(end)) projectedTypes = projectedTypes.replace(/^export interface HostMethodMap \{/m, `${expected}\n\nexport interface HostMethodMap {`);
+          else projectedTypes = projectedTypes.replaceAll("\r\n","\n").replace(block(projectedTypes),expected);
+          continue;
+        }
         assert.equal(point.id, "hostList.menu", "Unknown manifest extension point");
         assert.equal(point.registration.manifest, "commands[].hostMenu");
         assert.deepEqual(Object.keys(point.registration), ["manifest"]);
