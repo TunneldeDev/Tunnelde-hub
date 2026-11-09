@@ -188,6 +188,11 @@ from completed requests remain open. `tools.revokeClient` permanently revokes th
 identity for this runtime generation and releases its tasks, transfers and SSH connections.
 Other clients, direct plugin calls and user connections are preserved; use a new client ID
 to resume. Reusing a public request ID does not transfer ownership to old cleanup.
+For work the user wants to keep independently, the plugin may call
+`sessions.requestHandoff({sessionId})` after receiving its connection result. The host
+requires native user consent; no request flag can preapprove it. `true` means the user
+now owns that connection, `false` means declined. Stale/expired/revoked/foreign requests
+fail. This does not open tabs or transfer tasks. The method is not an AI tool.
 Completed writes cannot be rolled back. The reviewer decision is trusted plugin input: never copy it from model
 tool arguments. Scope checks constrain host tool calls, not arbitrary executable code.
 
