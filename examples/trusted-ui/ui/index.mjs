@@ -14,4 +14,5 @@ export function activate(context) {
   }
   context.views.register("main", View);
   context.commands.register("hello", () => ({ text: "Hello from the shared UI runtime" }));
+  context.commands.register("inspect-host", ({ host }) => ({ text: `${host.name}: ${host.address}:${host.port}` }));
 }
