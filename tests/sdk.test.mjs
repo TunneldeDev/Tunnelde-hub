@@ -92,6 +92,22 @@ test("SDK preserves JSON null returned by host mutation methods", async () => {
     t.close();
   }
 });
+
+test("SDK logging preserves legacy levels and structured correlation fields", async () => {
+  const t = transport();
+  try {
+    for (const options of ["error", { level: "warn", domain: "connection", operation: "connect", requestId: "req-1", fields: { status: 403 } }]) {
+      const pending = t.plugin.host.log("Failed", options);
+      const request = await t.next();
+      assert.equal(request.method, "log");
+      assert.deepEqual(request.params, typeof options === "string" ? { message: "Failed", level: options } : { ...options, message: "Failed" });
+      t.send({ jsonrpc: "2.0", id: request.id, result: null });
+      assert.equal(await pending, null);
+    }
+  } finally {
+    t.close();
+  }
+});
 test("SDK abort, timeout and disposal settle outstanding requests", async () => {
   const t = transport({}, { timeout: 20 });
   try {

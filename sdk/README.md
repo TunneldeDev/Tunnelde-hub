@@ -234,3 +234,14 @@ correction does not change the runtime protocol.
 Stable status bar contributions: [English](../docs/status-bar.en-us.md) · [简体中文](../docs/status-bar.zh-cn.md).
 
 Stable tab bar controls: [English](../docs/tab-bar.en-us.md) · [简体中文](../docs/tab-bar.zh-cn.md).
+
+### Structured local logging
+
+With the `log` permission, `host.log("Failed", "error")` remains supported. New hosts also accept
+`host.log("Failed", { level: "error", domain: "connection", operation: "connect", requestId: "req-1", fields: { status: 403 } })`.
+Detect optional parameters through `host.describe()` before relying on this experimental extension.
+The host assigns plugin identity and runtime generation, prefixes domains with `plugins.<id>.`,
+and writes to the user's rotating local application log. Output supports plugin/domain/level filters.
+Fields are bounded and credential-like keys are redacted; free text must never contain secrets.
+Returned null means accepted, subject to log filtering and the bounded nonblocking writer.
+See the host's bilingual `docs/logging.en-us.md` and `docs/logging.zh-cn.md` for limits and semantics.
