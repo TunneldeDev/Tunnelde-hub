@@ -62,6 +62,41 @@ test("SDK handles a nested host API call without blocking command replies", asyn
     t.close();
   }
 });
+
+test("SDK preserves Unicode separators and split UTF-8 across LF frames", async () => {
+  const input = new PassThrough(), output = new PassThrough();
+  const frames = [];
+  const lines = createInterface({ input: output });
+  lines.on("line", line => frames.push(JSON.parse(line)));
+  const plugin = createPlugin({}, { input, output });
+  try {
+    const text = "first\u2028第二\u2029😀\nlast";
+    const pending = plugin.host.call("events.publish", { event: "chat", payload: text });
+    assert.equal(frames.length, 1);
+    assert.equal(frames[0].params.payload, text);
+    const reply = Buffer.from(JSON.stringify({ jsonrpc: "2.0", id: frames[0].id, result: text }) + "\r\n");
+    // One byte per chunk splits both Unicode delimiters and multi-byte text.
+    for (const byte of reply) input.write(Buffer.from([byte]));
+    assert.equal(await pending, text);
+    const a = plugin.host.call("storage.get", { key: "a" });
+    const b = plugin.host.call("storage.get", { key: "b" });
+    input.write(Buffer.from(frames.slice(1).map(frame => JSON.stringify({ jsonrpc: "2.0", id: frame.id, result: text })).join("\n") + "\n"));
+    assert.deepEqual(await Promise.all([a,b]), [text,text]);
+  } finally { plugin.close(); lines.close(); input.destroy(); output.destroy(); }
+});
+
+test("SDK bounds unterminated frames and detaches stream listeners on close", async () => {
+  const input = new PassThrough(), output = new PassThrough();
+  const plugin = createPlugin({}, { input, output });
+  const pending = plugin.host.call("api.describe");
+  const settled = assert.rejects(pending, /closed/);
+  input.write(Buffer.alloc(1024 * 1024, 120));
+  input.write(Buffer.from("x"));
+  await settled;
+  for (const name of ["data", "end", "error"]) assert.equal(input.listenerCount(name), 0);
+  assert.equal(output.listenerCount("error"), 0);
+  plugin.close(); input.destroy(); output.destroy();
+});
 test("SDK propagates permission denial with RPC code", async () => {
   const t = transport();
   try {

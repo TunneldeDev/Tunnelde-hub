@@ -140,10 +140,24 @@ without retrying writes automatically.
 
 ## Events, processes and scoped tools
 
-`events.publish` sends `{event, payload}` to the application. The host wraps it in
+`events.publish` has a stable v1 contract. It sends `{event, payload}` to the application.
+Names use 1–128 ASCII letters, digits, dot, underscore, colon or hyphen. Omitting
+`payload` sends `null`; the complete UTF-8 parameter object remains limited to 256 KiB.
+The host wraps it in
 `{pluginId, generation, event, payload}` on `plugin://event`; consumers must check runtime
 generation and, for chat, view/session/run/sequence before applying updates. Never publish
-secrets. Store API keys with `secrets.set`, read with `secrets.get`, and delete with
+secrets. A `null` result acknowledges transport acceptance, not subscriber processing
+or durable delivery. There is no replay or cross-request completion-order guarantee;
+use a query/snapshot for recoverable state. `eventSchema` in discovery describes the
+host envelope, not every plugin-defined payload. See the bilingual event guides:
+[English](../docs/plugin-events.en-us.md) · [简体中文](../docs/plugin-events.zh-cn.md).
+
+The SDK reads LF-delimited frames with a bounded 1 MiB buffer, preserving Unicode
+line/paragraph separators and split UTF-8. Outgoing separators are escaped for old
+readers without changing JSON values. Existing installed plugins retain their bundled
+SDK; the host also escapes these characters when communicating with historical SDKs.
+
+Store API keys with `secrets.set`, read with `secrets.get`, and delete with
 `secrets.delete`. A secret is at most 16 KiB. Blank password fields in a configuration
 editor should preserve saved secrets, rather than echo them in render payloads.
 

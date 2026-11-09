@@ -2,6 +2,19 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { test } from "node:test";
 
+test("event publication freezes host identity, optional payload and advisory delivery", async () => {
+  const catalogue = JSON.parse(await readFile(new URL("../sdk/api.json", import.meta.url), "utf8"));
+  const method = catalogue.methods.find(method => method.name === "events.publish");
+  assert.equal(method.stability, "stable");
+  assert.equal(method.since, "0.21.0");
+  assert.deepEqual(method.permissions, []);
+  assert.deepEqual(method.contract.inputSchema.required, ["event"]);
+  assert.deepEqual(method.contract.events, ["plugin://event"]);
+  assert.deepEqual(method.contract.eventSchema.required, ["pluginId", "generation", "event", "payload"]);
+  assert.equal(method.contract.resultSchema.type, "null");
+  assert.match(method.description, /not subscriber acknowledgement/);
+});
+
 test("tab-bar contracts include stable availability, replacement semantics and advisory command input", async () => {
   const catalogue = JSON.parse(await readFile(new URL("../sdk/api.json", import.meta.url), "utf8"));
   for (const name of ["tabBar.set", "tabBar.remove"]) {
