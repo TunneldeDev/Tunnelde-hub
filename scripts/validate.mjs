@@ -201,7 +201,8 @@ export function validateManifest(manifest, id) {
     );
     viewIds.add(view.id);
     assert.ok(
-      typeof view.title === "string" && view.title.trim() && view.title.length <= 120,
+      typeof view.title === "string" && view.title.trim() &&
+        (view.provider ? Array.from(view.title).length : view.title.length) <= 120,
       `${id}: invalid view title`,
     );
     assert.ok(
