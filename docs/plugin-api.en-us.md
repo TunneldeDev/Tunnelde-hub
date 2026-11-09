@@ -102,3 +102,26 @@ Windows desktop acceptance for persistence, isolation, quotas and revocation. Th
 the defined core, not all methods, platforms or historical plugin behavior. The Hub CI
 compares the generated catalogue and typed method names with application `dev`; regenerate
 with `npm run sdk:sync -- ../Tunnelde` after host changes.
+
+## Local logging contract
+
+`log` requires the `log` permission and a running approved runtime. Its frozen v1 contract
+is included in discovery; old `host.log(message, level)` calls remain supported. Structured
+options and requested severity need host 0.33.0-beta.5 or later; `since: 0.21.0` records the
+method's initial availability. Set `engines.tunnelde` or discover the contract before
+depending on the newer semantics.
+
+`host.log(message, {level, domain, operation, requestId, fields})` returns `null` on acceptance,
+subject to filtering and a bounded lossy writer. It never promises durable delivery or
+subscribes to events. Identity and generation come from the host; domains are prefixed with
+`plugins.<id>.`. Messages are at most 16 KiB UTF-8; optional identifiers accept `null` or
+1–128 ASCII letters, digits, `.`, `_`, `-`, `:`. `fields` is an object limited to 16 KiB
+before redaction, 256 visited nodes including its root, depth four below root and 64-byte
+identifier keys. Runtime quotas supplement structural schemas. Sensitive structured keys
+are redacted; HTTP/SOCKS URL values lose credentials, query and fragment. Free-text secrets
+and URL paths cannot be reliably scrubbed. Never include credentials or document content.
+
+Malformed entries return `plugin.api.invalid:log`; limits return `logs.invalid:<field>`,
+both with RPC `-32000`. Shared invalid-parameter and authorization errors use `-32602` and
+`-32001`. Unknown errors remain possible. The on-disk record layout is not this API's
+stable contract.
