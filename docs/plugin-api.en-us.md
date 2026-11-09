@@ -41,7 +41,12 @@ emit no events.
 Session DTOs contain `id`, `hostId`, `title`, `address`, `cols`, `rows` and `connectedAt`
 (Unix epoch milliseconds). Internal terminal/purpose fields and credentials are excluded.
 A listed session can disconnect before a later call. `sessions.connect` uses this DTO
-but remains experimental.
+but remains experimental. Connections it creates belong to the calling runtime generation
+and close on stop, crash, revocation or replacement. Opening a terminal/file tab does not
+transfer ownership. Pending and live connections share a limit of eight per plugin and
+64 across plugins, with a 120-second setup deadline. Host-key checks remain mandatory.
+Use an existing user-created session for an independent lifetime; explicit ownership
+handoff is not yet available. `sessions.list` continues to list all active sessions.
 
 Host errors include integer `code`, string `message` and usually a `data.code` category.
 Invalid parameter objects or oversized requests use `-32602`; authorization failures
