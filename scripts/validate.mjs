@@ -184,14 +184,25 @@ export function validateManifest(manifest, id) {
     manifest.views === undefined || Array.isArray(manifest.views),
     `${id}: views must be an array`,
   );
+  assert.ok((manifest.views ?? []).filter(view => view?.provider !== undefined).length <= 8,
+    `${id}: too many interface providers`);
   for (const view of manifest.views ?? []) {
+    if (view.provider !== undefined) {
+      assert.ok(["hostList", "workbench"].includes(view.provider) &&
+        view.kind === "component" && manifest.frontend && view.location === undefined &&
+        typeof view.title === "string" && Array.from(view.title).length <= 120 &&
+        !/\p{Cc}/u.test(view.title) &&
+        (view.provider !== "hostList" || manifest.permissions.includes("hosts.read")),
+        `${id}: invalid interface provider`);
+    }
     assert.ok(
       view && idPattern.test(view.id) && !viewIds.has(view.id),
       `${id}: duplicate or invalid view id`,
     );
     viewIds.add(view.id);
     assert.ok(
-      typeof view.title === "string" && view.title.trim() && view.title.length <= 120,
+      typeof view.title === "string" && view.title.trim() &&
+        (view.provider ? Array.from(view.title).length : view.title.length) <= 120,
       `${id}: invalid view title`,
     );
     assert.ok(

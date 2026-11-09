@@ -45,6 +45,31 @@ test("pure and combined frontends require explicit trust and safe manifest decla
   }
 });
 
+test("interface providers require a trusted component declaration and explicit target metadata", () => {
+  for (const provider of ["workbench", "hostList"]) {
+    const valid = { ...structuredClone(manifest), permissions: ["ui.trusted", "hosts.read"] };
+    valid.views[0].provider = provider;
+    validateManifest(valid, valid.id);
+    const unicode = structuredClone(valid); unicode.views[0].title = "🖥".repeat(120);
+    validateManifest(unicode, unicode.id);
+    for (const mutate of [
+      m => { m.views[0].provider = "unknown"; },
+      m => { m.views[0].location = "sidebar"; },
+      m => { m.views[0].kind = "blocks"; },
+      m => { m.views[0].title = "Unsafe\nTitle"; },
+      m => { m.views[0].title = "Unsafe\u0085Title"; },
+      m => { m.views[0].title = "🖥".repeat(121); },
+      m => { m.frontend = undefined; },
+      m => { m.views = Array.from({length: 9}, (_, i) => ({...m.views[0], id: 'view'+i})); },
+    ]) {
+      const bad = structuredClone(valid); mutate(bad);
+      assert.throws(() => validateManifest(bad, bad.id));
+    }
+  }
+  const bad = structuredClone(manifest); bad.views[0].provider = "hostList";
+  assert.throws(() => validateManifest(bad, bad.id));
+});
+
 test("UI declarations synchronize from host discovery, reject drift and never expose private imports", async () => {
   const root = await mkdtemp(join(tmpdir(), "tunnelde-ui-contract-"));
   const app = join(root, "app"), sdk = join(root, "sdk"), host = join(app, "src-tauri/src/plugins");

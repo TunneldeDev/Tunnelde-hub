@@ -150,6 +150,17 @@ export async function syncSdk(applicationDirectory, { check = false, sdkDirector
       assert.match(uiTypes, /readonly version: "0\.1\.0"/, "Unexpected UI SDK contract version");
       assert.equal(directory.frontend.sdkVersion, "0.1.0", "UI SDK version differs from host discovery");
       assert.ok(!uiTypes.includes("@/") && !/from ["']\./.test(uiTypes), "UI contract exposes host-private types");
+      if (directory.frontend.providers) {
+        const providers = directory.frontend.providers;
+        assert.equal(providers.manifest, "views[].provider");
+        assert.deepEqual(providers.targets, ["hostList", "workbench"]);
+        assert.equal(providers.selection, "explicit-user");
+        assert.equal(providers.fallback, "built-in");
+        assert.deepEqual(providers.slots, ["Workspace", "Navigation", "Inspector", "StatusBar"]);
+        assert.equal(providers.requiredSlot, "Workspace");
+        assert.equal(providers.limits.perPlugin, 8);
+        for (const slot of providers.slots) assert.match(uiTypes, new RegExp(`${slot}: React.ComponentType`));
+      }
       artifacts.push(["tunnelde-ui.d.mts", uiTypes]);
     }
   }
