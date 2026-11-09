@@ -1417,8 +1417,8 @@
       "permissions": [
         "log"
       ],
-      "params": "{message:string,level?:string}",
-      "description": "Write a bounded plugin-tagged log message.",
+      "params": "{message:string,level?:string,domain?:string,operation?:string,requestId?:string,fields?:object}",
+      "description": "Write a bounded local log at its requested severity. Host supplies plugin identity and runtime generation; domain is plugin-scoped. Optional structured fields redact credential keys and URL credentials/query/fragment. Existing message/level calls remain supported. Subject to configured log filter and nonblocking writer; never include secrets in message text.",
       "stability": "experimental",
       "since": null,
       "deprecated": null

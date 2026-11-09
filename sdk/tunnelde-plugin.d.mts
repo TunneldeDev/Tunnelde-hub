@@ -799,7 +799,18 @@ export interface HostMethodMap {
     null,
   ];
   "ui.confirm": [{ message: string }, boolean];
-  log: [{ message: string; level?: string }, null];
+  log: [PluginLogOptions & { message: string }, null];
+}
+export type PluginLogValue = string | number | boolean | null | PluginLogValue[] | { [key: string]: PluginLogValue };
+/** Structured logging requires a host whose log catalogue lists the optional fields.
+ * Message and level remain compatible with older hosts. Never log credentials in prose.
+ */
+export interface PluginLogOptions {
+  level?: string;
+  domain?: string;
+  operation?: string;
+  requestId?: string;
+  fields?: Record<string, PluginLogValue>;
 }
 export interface Host {
   /** Stable v1; use describe() to detect support and contracts on older hosts. */
@@ -824,6 +835,7 @@ export interface Host {
   ): Promise<T>;
   describe(): Promise<HostMethodMap["api.describe"][1]>;
   log(message: string, level?: string): Promise<null>;
+  log(message: string, options: PluginLogOptions): Promise<null>;
 }
 export interface PluginHandlers {
   initialize?(

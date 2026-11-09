@@ -72,7 +72,8 @@ export function createPlugin(
       remove: (id) => call("statusBar.remove", { id }),
     }),
     describe: () => call("api.describe"),
-    log: (message, level = "info") => call("log", { message, level }),
+    log: (message, options = "info") =>
+      call("log", typeof options === "string" ? { message, level: options } : { ...options, message }),
   });
   function close() {
     if (disposed) return;

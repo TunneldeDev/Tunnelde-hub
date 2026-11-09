@@ -46,7 +46,7 @@ Stability is part of the compatibility contract: `stable` methods include their 
 | `tools.cancel` | Approved execution | `{requestId:string}` | `experimental` |  |  | Cancel this plugin runtime's pending tool invocation; already completed operations cannot be rolled back. |
 | `tools.revokeClient` | Approved execution | `{clientId:string}` | `experimental` |  |  | Cancel pending tool invocations owned by this plugin runtime's client. |
 | `api.describe` | Approved execution | `{}` | `stable` | 0.21.0 |  | List the fixed versioned host API; every request still checks runtime authorization. |
-| `log` | `log` | `{message:string,level?:string}` | `experimental` |  |  | Write a bounded plugin-tagged log message. |
+| `log` | `log` | `{message:string,level?:string,domain?:string,operation?:string,requestId?:string,fields?:object}` | `experimental` |  |  | Write a bounded local log at its requested severity. Host supplies plugin identity and runtime generation; domain is plugin-scoped. Optional structured fields redact credential keys and URL credentials/query/fragment. Existing message/level calls remain supported. Subject to configured log filter and nonblocking writer; never include secrets in message text. |
 | `app.info` | `app.read` | `{}` | `experimental` |  |  | Read application metadata, platform and preference schema; no credentials. |
 | `app.openExternal` | `app.openExternal` | `{url:string}` | `experimental` |  |  | Open an http/https URL with the system browser. |
 | `settings.get` | `settings.read` | `{}` | `experimental` |  |  | Read application preferences. |
