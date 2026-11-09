@@ -2,6 +2,39 @@
   "version": 1,
   "methods": [
     {
+      "name": "extensions.describe",
+      "permissions": [],
+      "params": "{}",
+      "description": "Discover implemented extension points, their domain, permissions, registration methods, composition and runtime ownership. The experimental directory is not a completeness or authorization claim; use api.describe for individual method contracts.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "hostList.setDecorations",
+      "permissions": [
+        "hosts.read",
+        "workspace.write"
+      ],
+      "params": "{id:string,priority?:number,decorations:{hostId:string,badge?:string,description?:string,tooltip?:string,icon?:server|cloud|container|database|globe|code|terminal|shield|key|activity,tone?:neutral|info|success|warning|error}[]}",
+      "description": "Replace a runtime-owned collection of host-list decorations. Plain text, semantic colors and host-rendered icons; host names, addresses, connection state and actions remain intact. At most 256 distinct existing hosts per collection, 8 collections per plugin and 128 total. Empty decorations clears a collection. Higher priority wins icon/description; badges combine in deterministic order. Removed on stop, crash, revocation or restart; never modifies saved hosts.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "hostList.removeDecorations",
+      "permissions": [
+        "hosts.read",
+        "workspace.write"
+      ],
+      "params": "{id:string}",
+      "description": "Remove only this plugin runtime's host decoration collection; returns false if absent. Requires the same permissions as registration.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
       "name": "tabBar.set",
       "permissions": [],
       "params": "{id:string,title:string,kind:button|select|text,priority?:number,icon?:string,command?:string,disabled?:boolean,when?:{tabKind?:string,tabId?:string},options?:{value:string,label:string}[],value?:string,placement?:leading|trailing,group?:string,tooltip?:string,showLabel?:boolean,checked?:boolean}",

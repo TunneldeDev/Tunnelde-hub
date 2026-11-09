@@ -136,10 +136,58 @@ export async function syncSdk(applicationDirectory, { check = false, sdkDirector
       `| \`${method.name}\` | ${method.permissions.map((permission) => `\`${permission}\``).join(", ") || "Approved execution"} | \`${escape(method.params)}\` | \`${method.stability}\` | ${method.since ?? ""} | ${method.deprecated ?? ""} | ${escape(method.description)} |`,
   );
   const markdown = `# Host API v1\n\nGenerated from the host method catalogue for Tunnelde ${version}. All calls require an approved executable plugin, including calls without domain permissions. \`host.describe()\` reports the running version. Regenerate with \`npm run sdk:sync -- ../Tunnelde\`.\n\nStability is part of the compatibility contract: \`stable\` methods include their first host version in \`since\`; \`experimental\` methods may evolve; \`deprecated\` methods include migration guidance.\n\n| Method | Permissions | Parameters | Stability | Since | Deprecated | Behavior |\n| --- | --- | --- | --- | --- | --- | --- |\n${rows.join("\n")}\n`;
-  for (const [name, expected] of [["api.json", json], ["api.md", markdown]]) {
+  const artifacts = [
+    ["api.json", json],
+    ["api.md", markdown],
+  ];
+  if (catalogue.methods.some(({ name }) => name === "extensions.describe")) {
+    const extensions = JSON.parse(
+      await readFile(
+        join(source, "src-tauri/src/plugins/extensions.json"),
+        "utf8",
+      ),
+    );
+    assert.equal(
+      extensions.version,
+      1,
+      "Unsupported extension directory version",
+    );
+    assert.equal(
+      extensions.stability,
+      "experimental",
+      "Extension directory stability changed",
+    );
+    const ids = new Set();
+    for (const point of extensions.points) {
+      assert.ok(!ids.has(point.id), `Duplicate extension point: ${point.id}`);
+      ids.add(point.id);
+      for (const name of Object.values(point.registration)) {
+        const method = catalogue.methods.find((method) => method.name === name);
+        assert.ok(method, `Unknown registration method: ${name}`);
+        assert.deepEqual(
+          method.permissions,
+          point.permissions,
+          `Extension permissions differ: ${point.id}`,
+        );
+        assert.equal(
+          method.stability,
+          point.stability,
+          `Extension stability differs: ${point.id}`,
+        );
+      }
+    }
+    artifacts.push([
+      "extensions.json",
+      JSON.stringify(extensions, null, 2) + "\n",
+    ]);
+  }
+  for (const [name, expected] of artifacts) {
     const path = join(sdkDirectory, name);
     if (check) {
-      assert.ok((await readFile(path, "utf8")) === expected, `${name} differs from the selected host; run npm run sdk:sync`);
+      assert.ok(
+        (await readFile(path, "utf8")) === expected,
+        `${name} differs from the selected host; run npm run sdk:sync`,
+      );
     } else {
       await writeFile(path, expected);
     }

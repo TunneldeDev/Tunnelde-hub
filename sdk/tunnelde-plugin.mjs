@@ -64,6 +64,12 @@ export function createPlugin(
   }
   const host = Object.freeze({
     call,
+    hostList: Object.freeze({
+      setDecorations: (collection) =>
+        call("hostList.setDecorations", collection),
+      removeDecorations: (id) => call("hostList.removeDecorations", { id }),
+    }),
+    extensions: Object.freeze({ describe: () => call("extensions.describe") }),
     tabBar: Object.freeze({
       set: (item) => call("tabBar.set", item),
       remove: (id) => call("tabBar.remove", { id }),
@@ -74,7 +80,12 @@ export function createPlugin(
     }),
     describe: () => call("api.describe"),
     log: (message, options = "info") =>
-      call("log", typeof options === "string" ? { message, level: options } : { ...options, message }),
+      call(
+        "log",
+        typeof options === "string"
+          ? { message, level: options }
+          : { ...options, message },
+      ),
   });
   function close() {
     if (disposed) return;
@@ -165,7 +176,12 @@ export function createPlugin(
       const required = frameBytes + part.length;
       if (required > 1024 * 1024) return close();
       if (required > frame.length) {
-        const expanded = Buffer.allocUnsafe(Math.max(required, Math.min(1024 * 1024, Math.max(1024, frame.length * 2))));
+        const expanded = Buffer.allocUnsafe(
+          Math.max(
+            required,
+            Math.min(1024 * 1024, Math.max(1024, frame.length * 2)),
+          ),
+        );
         frame.copy(expanded, 0, 0, frameBytes);
         frame = expanded;
       }

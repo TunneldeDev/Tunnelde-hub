@@ -1,5 +1,51 @@
 import type { Readable, Writable } from "node:stream";
 
+/** Experimental additive host-list appearance. Does not modify saved host metadata. */
+export interface HostDecoration {
+  hostId: string;
+  badge?: string | null;
+  description?: string | null;
+  tooltip?: string | null;
+  icon?:
+    | "server"
+    | "cloud"
+    | "container"
+    | "database"
+    | "globe"
+    | "code"
+    | "terminal"
+    | "shield"
+    | "key"
+    | "activity"
+    | null;
+  tone?: "neutral" | "info" | "success" | "warning" | "error";
+}
+export interface HostDecorationCollection {
+  id: string;
+  priority?: number;
+  decorations: HostDecoration[];
+}
+/** Experimental directory; discovery does not authorize calls or promise complete coverage. */
+export interface ExtensionDirectory {
+  version: 1;
+  stability: "experimental";
+  layers: Array<
+    "contract" | "runtime" | "data" | "presentation" | "behavior" | "governance"
+  >;
+  domains: Array<{ id: string; namespaces: string[] }>;
+  points: Array<{
+    id: string;
+    domain: string;
+    layer: string;
+    stability: string;
+    composition: string;
+    registration: { set: string; remove: string };
+    ownership: "runtime";
+    permissions: string[];
+    limits: { perPlugin: number; total: number; entriesPerCollection?: number };
+  }>;
+}
+
 export type AuthMethod = "password" | "key" | "agent" | "keyboardInteractive";
 
 /** Stable v1 tab-bar controls, available since 0.32.0-beta.6. Set replaces the whole item. */
@@ -554,6 +600,9 @@ export interface PluginWorkspaceSnapshot {
 // END GENERATED WORKSPACE V1 TYPES
 
 export interface HostMethodMap {
+  "extensions.describe": [Record<string, never>, ExtensionDirectory];
+  "hostList.setDecorations": [HostDecorationCollection, null];
+  "hostList.removeDecorations": [{ id: string }, boolean];
   "tabBar.set": [TabBarItem, null];
   "tabBar.remove": [{ id: string }, boolean];
   "statusBar.set": [StatusBarItem, null];
@@ -803,7 +852,13 @@ export interface HostMethodMap {
   "ui.confirm": [{ message: string }, boolean];
   log: [PluginLogOptions & { message: string }, null];
 }
-export type PluginLogValue = string | number | boolean | null | PluginLogValue[] | { [key: string]: PluginLogValue };
+export type PluginLogValue =
+  | string
+  | number
+  | boolean
+  | null
+  | PluginLogValue[]
+  | { [key: string]: PluginLogValue };
 /** Stable v1 when discovery includes the log contract; structured options and
  * requested-severity handling require 0.33.0-beta.5+. Message/level exist since
  * 0.21.0. Success means accepted, not durable delivery. Never log secrets in prose.
@@ -817,6 +872,11 @@ export interface PluginLogOptions {
 }
 export interface Host {
   /** Stable v1; use describe() to detect support and contracts on older hosts. */
+  readonly hostList: {
+    setDecorations(collection: HostDecorationCollection): Promise<null>;
+    removeDecorations(id: string): Promise<boolean>;
+  };
+  readonly extensions: { describe(): Promise<ExtensionDirectory> };
   readonly tabBar: {
     set(item: TabBarItem): Promise<null>;
     remove(id: string): Promise<boolean>;
