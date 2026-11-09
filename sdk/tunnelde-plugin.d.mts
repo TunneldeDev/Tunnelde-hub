@@ -275,6 +275,8 @@ export interface TaskOutput {
   nextSeq: number;
   status: TaskStatus;
   exitCode: number | null;
+  /** Host failure detail from the same snapshot; absent on older hosts. */
+  error?: string | null;
   truncated: boolean;
 }
 export interface RunnerDeployment {

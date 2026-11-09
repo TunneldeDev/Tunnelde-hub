@@ -157,6 +157,12 @@ reporting completion. Default deadline is 30 minutes, maximum 24 hours. The host
 8 active tasks per plugin and bounds retained output. Direct SSH tasks depend on their
 SSH channel and are distinct from durable runners.
 
+The output snapshot includes the task's `status`, `exitCode` and optional `error`,
+including when no new events remain. Show this host failure detail when available;
+a disconnected SSH channel is not evidence that the executable or login is wrong.
+Older hosts may omit `error`; `tasks.status` also provides diagnostic details. Drain
+terminal output before reporting failure so the last protocol response is retained.
+
 AI and MCP clients should call `tools.invoke` with an allowlisted method, parameters,
 explicit `scope`, `mode`, `clientId` and unique `requestId`. `readOnly` rejects commands
 and mutations. `ask` asks the human before mutations; `approve` may accept a decision
