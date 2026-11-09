@@ -1,5 +1,15 @@
 /** Explicit host menu command. A conflict is surfaced instead of silently retried. */
 export function activate(context) {
+  context.commands.register("show-budget-column", async ({ host }) => {
+    const { document } = await context.api.call("hosts.getFields", { hostId: host.id });
+    if (document.schemaChanged) throw new Error("Review the changed host field schema before displaying it.");
+    const budget = document.values.cost;
+    await context.api.call("hostList.setColumn", {
+      id: "budget", label: "Monthly budget", type: "number", width: 140,
+      cells: typeof budget === "number" ? [{ hostId: host.id, value: budget }] : [],
+    });
+    return { text: "Open the Hosts table to see this host's budget. The column disappears when the plugin stops." };
+  });
   context.commands.register("toggle-managed", async ({ host }) => {
     const { document } = await context.api.call("hosts.getFields", { hostId: host.id });
     if (document.schemaChanged) throw new Error("Review the changed host field schema before editing.");

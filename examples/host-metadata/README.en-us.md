@@ -5,3 +5,5 @@ Install this folder as a local plugin on a host implementing the experimental `h
 The host menu command **Toggle managed flag** is executable trusted frontend code. Running it requires explicit approval for `ui.trusted`, `hosts.read` and `hosts.write`. Trusted code runs in the application context, without a sandbox. The command reads this plugin’s current document and replaces it against the observed revision and schema digest. Concurrent changes or an incompatible schema fail visibly, without blind retries. Existing values are retained on stop or uninstall and deleted when the host is removed. Do not put secrets in metadata.
 
 See [the field contract](../../docs/host-fields.en-us.md). This example is development material and is not a marketplace package.
+
+**Show budget column** additionally requires `workspace.write` and the experimental `hostList.columns` extension. It publishes the selected host’s numeric budget, including zero, or an empty column if unset. Switch the Hosts panel to table view; stop the plugin to remove the contribution. See [host columns](../../docs/host-columns.en-us.md).

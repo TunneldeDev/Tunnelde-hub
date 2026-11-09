@@ -684,9 +684,30 @@ export interface HostFieldsUpdate {
 }
 // END GENERATED HOST FIELDS V1 TYPES
 
+// BEGIN GENERATED HOST COLUMNS V1 TYPES
+/** Experimental runtime-owned host table presentation. No executable cell content. */
+export interface HostColumn {
+  id: string;
+  label: string;
+  type: "text" | "number" | "boolean";
+  width?: number;
+  cells: { hostId: string; value: string | number | boolean; tooltip?: string }[];
+}
+export interface HostColumnContribution extends HostColumn {
+  pluginId: string;
+  pluginName: string;
+}
+export interface HostColumnsSnapshot {
+  revision: number;
+  items: HostColumnContribution[];
+}
+// END GENERATED HOST COLUMNS V1 TYPES
+
 export interface HostMethodMap {
   "extensions.describe": [Record<string, never>, ExtensionDirectory];
   "hostList.setDecorations": [HostDecorationCollection, null];
+  "hostList.setColumn": [HostColumn, null];
+  "hostList.removeColumn": [{ id: string }, boolean];
   "hostList.removeDecorations": [{ id: string }, boolean];
   "tabBar.set": [TabBarItem, null];
   "tabBar.remove": [{ id: string }, boolean];
