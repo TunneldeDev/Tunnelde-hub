@@ -23,3 +23,14 @@ File checksums and directory membership are checked before cleanup. These checks
 are not an atomic protection against another client changing files during deletion.
 Avoid editing deployment directories while cleanup is running. This identity
 binding does not provide durable CLI processes across application restarts.
+
+## Recovering a task
+
+Recovery belongs to the saved process and operation, rather than whichever process
+happens to be the conversation's latest one. Starting another message retires the
+previous task's recovery actions while preserving its history. Stale actions are
+rejected before accessing a process or sending a request, including when a remote
+runner is reused. Inspecting the current task displays its availability, status,
+exit code and error when available; inspection never starts another agent or sends
+a model prompt. Hosts that support task run identities also send the captured
+identity, so an old action cannot select a new operation on the same runner.

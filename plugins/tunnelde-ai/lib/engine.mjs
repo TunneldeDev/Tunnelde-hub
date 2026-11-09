@@ -255,8 +255,25 @@ export class AiPlugin {
     return { ...(this.preparations.get(preparationKey(profile, session?.execution ?? null, this.configRevision, mode)) ??
       { status: "required", profileId: profile.id, detail: "Initialize the selected agent before sending messages" }), targetKey, mode };
   }
+  recoveryState(session) {
+    const profile = this.config.profiles.find(
+      (item) => item.id === (session?.run?.profileId ?? session?.remote?.profileId),
+    );
+    const remote = !session?.execution && profile?.remote ? session?.remote : null;
+    const saved = remote ?? session?.cli;
+    const taskId = remote ? remote.runnerId : saved?.taskId;
+    const task = session?.tasks.find((item) =>
+      item.id === taskId && (!item.runId || item.runId === session.run?.id),
+    );
+    return {
+      remote, saved, task,
+      recoverable: task?.recoverable === true &&
+        ["running", "waiting", "failed", "cancelled", "interrupted"].includes(session?.run?.status),
+    };
+  }
   block() {
     const session = this.session();
+    const recovery = this.recoveryState(session);
     const block = {
       type: "chat",
       id: "assistant",
@@ -313,7 +330,10 @@ export class AiPlugin {
       approvals: [...this.approvals.values()]
         .filter((item) => item.sessionId === session?.id)
         .map(({ resolve, timer, ...item }) => item),
-      tasks: session?.tasks.slice(-24) ?? [],
+      tasks: session?.tasks.slice(-24).map((task) => ({
+        ...task,
+        recoverable: recovery.recoverable && task.id === recovery.task.id,
+      })) ?? [],
       configured: this.config.profiles.some((profile) =>
         PROFILE_POLICY.primaryProtocols.includes(profile.protocol),
       ),
@@ -694,7 +714,10 @@ export class AiPlugin {
     const controller = new AbortController();
     this.activeSessionId = session.id;
     session.mode = mode;
-    if (!recover) session.history.push({ id: randomUUID(), role: "user", content: message });
+    if (!recover) {
+      for (const task of session.tasks) task.recoverable = false;
+      session.history.push({ id: randomUUID(), role: "user", content: message });
+    }
     if (!recover && session.untitled) {
       session.title = message.slice(0, 60);
       session.untitled = false;
@@ -909,6 +932,7 @@ export class AiPlugin {
             this.approveCli(profile, session, request, signal),
           checkpoint: () => this.checkpoint(),
           onTask: (task) => {
+            task = { ...task, runId: session.run.id };
             const index = session.tasks.findIndex(
               (item) => item.id === task.id,
             );
@@ -1160,6 +1184,7 @@ export class AiPlugin {
     const waitStarted = Date.now();
     const runnerTask = {
       id: saved.runnerId,
+      runId: session.run.id,
       title: `${profile.name} remote agent`,
       status: "running",
       recoverable: true,
@@ -1506,12 +1531,23 @@ export class AiPlugin {
       const session = this.session(input.sessionId);
       if (!session || this.runs.has(session.id))
         throw new Error("Select an interrupted conversation first");
+      if (!["inspect", "resume"].includes(input.action))
+        throw new Error("Choose inspect or resume");
+      const recovery = this.recoveryState(session);
+      if ((input.runId != null && input.runId !== session.run?.id) ||
+          (input.taskRunId != null && input.taskRunId !== (recovery.task?.runId ?? session.run?.id)))
+        throw new Error("This action belongs to a different conversation run. Inspect the current task before continuing.");
+      if (input.taskId != null &&
+          (input.taskId !== recovery.task?.id || !recovery.recoverable))
+        throw new Error("This task no longer has its saved recovery state. Inspect its conversation; it will not reconnect to a later process.");
+      if (input.action === "resume" && session.run?.status === "done")
+        throw new Error("This task no longer needs recovery. Start a new message explicitly.");
       if (input.action === "inspect") {
         const profile = this.config.profiles.find(
           (item) => item.id === session.remote?.profileId,
         );
         if (
-          session.remote &&
+          recovery.remote &&
           profile?.remote &&
           session.remote.sessionId !== profile.remote.sessionId
         ) {
@@ -1526,21 +1562,34 @@ export class AiPlugin {
           session.remote.sessionId = profile.remote.sessionId;
           await this.persist();
         }
-        const status = session.remote
-          ? await this.host.call("runners.status", session.remote)
-          : session.cli?.taskId
+        const status = recovery.remote
+          ? await this.host.call("runners.status", recovery.remote)
+          : recovery.saved?.taskId
             ? await this.host
-                .call("tasks.status", { taskId: session.cli.taskId })
-                .catch(() => null)
+                .call("tasks.status", { taskId: recovery.saved.taskId })
+                .catch((error) => {
+                  if (error?.message === "plugin.tasks.notFound") return null;
+                  throw error;
+                })
             : null;
+        if (recovery.task) {
+          const previousInspection = recovery.task.inspection;
+          recovery.task.inspection = [
+            `Task: ${recovery.task.id}`,
+            `Status: ${status?.status ?? "No longer available"}`,
+            ...(status?.exitCode != null ? [`Exit code: ${status.exitCode}`] : []),
+            ...(status?.error ? [`Error: ${String(status.error).slice(0, 4000)}`] : []),
+          ].join("\n");
+          if (!recovery.task.output || recovery.task.output === previousInspection)
+            recovery.task.output = recovery.task.inspection;
+          await this.persist();
+        }
         return {
           status,
-          saved: session.remote ?? session.cli,
+          saved: recovery.saved,
           block: this.block(),
         };
       }
-      if (input.action !== "resume")
-        throw new Error("Choose inspect or resume");
       return this.send(
         {
           ...input,
