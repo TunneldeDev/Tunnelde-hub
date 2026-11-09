@@ -263,3 +263,49 @@ test("tab-bar commands preserve nullable and Unicode advisory input without impl
     assert.equal(await removing, false);
   } finally { t.close(); }
 });
+
+test("host decorations and extension discovery use the ordinary authorized RPC transport", async () => {
+  const collection = {
+    id: "health",
+    decorations: [{ hostId: "h", badge: "Ready", tone: "success" }],
+  };
+  const t = transport({
+    run: async (_, __, host) => {
+      const directory = await host.extensions.describe();
+      await host.hostList.setDecorations(collection);
+      return {
+        directory,
+        removed: await host.hostList.removeDecorations("health"),
+      };
+    },
+  });
+  try {
+    t.send({
+      jsonrpc: "2.0",
+      id: 77,
+      method: "command.run",
+      params: { command: "test" },
+    });
+    const discovery = await t.next();
+    assert.equal(discovery.method, "extensions.describe");
+    t.send({
+      jsonrpc: "2.0",
+      id: discovery.id,
+      result: { version: 1, points: [] },
+    });
+    const set = await t.next();
+    assert.equal(set.method, "hostList.setDecorations");
+    assert.deepEqual(set.params, collection);
+    t.send({ jsonrpc: "2.0", id: set.id, result: null });
+    const remove = await t.next();
+    assert.equal(remove.method, "hostList.removeDecorations");
+    assert.deepEqual(remove.params, { id: "health" });
+    t.send({ jsonrpc: "2.0", id: remove.id, result: true });
+    assert.deepEqual((await t.next()).result, {
+      directory: { version: 1, points: [] },
+      removed: true,
+    });
+  } finally {
+    t.close();
+  }
+});

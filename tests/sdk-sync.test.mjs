@@ -140,3 +140,27 @@ test("stable workspace DTOs synchronize and detect drift without mutating SDK fi
     await rm(root, { recursive: true, force: true });
   }
 });
+
+
+test("extension directory synchronization rejects drift and nonexistent registration methods", async () => {
+  const root = await mkdtemp(join(tmpdir(), "tunnelde-extensions-"));
+  const app=join(root,"app"), sdk=join(root,"sdk"), host=join(app,"src-tauri/src/plugins");
+  try {
+    await mkdir(host,{recursive:true}); await mkdir(sdk);
+    await writeFile(join(app,"package.json"),JSON.stringify({version:"0.26.1"}));
+    await writeFile(join(host,"api.rs"),'pub const METHODS: &[ApiMethod] = &[\n method!("extensions.describe", [], "{}", "Describe."),\n method!("test.set", [], "{}", "Set."),\n method!("test.remove", [], "{}", "Remove."),\n];');
+    await writeFile(join(sdk,"tunnelde-plugin.d.mts"),'export interface HostMethodMap {\n  "extensions.describe": [Record<string, never>, unknown];\n  "test.set": [unknown, null];\n  "test.remove": [unknown, boolean];\n}\n');
+    const directory={version:1,stability:"experimental",points:[{id:"test",permissions:[],stability:"experimental",registration:{set:"test.set",remove:"test.remove"}}]};
+    await writeFile(join(host,"extensions.json"),JSON.stringify(directory));
+    await syncSdk(app,{sdkDirectory:sdk}); await syncSdk(app,{sdkDirectory:sdk,check:true});
+    const current=await readFile(join(sdk,"extensions.json"),"utf8");
+    await writeFile(join(sdk,"extensions.json"),"{}\n");
+    await assert.rejects(syncSdk(app,{sdkDirectory:sdk,check:true}),/extensions.json differs/);
+    assert.equal(await readFile(join(sdk,"extensions.json"),"utf8"),"{}\n");
+    await writeFile(join(sdk,"extensions.json"),current);
+    directory.points[0].registration.set="missing.set";
+    await writeFile(join(host,"extensions.json"),JSON.stringify(directory));
+    await assert.rejects(syncSdk(app,{sdkDirectory:sdk}),/Unknown registration method/);
+    assert.equal(await readFile(join(sdk,"extensions.json"),"utf8"),current);
+  } finally { await rm(root,{recursive:true,force:true}); }
+});
