@@ -46,7 +46,15 @@ and close on stop, crash, revocation or replacement. Opening a terminal/file tab
 transfer ownership. Pending and live connections share a limit of eight per plugin and
 64 across plugins, with a 120-second setup deadline. Host-key checks remain mandatory.
 Use an existing user-created session for an independent lifetime; explicit ownership
-handoff is not yet available. `sessions.list` continues to list all active sessions.
+handoff is available through the experimental `sessions.requestHandoff({sessionId})`.
+The host shows a native consent dialog identifying the plugin and connection. It returns
+`true` after transfer, `false` on decline, and errors on timeout, revocation, disconnection,
+foreign ownership or an unaccepted tool result. Only one confirmation can be outstanding;
+close an old dialog before retrying. Stale confirmations cannot transfer connections.
+After acceptance the user manages the connection: plugin/client cleanup and restricted
+mode preserve it, while manual disconnect and app exit close it. This neither opens a tab
+nor transfers dependent tasks, persists a transport or grants new access. It is excluded
+from `tools.invoke`. `sessions.list` continues to list all active sessions.
 
 Through `tools.invoke`, a connection also belongs to its `clientId` (default `agent`).
 `tools.revokeClient` permanently revokes that identity in the current runtime generation,
