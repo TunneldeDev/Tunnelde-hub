@@ -116,3 +116,5 @@ and data-only theme manifest formats. Tunnelde AI, Codex, Claude Code, Pi and MC
 ## License
 
 GPL-3.0-only. See [LICENSE](LICENSE). Every distributable ZIP includes its applicable LICENSE.
+
+Experimental frontend UI SDK: [English](docs/frontend-ui.en-us.md) · [简体中文](docs/frontend-ui.zh-cn.md).
