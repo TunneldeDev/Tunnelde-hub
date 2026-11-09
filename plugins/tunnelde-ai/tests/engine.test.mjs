@@ -395,7 +395,7 @@ test("saved running sessions become interrupted and inspect never replays tools"
   const engine = new AiPlugin(host);
   await engine.initialize();
   assert.equal(engine.block().run.status, "interrupted");
-  assert.equal(engine.block().tasks[0].recoverable, true);
+  assert.equal(engine.block().tasks[0].recoverable, false);
   await engine.command("ai.recover", { action: "inspect" });
   assert.ok(
     !host.calls.some((item) => /tools.invoke|tasks.start/.test(item.method)),
@@ -410,6 +410,84 @@ test("recovering an API conversation without a durable run preserves history and
   await assert.rejects(engine.command("ai.recover", { action: "resume", sessionId: session.id }), /cannot be reconnected/);
   assert.deepEqual(session, before);
   assert.ok(!host.calls.some((item) => /tasks.start|runners.send|runners.deploy/.test(item.method)));
+  await engine.shutdown();
+});
+
+test("historical CLI task recovery cannot inspect or resume a later process", async () => {
+  const { host, engine } = await prepared(undefined, PiPlugin);
+  await engine.initialize();
+  const session = engine.newSession();
+  session.run = { id: "new-run", status: "failed", profileId: "default", mode: "ask" };
+  session.cli = { taskId: "new-process", protocol: "pi" };
+  session.tasks = [
+    { id: "old-process", status: "failed", recoverable: true, runId: "old-run" },
+    { id: "new-process", status: "failed", recoverable: true, runId: "new-run" },
+  ];
+  const before = structuredClone(session);
+  const calls = host.calls.length;
+  for (const action of ["inspect", "resume"])
+    await assert.rejects(engine.command("ai.recover", {
+      action, sessionId: session.id, taskId: "old-process", taskRunId: "old-run", runId: "new-run",
+    }), /no longer.*recover|different.*run/i);
+  assert.deepEqual(session, before);
+  assert.equal(host.calls.length, calls);
+  assert.equal(engine.block().tasks[0].recoverable, false);
+  assert.equal(engine.block().tasks[1].recoverable, true);
+  await engine.shutdown();
+});
+
+test("task recovery rejects stale conversation and runner generations before host access", async () => {
+  const { host, engine } = await prepared();
+  const session = engine.newSession();
+  engine.config.profiles[0].remote = { sessionId: "ssh", platform: "posix" };
+  session.remote = { runnerId: "same-runner", profileId: "main", sessionId: "ssh", runId: "new-run" };
+  session.run = { id: "new-run", status: "interrupted", profileId: "main", mode: "ask" };
+  session.tasks = [{ id: "same-runner", runId: "new-run", status: "interrupted", recoverable: true }];
+  const before = structuredClone(session), calls = host.calls.length;
+  for (const action of ["inspect", "resume"]) {
+    for (const identity of [{ runId: "old-run" }, { runId: "new-run", taskRunId: "old-run" }])
+      await assert.rejects(engine.command("ai.recover", {
+        action, sessionId: session.id, taskId: "same-runner", ...identity,
+      }), /different.*run|no longer.*recover/i);
+  }
+  assert.deepEqual(session, before);
+  assert.equal(host.calls.length, calls);
+  await engine.shutdown();
+});
+
+test("inspecting the current interrupted task uses its original process without sending", async () => {
+  const { host, engine } = await prepared(undefined, PiPlugin);
+  await engine.initialize();
+  const session = engine.newSession();
+  session.run = { id: "run", status: "interrupted", profileId: "default", mode: "ask" };
+  session.cli = { taskId: "original-process", protocol: "pi" };
+  session.tasks = [{ id: "original-process", status: "interrupted", recoverable: true, output: "Saved agent output" }];
+  const call = host.call.bind(host);
+  host.call = async (method, params) => {
+    if (method === "tasks.status") {
+      assert.equal(params.taskId, "original-process");
+      return { status: "completed", exitCode: 0 };
+    }
+    return call(method, params);
+  };
+  const result = await engine.command("ai.recover", {
+    action: "inspect", sessionId: session.id, taskId: "original-process", runId: "run",
+  });
+  assert.equal(result.status.status, "completed");
+  assert.equal(result.saved.taskId, "original-process");
+  assert.equal(result.block.tasks[0].recoverable, true);
+  assert.match(result.block.tasks[0].inspection, /Status: completed\nExit code: 0/);
+  assert.equal(result.block.tasks[0].output, "Saved agent output");
+  assert.ok(!host.calls.some(item => /tasks.start|tasks.write|runners.send/.test(item.method)));
+  host.call = async (method, params) => {
+    if (method === "tasks.status") throw new Error("plugin.permissionDenied");
+    return call(method, params);
+  };
+  const inspection = result.block.tasks[0].inspection;
+  await assert.rejects(engine.command("ai.recover", {
+    action: "inspect", sessionId: session.id, taskId: "original-process", runId: "run",
+  }), /plugin.permissionDenied/);
+  assert.equal(session.tasks[0].inspection, inspection);
   await engine.shutdown();
 });
 

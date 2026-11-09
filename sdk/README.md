@@ -199,6 +199,13 @@ Use `ChatSession.untitled` to distinguish a localized placeholder from a custom 
 clear a background item's busy state when the matching run finishes. `ChatExecution`
 and structured message activity describe the selected target and collapsible tool work.
 
+Chat task entries can provide `runId` to bind recovery to their original operation.
+Recovery commands receive that value as `taskRunId`, the clicked `taskId` and the
+current conversation `runId`. Validate the supplied identities before any process
+access; a reused runner must not turn an old action into recovery of a later run.
+Older hosts omit `taskRunId`, so plugins must also validate their saved task cursor
+and retire recovery actions when that cursor is replaced.
+
 Tunnelde 0.26.0 adds optional chat preparation/install commands and per-target
 `readiness`. See the [chat schema](../plugins/README.md#sidebar-and-chat-views) and
 [assistant initialization guide](../docs/assistant-plugins-1.4.md). A declared preparation

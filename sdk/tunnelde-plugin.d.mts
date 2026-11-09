@@ -413,11 +413,15 @@ export interface PluginChatBlock {
   }[];
   tasks?: {
     id: string;
+    /** Captured operation identity; forwarded as taskRunId when inspecting/resuming. */
+    runId?: string;
     title?: string;
     status:
       "queued" | "running" | "done" | "failed" | "cancelled" | "interrupted";
     output?: string;
     recoverable?: boolean;
+    /** Optional process inspection details, separate from saved agent output. */
+    inspection?: string;
   }[];
   configured?: boolean;
   notice?: string;
