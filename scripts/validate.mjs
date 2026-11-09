@@ -93,7 +93,14 @@ export function validateManifest(manifest, id) {
     manifest.commands === undefined || Array.isArray(manifest.commands),
     `${id}: commands must be an array`,
   );
+  assert.ok((manifest.commands ?? []).filter(command => command?.hostMenu).length <= 16,
+    `${id}: at most 16 host menu commands`);
   for (const command of manifest.commands ?? []) {
+    assert.ok(command.hostMenu === undefined ||
+      (typeof command.hostMenu === "boolean" && (!command.hostMenu ||
+        (manifest.permissions.includes("hosts.read") && !command.editor && !command.fileMenu &&
+          typeof command.title === "string" && [...command.title].length <= 120 && !/\p{Cc}/u.test(command.title)))),
+      `${id}: invalid host menu command or missing hosts.read permission`);
     assert.ok(command.frontend === undefined ||
       (typeof command.frontend === "boolean" && (!command.frontend || manifest.frontend)),
       `${id}: frontend command requires a frontend declaration`);

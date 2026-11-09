@@ -127,7 +127,7 @@ export async function syncSdk(applicationDirectory, { check = false, sdkDirector
   const catalogue = await loadRustCatalogue(source);
   const typesPath = join(sdkDirectory, "tunnelde-plugin.d.mts");
   const types = await readFile(typesPath, "utf8");
-  const projectedTypes = await syncWorkspaceTypes(source, types, catalogue, check);
+  let projectedTypes = await syncWorkspaceTypes(source, types, catalogue, check);
   const { version } = JSON.parse(await readFile(join(source, "package.json"), "utf8"));
   const json = JSON.stringify(catalogue, null, 2) + "\n";
   const escape = (value) => value.replaceAll("|", "\\|").replaceAll("\n", " ");
@@ -174,6 +174,33 @@ export async function syncSdk(applicationDirectory, { check = false, sdkDirector
     for (const point of extensions.points) {
       assert.ok(!ids.has(point.id), `Duplicate extension point: ${point.id}`);
       ids.add(point.id);
+      if (point.registration.manifest !== undefined) {
+        assert.equal(point.id, "hostList.menu", "Unknown manifest extension point");
+        assert.equal(point.registration.manifest, "commands[].hostMenu");
+        assert.deepEqual(Object.keys(point.registration), ["manifest"]);
+        assert.equal(point.stability, "experimental");
+        assert.equal(point.ownership, "manifest");
+        assert.deepEqual(point.permissions, ["hosts.read"]);
+        assert.deepEqual(point.limits, { perPlugin: 16, total: 128 });
+        const begin = "// BEGIN GENERATED HOST MENU V1 TYPES";
+        const end = "// END GENERATED HOST MENU V1 TYPES";
+        const block = (text) => {
+          assert.equal(text.split(begin).length, 2, "Missing or duplicate host menu DTO start");
+          assert.equal(text.split(end).length, 2, "Missing or duplicate host menu DTO end");
+          assert.ok(text.indexOf(end) > text.indexOf(begin), "Invalid host menu DTO order");
+          return text.slice(text.indexOf(begin), text.indexOf(end) + end.length).replaceAll("\r\n", "\n");
+        };
+        const expected = block(await readFile(join(source, "src/lib/plugins/hostMenu.ts"), "utf8"));
+        assert.ok(!expected.includes("@/") && !/\bimport\b/.test(expected), "Host menu DTO exposes private types");
+        if (check) {
+          assert.equal(block(projectedTypes), expected, "Host menu DTOs differ; run npm run sdk:sync");
+        } else if (!projectedTypes.includes(begin) && !projectedTypes.includes(end)) {
+          projectedTypes = projectedTypes.replace(/^export interface HostMethodMap \{/m, `${expected}\n\nexport interface HostMethodMap {`);
+        } else {
+          projectedTypes = projectedTypes.replaceAll("\r\n", "\n").replace(block(projectedTypes), expected);
+        }
+        continue;
+      }
       for (const name of Object.values(point.registration)) {
         const method = catalogue.methods.find((method) => method.name === name);
         assert.ok(method, `Unknown registration method: ${name}`);

@@ -50,8 +50,8 @@ export interface ExtensionDirectory {
     layer: string;
     stability: string;
     composition: string;
-    registration: { set: string; remove: string };
-    ownership: "runtime";
+    registration: { set: string; remove: string } | { manifest: string };
+    ownership: "runtime" | "manifest";
     permissions: string[];
     limits: { perPlugin: number; total: number; entriesPerCollection?: number };
   }>;
@@ -263,6 +263,8 @@ export interface PluginCommand {
   editor?: { extensions: string[]; format?: boolean };
   /** Offer this command for a user-selected file or directory. */
   fileMenu?: FileMenuContribution;
+  /** Offer this command on saved hosts; requires hosts.read. At most 16 per plugin. */
+  hostMenu?: boolean;
 }
 export interface FileMenuContribution {
   sources: ("local" | "remote")[];
@@ -611,6 +613,21 @@ export interface PluginWorkspaceSnapshot {
   layout: PluginWorkspaceLayout;
 }
 // END GENERATED WORKSPACE V1 TYPES
+
+// BEGIN GENERATED HOST MENU V1 TYPES
+/** Experimental, advisory context. No credentials, key paths or internal store fields. */
+export interface HostMenuCommandInput {
+  host: {
+    id: string;
+    name: string;
+    address: string;
+    port: number;
+    username: string;
+    groupId: string | null;
+    tags: string[];
+  };
+}
+// END GENERATED HOST MENU V1 TYPES
 
 export interface HostMethodMap {
   "extensions.describe": [Record<string, never>, ExtensionDirectory];
