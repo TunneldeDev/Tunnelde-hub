@@ -125,3 +125,27 @@ Malformed entries return `plugin.api.invalid:log`; limits return `logs.invalid:<
 both with RPC `-32000`. Shared invalid-parameter and authorization errors use `-32602` and
 `-32001`. Unknown errors remain possible. The on-disk record layout is not this API's
 stable contract.
+
+## Notifications and confirmations
+
+`ui.showMessage` and `ui.confirm` have stable v1 contracts when discovery includes
+their schemas. Both require an approved running plugin and no extra permission;
+`since: 0.21.0` records their original availability, not the addition of metadata.
+Messages are literal, nonempty and cannot contain NUL. Unknown fields are ignored;
+the host identifies the installed plugin in notifications and dialog titles.
+
+`ui.showMessage({message, kind})` accepts up to 4,000 UTF-16 code units. `kind`
+is `info`, `success` or `error`; omitted or null defaults to `info`. The null result
+acknowledges transient display, not durable delivery or that the user read it.
+
+`ui.confirm({message})` accepts up to 220 × 1,024 UTF-16 units, within the shared
+256 KiB UTF-8 serialized request budget. It returns true only on explicit
+confirmation; dismissal, replacement or the 55-second UI deadline returns false.
+Use a call timeout above 55 seconds to wait for that deadline; a shorter SDK
+timeout can reject first. An existing dialog is preserved and rejects the request
+as `plugin.api.frontend:dialog.busy`. Stop, revocation or cancellation can reject
+instead of returning a boolean; cancelled authorization must not create late UI.
+Invalid fields use `plugin.api.frontend:invalid:message` or
+`plugin.api.frontend:invalid:kind`. These methods grant no permissions and expose
+no actions, subscriptions or internal UI state. Schema character counts are
+separate from runtime UTF-16 and wire byte quotas.

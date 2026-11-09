@@ -102,3 +102,23 @@ ID 必须非空、不含 NUL，且不超过 1,024 个 UTF-16 码元；版本是�
 格式错误返回 `plugin.api.invalid:log`，限制错误返回 `logs.invalid:<字段>`，RPC 代码
 均为 `-32000`。公共参数校验和授权错误使用 `-32602`、`-32001`；仍可能有未知错误。
 本地日志文件布局不属于此 API 的稳定契约。
+
+## 通知与确认
+
+`ui.showMessage` 和 `ui.confirm` 在接口发现包含其结构时采用稳定 v1 契约。
+两者需要已批准且运行中的插件，不要求额外权限；`since: 0.21.0` 表示首次可用版本，
+不代表契约元数据的引入时间。消息为非空纯文本，不能含 NUL；未知字段会被忽略，
+通知前缀和确认标题由宿主使用实际安装的插件名称生成。
+
+`ui.showMessage({message, kind})` 接受最多 4,000 个 UTF-16 码元。
+kind 为 info、success 或 error；省略或 null 使用 info。返回 null 仅表示接受临时展示，
+不保证持久化或用户已经阅读。
+
+`ui.confirm({message})` 接受最多 220 × 1,024 个 UTF-16 码元，同时受整个序列化请求
+256 KiB UTF-8 限制。只有明确确认返回 true；关闭、替换或 55 秒 UI 超时返回 false。
+要等待此超时，应将调用时限设为大于 55 秒；较短的 SDK 时限可能先报错。
+已有弹窗时不会覆盖，返回 `plugin.api.frontend:dialog.busy`。停止、撤销批准或取消请求
+可能报错而非返回布尔值；异步授权期间取消的请求不得延迟弹出界面。字段错误使用
+`plugin.api.frontend:invalid:message` 或 `plugin.api.frontend:invalid:kind`。
+这些方法不授予权限，也不提供操作、事件订阅或内部 UI 状态。结构的字符计数独立于
+运行时 UTF-16 及请求字节配额。

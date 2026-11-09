@@ -795,7 +795,7 @@ export interface HostMethodMap {
   "clipboard.readText": [Record<string, never>, string];
   "clipboard.writeText": [{ text: string }, null];
   "ui.showMessage": [
-    { message: string; kind?: "info" | "success" | "error" },
+    { message: string; kind?: "info" | "success" | "error" | null },
     null,
   ];
   "ui.confirm": [{ message: string }, boolean];
