@@ -1,5 +1,3 @@
-import { createInterface } from "node:readline";
-
 /** A dependency-free, bidirectional client for Tunnelde's bounded stdio protocol. */
 export function createPlugin(
   { initialize, run, render, shutdown } = {},
@@ -10,10 +8,13 @@ export function createPlugin(
   let sequence = 0;
   let disposed = false;
   const pending = new Map();
-  const reader = createInterface({ input, crlfDelay: Infinity });
+  let frame = Buffer.alloc(0);
+  let frameBytes = 0;
   function send(message) {
     if (disposed) throw new Error("Plugin transport is closed");
-    const line = JSON.stringify(message);
+    const line = JSON.stringify(message)
+      .replaceAll("\u2028", "\\u2028")
+      .replaceAll("\u2029", "\\u2029");
     if (Buffer.byteLength(line, "utf8") > 1024 * 1024)
       throw new Error("Plugin message exceeds 1 MiB");
     output.write(line + "\n");
@@ -80,7 +81,13 @@ export function createPlugin(
     disposed = true;
     for (const request of [...pending.values()])
       request.finish(new Error("Plugin transport closed"));
-    reader.close();
+    input.removeListener("data", readChunk);
+    input.removeListener("end", close);
+    input.removeListener("close", close);
+    input.removeListener("error", close);
+    output.removeListener("error", close);
+    frame = Buffer.alloc(0);
+    frameBytes = 0;
   }
   async function receive(line) {
     if (Buffer.byteLength(line, "utf8") > 1024 * 1024) return close();
@@ -147,11 +154,33 @@ export function createPlugin(
       }
     }
   }
-  reader.on("line", (line) => {
-    void receive(line);
-  });
-  reader.on("close", close);
-  reader.on("error", close);
+  // JSONL uses LF, not Unicode line/paragraph separators inside JSON strings.
+  // Bound incomplete frames too and decode only after split UTF-8 bytes rejoin.
+  function readChunk(chunk) {
+    const bytes = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+    let start = 0;
+    while (start < bytes.length && !disposed) {
+      const end = bytes.indexOf(10, start);
+      const part = bytes.subarray(start, end < 0 ? bytes.length : end);
+      const required = frameBytes + part.length;
+      if (required > 1024 * 1024) return close();
+      if (required > frame.length) {
+        const expanded = Buffer.allocUnsafe(Math.max(required, Math.min(1024 * 1024, Math.max(1024, frame.length * 2))));
+        frame.copy(expanded, 0, 0, frameBytes);
+        frame = expanded;
+      }
+      part.copy(frame, frameBytes);
+      frameBytes = required;
+      if (end < 0) break;
+      const line = frame.toString("utf8", 0, frameBytes);
+      frameBytes = 0;
+      void receive(line);
+      start = end + 1;
+    }
+  }
+  input.on("data", readChunk);
+  input.on("end", close);
+  input.on("close", close);
   input.on("error", close);
   output.on("error", close);
   return Object.freeze({ host, close });
