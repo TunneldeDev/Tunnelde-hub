@@ -169,6 +169,8 @@ export interface MethodContract {
   errorSchema: Record<string, unknown>;
   /** Optional schema of advisory input passed to a contribution's manifest command. */
   commandContextSchema?: Record<string, unknown>;
+  /** Optional schema of the host-generated event envelope, not every custom payload. */
+  eventSchema?: Record<string, unknown>;
   /** Stable application error messages; IO/internal error text remains platform-specific. */
   knownErrors: string[];
   /** Events emitted by this method; an empty list means snapshot/RPC behavior only. */
@@ -584,7 +586,7 @@ export interface HostMethodMap {
   "workspace.showQuickAccess": [{ query?: string }, unknown];
   "workspace.setPaneLocked": [{ paneId: string; locked: boolean }, unknown];
   "workspace.resizeSplit": [{ splitId: string; ratio: number }, unknown];
-  "events.publish": [{ event: string; payload: unknown }, null];
+  "events.publish": [{ event: string; payload?: unknown }, null];
   "secrets.get": [{ key: string }, string | null];
   "secrets.set": [{ key: string; value: string }, null];
   "secrets.delete": [{ key: string }, null];
