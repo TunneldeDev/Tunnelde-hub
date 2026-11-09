@@ -1724,6 +1724,29 @@
       "deprecated": null
     },
     {
+      "name": "hosts.getFields",
+      "permissions": [
+        "hosts.read"
+      ],
+      "params": "{hostId:string}",
+      "description": "Read this plugin's manifest hostFields schema and revisioned values for one existing host. Returns {schema,document}; document includes hostId, revision, schemaDigest, schemaVersion, storedSchemaVersion, schemaChanged and values. Retains values after schema changes; does not execute migration or expose another plugin's data. Nonsecret metadata only.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "hosts.setFields",
+      "permissions": [
+        "hosts.read",
+        "hosts.write"
+      ],
+      "params": "{hostId:string,expectedRevision:number,schemaDigest:string,values:object}",
+      "description": "Atomically replace this plugin's host fields against the current schema digest and revision. Declared text, number, boolean and select values only; missing keys unset values. No merge, implicit migration or secret storage. Returns {schema,document}; stale revisions/schemas fail without mutation. 32KiB per document, 4MiB values per plugin, 32MiB total. Host deletion cascades, uninstall retains data. Revocation is serialized with commit.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
       "name": "hosts.create",
       "permissions": [
         "hosts.write"

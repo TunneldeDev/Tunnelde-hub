@@ -60,10 +60,11 @@ export interface ExtensionDirectory {
     layer: string;
     stability: string;
     composition: string;
-    registration: { set: string; remove: string } | { manifest: string };
+    registration: { set: string; remove: string } | { manifest: string; read?: string; replace?: string };
     ownership: "runtime" | "manifest";
     permissions: string[];
-    limits: { perPlugin: number; total: number; entriesPerCollection?: number };
+    writePermissions?: string[];
+    limits: Record<string, number>;
   }>;
 }
 
@@ -285,6 +286,10 @@ export interface FileMenuContribution {
 /** Optional manifest field: register native reveal for this plugin's active mounts. */
 export interface MountedFileRevealContribution {
   mountedFileReveal?: boolean;
+}
+/** Optional experimental Manifest metadata; editing does not start a runtime. */
+export interface HostFieldsContribution {
+  hostFields?: HostFieldsSchema;
 }
 export interface FileMenuCommandInput {
   file: {
@@ -641,6 +646,44 @@ export interface HostMenuCommandInput {
 }
 // END GENERATED HOST MENU V1 TYPES
 
+// BEGIN GENERATED HOST FIELDS V1 TYPES
+/** Experimental public metadata, independent of Host and internal settings. */
+export interface HostField {
+  id: string;
+  label: string;
+  type: "text" | "number" | "boolean" | "select";
+  description?: string;
+  maxLength?: number;
+  minimum?: number;
+  maximum?: number;
+  options?: { value: string; label: string }[];
+}
+export interface HostFieldsSchema {
+  version: number;
+  fields: HostField[];
+}
+export type HostFieldValue = string | number | boolean;
+export interface HostFieldsDocument {
+  hostId: string;
+  revision: number;
+  schemaDigest: string;
+  schemaVersion: number;
+  storedSchemaVersion: number | null;
+  schemaChanged: boolean;
+  values: Record<string, HostFieldValue>;
+}
+export interface HostFieldsSnapshot {
+  schema: HostFieldsSchema;
+  document: HostFieldsDocument;
+}
+export interface HostFieldsUpdate {
+  hostId: string;
+  expectedRevision: number;
+  schemaDigest: string;
+  values: Record<string, HostFieldValue>;
+}
+// END GENERATED HOST FIELDS V1 TYPES
+
 export interface HostMethodMap {
   "extensions.describe": [Record<string, never>, ExtensionDirectory];
   "hostList.setDecorations": [HostDecorationCollection, null];
@@ -824,6 +867,8 @@ export interface HostMethodMap {
     { hosts: SavedHost[]; groups: Group[] },
   ];
   "hosts.create": [{ input: HostInput }, SavedHost];
+  "hosts.getFields": [{ hostId: string }, HostFieldsSnapshot];
+  "hosts.setFields": [HostFieldsUpdate, HostFieldsSnapshot];
   "hosts.update": [{ id: string; input: HostInput }, SavedHost];
   "hosts.delete": [{ id: string }, null];
   "hosts.markUsed": [{ id: string }, null];

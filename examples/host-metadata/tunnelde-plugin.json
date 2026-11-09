@@ -1,0 +1,25 @@
+{
+  "id": "example-host-metadata",
+  "name": "Host metadata example",
+  "version": "1.0.0",
+  "apiVersion": 1,
+  "description": "Revisioned optional metadata edited by the host and an approved host command",
+  "author": "TunneldeDev",
+  "readme": "README.md",
+  "runtime": "frontend",
+  "frontend": { "entry": "ui/index.mjs", "sdk": "^0.1.0" },
+  "permissions": ["ui.trusted", "hosts.read", "hosts.write"],
+  "commands": [{ "id": "toggle-managed", "title": "Toggle managed flag", "hostMenu": true }],
+  "hostFields": {
+    "version": 1,
+    "fields": [
+      { "id": "owner", "label": "Owner", "type": "text", "maxLength": 120, "description": "Optional team or contact; no secrets." },
+      { "id": "managed", "label": "Managed", "type": "boolean" },
+      { "id": "cost", "label": "Monthly budget", "type": "number", "minimum": 0 },
+      { "id": "tier", "label": "Environment", "type": "select", "options": [
+        { "value": "production", "label": "Production" },
+        { "value": "test", "label": "Test" }
+      ] }
+    ]
+  }
+}
