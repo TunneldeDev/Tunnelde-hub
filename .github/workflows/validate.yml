@@ -10,6 +10,59 @@ concurrency:
   group: validate-${{ github.ref }}
   cancel-in-progress: true
 jobs:
+  native-pi:
+    name: Native Pi (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - name: Download pinned Pi binary
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/pi-native"
+          if [ "$RUNNER_OS" = Windows ]; then
+            asset=pi-windows-x64.zip
+            checksum=002fa95b90d521245b9985d8f168caebc237ad56e7e30b319807dee1b2e17e1c
+          else
+            asset=pi-linux-x64.tar.gz
+            checksum=494e498f47d74d21f40b3386f6a5e921a3d49531a169cab55bbdaca0ea1fe25a
+          fi
+          gh release download v0.85.1 --repo earendil-works/pi --pattern "$asset" --dir "$RUNNER_TEMP/pi-native"
+          (cd "$RUNNER_TEMP/pi-native" && printf '%s  %s\n' "$checksum" "$asset" | sha256sum --check)
+          if [ "$RUNNER_OS" = Windows ]; then
+            unzip -q "$RUNNER_TEMP/pi-native/$asset" -d "$RUNNER_TEMP/pi-native/extracted"
+            binary=$(find "$RUNNER_TEMP/pi-native/extracted" -type f -name pi.exe -print -quit)
+          else
+            mkdir -p "$RUNNER_TEMP/pi-native/extracted"
+            tar -xzf "$RUNNER_TEMP/pi-native/$asset" -C "$RUNNER_TEMP/pi-native/extracted"
+            binary=$(find "$RUNNER_TEMP/pi-native/extracted" -type f -name pi -print -quit)
+          fi
+          test -n "$binary"
+          echo "TUNNELDE_TEST_PI=$binary" >> "$GITHUB_ENV"
+      - name: Test native protocol, streaming and tool approval
+        run: node --test tests/pi-native.test.mjs
+      - name: Preserve native acceptance report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: native-pi-${{ matrix.os }}
+          path: .tmp/qa/pi-native-*/result.json
+          if-no-files-found: ignore
+
   host-catalogue:
     name: SDK catalogue matches application dev
     runs-on: ubuntu-latest
