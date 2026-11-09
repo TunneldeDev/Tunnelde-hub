@@ -1967,7 +1967,7 @@
         "ssh.exec"
       ],
       "params": "{request:SshConnectRequest}",
-      "description": "Connect a saved host with normal host-key verification; never auto-trust a server.",
+      "description": "Connect a saved host with normal host-key verification; never auto-trust a server. The connection belongs to this runtime generation and closes on stop, crash, revocation or replacement. Pending and live connections share a limit of 8 per plugin and 64 total; connection setup has a 120-second deadline. Opening a terminal or file tab does not transfer ownership. User-created connections are unaffected.",
       "stability": "experimental",
       "since": null,
       "deprecated": null

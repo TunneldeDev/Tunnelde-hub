@@ -68,7 +68,7 @@ Stability is part of the compatibility contract: `stable` methods include their 
 | `groups.update` | `hosts.write` | `{id:string,input:GroupInput}` | `experimental` |  |  | Update a validated host group. |
 | `groups.delete` | `hosts.write` | `{id:string}` | `experimental` |  |  | Delete a host group through the normal group service. |
 | `sessions.list` | `sessions.read` | `{}` | `stable` | 0.21.0 |  | List active SSH session metadata; no passwords or private keys. |
-| `sessions.connect` | `ssh.exec` | `{request:SshConnectRequest}` | `experimental` |  |  | Connect a saved host with normal host-key verification; never auto-trust a server. |
+| `sessions.connect` | `ssh.exec` | `{request:SshConnectRequest}` | `experimental` |  |  | Connect a saved host with normal host-key verification; never auto-trust a server. The connection belongs to this runtime generation and closes on stop, crash, revocation or replacement. Pending and live connections share a limit of 8 per plugin and 64 total; connection setup has a 120-second deadline. Opening a terminal or file tab does not transfer ownership. User-created connections are unaffected. |
 | `sessions.disconnect` | `ssh.exec` | `{sessionId:string}` | `experimental` |  |  | Disconnect an active SSH session. |
 | `sessions.exec` | `ssh.exec` | `{sessionId:string,command:string,timeoutMs?:number}` | `experimental` |  |  | Execute in a separate SSH channel; return stdout/stderr/exitCode/signal. Timeout 100–60000ms, output at most 1MiB. |
 | `terminal.write` | `ssh.exec` | `{sessionId:string,data:string}` | `experimental` |  |  | Write plain UTF-8 terminal input, including remote shell commands; the host handles transport encoding. |
