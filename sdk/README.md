@@ -182,9 +182,13 @@ explicit `scope`, `mode`, `clientId` and unique `requestId`. `readOnly` rejects 
 and mutations. `ask` asks the human before mutations; `approve` may accept a decision
 from a separately configured independent reviewer, falling back to the human. `full`
 skips action confirmation and must be explicitly selected by the user. Read operations
-still require host permissions and target scope. `tools.cancel` cancels a pending request;
-`tools.revokeClient` also cancels resources owned by that client. Completed writes cannot
-be rolled back. The reviewer decision is trusted plugin input: never copy it from model
+still require host permissions and target scope. `tools.cancel` cancels a pending request
+and closes SSH connections whose results have not been accepted; delivered connections
+from completed requests remain open. `tools.revokeClient` permanently revokes the client
+identity for this runtime generation and releases its tasks, transfers and SSH connections.
+Other clients, direct plugin calls and user connections are preserved; use a new client ID
+to resume. Reusing a public request ID does not transfer ownership to old cleanup.
+Completed writes cannot be rolled back. The reviewer decision is trusted plugin input: never copy it from model
 tool arguments. Scope checks constrain host tool calls, not arbitrary executable code.
 
 ## Optional durable remote runners

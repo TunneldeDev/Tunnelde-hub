@@ -48,6 +48,15 @@ transfer ownership. Pending and live connections share a limit of eight per plug
 Use an existing user-created session for an independent lifetime; explicit ownership
 handoff is not yet available. `sessions.list` continues to list all active sessions.
 
+Through `tools.invoke`, a connection also belongs to its `clientId` (default `agent`).
+`tools.revokeClient` permanently revokes that identity in the current runtime generation,
+cancels its pending calls and releases its tasks, transfers and SSH connections. Other
+clients, direct plugin calls, user connections and replacement generations are preserved.
+Use a new client identity to resume. `tools.cancel` closes connections whose pending
+result has not been accepted; a completed request's delivered connection is unaffected.
+Reused public request IDs are isolated from old cleanup. Completed remote effects cannot
+be rolled back. These lifecycle rules do not add fields to the stable session DTO.
+
 Host errors include integer `code`, string `message` and usually a `data.code` category.
 Invalid parameter objects or oversized requests use `-32602`; authorization failures
 use `-32001`; storage, quota and IO errors use `-32000`. Recognized storage messages
