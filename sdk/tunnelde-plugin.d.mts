@@ -27,6 +27,17 @@ export interface HostDecorationCollection {
 }
 /** Experimental directory; discovery does not authorize calls or promise complete coverage. */
 export interface ExtensionDirectory {
+  frontend?: {
+    sdkVersion: string;
+    stability: "experimental";
+    trust: "host-context";
+    permission: "ui.trusted";
+    manifest: "frontend";
+    runtime: "frontend";
+    viewKind: "component";
+    components: string[];
+    limits: { moduleBytes: number; totalBytes: number; owners: number };
+  };
   version: 1;
   stability: "experimental";
   layers: Array<
@@ -242,6 +253,8 @@ export interface EditorWriteResult {
 }
 
 export interface PluginCommand {
+  /** Dispatch in the approved frontend module of a combined runtime. */
+  frontend?: boolean;
   id: string;
   title: string;
   keybindings?: string[];

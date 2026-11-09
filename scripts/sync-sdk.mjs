@@ -140,6 +140,19 @@ export async function syncSdk(applicationDirectory, { check = false, sdkDirector
     ["api.json", json],
     ["api.md", markdown],
   ];
+  // Only advertise UI declarations when the chosen host implements the loader.
+  // Older hosts remain valid synchronization targets and do not require this file.
+  const extensionPath = join(source, "src-tauri/src/plugins/extensions.json");
+  if (catalogue.methods.some(({ name }) => name === "extensions.describe")) {
+    const directory = JSON.parse(await readFile(extensionPath, "utf8"));
+    if (directory.frontend) {
+      const uiTypes = (await readFile(join(source, "src/lib/extensions/uiSdkContract.ts"), "utf8")).replaceAll("\r\n", "\n");
+      assert.match(uiTypes, /readonly version: "0\.1\.0"/, "Unexpected UI SDK contract version");
+      assert.equal(directory.frontend.sdkVersion, "0.1.0", "UI SDK version differs from host discovery");
+      assert.ok(!uiTypes.includes("@/") && !/from ["']\./.test(uiTypes), "UI contract exposes host-private types");
+      artifacts.push(["tunnelde-ui.d.mts", uiTypes]);
+    }
+  }
   if (catalogue.methods.some(({ name }) => name === "extensions.describe")) {
     const extensions = JSON.parse(
       await readFile(

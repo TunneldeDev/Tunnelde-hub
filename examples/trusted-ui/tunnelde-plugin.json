@@ -1,0 +1,14 @@
+{
+  "id": "example-trusted-ui",
+  "name": "Trusted UI example",
+  "version": "1.0.0",
+  "description": "Experimental component view using the shared host React and UI SDK",
+  "author": "TunneldeDev",
+  "readme": "README.md",
+  "apiVersion": 1,
+  "runtime": "frontend",
+  "frontend": { "entry": "ui/index.mjs", "sdk": "^0.1.0" },
+  "permissions": ["ui.trusted"],
+  "commands": [{ "id": "hello", "title": "UI example: Hello" }],
+  "views": [{ "id": "main", "title": "UI example", "kind": "component", "location": "sidebar" }]
+}

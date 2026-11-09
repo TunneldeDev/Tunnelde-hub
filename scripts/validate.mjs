@@ -25,7 +25,7 @@ export function validateManifest(manifest, id) {
   assert.ok(/^\d+\.\d+\.\d+$/.test(manifest.version), `${id}: use a semantic version`);
   assert.equal(manifest.apiVersion, 1, `${id}: unsupported API`);
   assert.ok(
-    ["node", "wasm", "theme", "declarative"].includes(manifest.runtime ?? "node"),
+    ["node", "wasm", "theme", "declarative", "frontend"].includes(manifest.runtime ?? "node"),
     `${id}: unknown runtime`,
   );
   assert.equal(
@@ -35,6 +35,7 @@ export function validateManifest(manifest, id) {
   );
   assert.ok(Array.isArray(manifest.permissions), `${id}: declare permissions explicitly`);
   const knownPermissions = new Set([
+    "ui.trusted",
     "log",
     "app.read",
     "settings.read",
@@ -68,6 +69,17 @@ export function validateManifest(manifest, id) {
   ]);
   for (const permission of manifest.permissions)
     assert.ok(knownPermissions.has(permission), `${id}: unknown permission ${permission}`);
+  if (manifest.frontend !== undefined) {
+    const frontend = manifest.frontend;
+    assert.ok(frontend && typeof frontend === "object" && !Array.isArray(frontend) &&
+      Object.keys(frontend).every(key => ["entry", "sdk"].includes(key)) &&
+      typeof frontend.entry === "string" && frontend.entry.length <= 240 &&
+      /^ui\/(?:[A-Za-z0-9_.-]+\/)*[A-Za-z0-9_.-]+\.mjs$/.test(frontend.entry) &&
+      frontend.entry.split('/').every(segment => segment !== '.' && segment !== '..') &&
+      typeof frontend.sdk === "string" && frontend.sdk.trim() && frontend.sdk.length <= 160 &&
+      manifest.runtime !== "theme" && manifest.permissions.includes("ui.trusted"),
+      `${id}: invalid trusted frontend declaration`);
+  }
   assert.ok(
     manifest.mountedFileReveal === undefined ||
       (typeof manifest.mountedFileReveal === "boolean" &&
@@ -82,6 +94,9 @@ export function validateManifest(manifest, id) {
     `${id}: commands must be an array`,
   );
   for (const command of manifest.commands ?? []) {
+    assert.ok(command.frontend === undefined ||
+      (typeof command.frontend === "boolean" && (!command.frontend || manifest.frontend)),
+      `${id}: frontend command requires a frontend declaration`);
     assert.ok(
       command &&
         typeof command.id === "string" &&
@@ -177,7 +192,8 @@ export function validateManifest(manifest, id) {
       `${id}: invalid view location`,
     );
     assert.ok(
-      view.kind === undefined || ["chat", "blocks"].includes(view.kind),
+      view.kind === undefined || ["chat", "blocks"].includes(view.kind) ||
+        (view.kind === "component" && manifest.frontend),
       `${id}: invalid view kind`,
     );
     assert.ok(
@@ -214,6 +230,10 @@ export function validateManifest(manifest, id) {
         (manifest.themes ?? []).length <= 32,
       `${id}: missing themes`,
     );
+  } else if (manifest.runtime === "frontend") {
+    assert.ok(manifest.frontend && !manifest.main && !manifest.engines?.node &&
+      (manifest.views ?? []).every(view => view.kind === "component"),
+      `${id}: pure frontend packages require component views and no backend entry or Node dependency`);
   } else {
     assert.ok(
       typeof manifest.main === "string" &&
@@ -276,6 +296,7 @@ export async function validateRegistry({ write = false } = {}) {
     const readme = await readFile(join(directory, "README.md"), "utf8");
     assert.ok(readme.trim().length >= 80, `${entry.name}: README must explain the plugin`);
     if (manifest.main) await readFile(join(directory, manifest.main));
+    if (manifest.frontend) await readFile(join(directory, manifest.frontend.entry));
   }
   const output = await mkdtemp(join(tmpdir(), "tunnelde-registry-"));
   try {
