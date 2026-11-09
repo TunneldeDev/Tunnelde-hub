@@ -10,6 +10,65 @@ concurrency:
   group: validate-${{ github.ref }}
   cancel-in-progress: true
 jobs:
+  native-codex:
+    name: Native Codex (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - name: Download pinned Codex binary
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/codex-native/extracted"
+          if [ "$RUNNER_OS" = Windows ]; then
+            asset=codex-x86_64-pc-windows-msvc.exe.zip
+            checksum=94b51ca84648a6923784ef71f06e2feb1e10796ddb3f5d033ccb0fbe8daa2f16
+          else
+            asset=codex-x86_64-unknown-linux-musl.tar.gz
+            checksum=9d64836106d5b374e90ee4454c7ebcde7ca7106558bd7e41a34b9f26ebda251a
+          fi
+          gh release download rust-v0.167.0 --repo openai/codex --pattern "$asset" --dir "$RUNNER_TEMP/codex-native"
+          (cd "$RUNNER_TEMP/codex-native" && printf '%s  %s\n' "$checksum" "$asset" | sha256sum --check)
+          if [ "$RUNNER_OS" = Windows ]; then
+            unzip -q "$RUNNER_TEMP/codex-native/$asset" -d "$RUNNER_TEMP/codex-native/extracted"
+            binary=$(find "$RUNNER_TEMP/codex-native/extracted" -type f -name '*.exe' -print -quit)
+          else
+            tar -xzf "$RUNNER_TEMP/codex-native/$asset" -C "$RUNNER_TEMP/codex-native/extracted"
+            binary=$(find "$RUNNER_TEMP/codex-native/extracted" -type f -name 'codex*' -print -quit)
+            helper=bwrap-x86_64-unknown-linux-musl.tar.gz
+            gh release download rust-v0.167.0 --repo openai/codex --pattern "$helper" --dir "$RUNNER_TEMP/codex-native"
+            (cd "$RUNNER_TEMP/codex-native" && printf '%s  %s\n' 19e02d1d65fb5556957120704c452c953a948c6bb58e4cb6221618425ba9624b "$helper" | sha256sum --check)
+            mkdir -p "$RUNNER_TEMP/codex-native/helper" "$(dirname "$binary")/codex-resources"
+            tar -xzf "$RUNNER_TEMP/codex-native/$helper" -C "$RUNNER_TEMP/codex-native/helper"
+            mv "$RUNNER_TEMP/codex-native/helper/bwrap-x86_64-unknown-linux-musl" "$(dirname "$binary")/codex-resources/bwrap"
+            chmod +x "$(dirname "$binary")/codex-resources/bwrap"
+          fi
+          test -n "$binary"
+          echo "TUNNELDE_TEST_CODEX=$binary" >> "$GITHUB_ENV"
+      - name: Test native readiness, streaming and conversation resume
+        run: node --test tests/codex-native.test.mjs
+      - name: Preserve native acceptance reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: native-codex-${{ matrix.os }}
+          path: .tmp/qa/codex-native-*/*result.json
+          if-no-files-found: ignore
+
   native-pi:
     name: Native Pi (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
