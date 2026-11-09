@@ -93,8 +93,8 @@ commands retain normal command discovery and shortcut routing. Activation and
 render errors reach software logs; a failed activation stops the plugin, and
 component views expose Refresh for recovery.
 
-This SDK adds component views and commands. Host-list replacement, complete
-workbench providers and the remaining domain migrations require separate
-contracts and are not implied by frontend module support.
+The SDK also supports explicit [interface providers](ui-providers.en-us.md)
+for the host list and workbench presentation. The remaining domain services and
+dependency management are still under development.
 
 A runnable plain-ESM example is in [examples/trusted-ui](../examples/trusted-ui/README.en-us.md).

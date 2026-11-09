@@ -13,6 +13,16 @@ export function activate(context) {
         `${name || "Hello"}: ${count}`));
   }
   context.views.register("main", View);
+  function Workbench({ workbench }) {
+    const { Workspace, Navigation, Inspector, StatusBar } = workbench;
+    return React.createElement("div", {
+      style: { display: "flex", flex: 1, flexDirection: "column", minHeight: 0 },
+    }, React.createElement("div", {
+      style: { display: "flex", flex: 1, minHeight: 0 },
+    }, React.createElement(Workspace), React.createElement(Navigation), React.createElement(Inspector)),
+    React.createElement(StatusBar));
+  }
+  context.views.register("desktop", Workbench);
   context.commands.register("hello", () => ({ text: "Hello from the shared UI runtime" }));
   context.commands.register("inspect-host", ({ host }) => ({ text: `${host.name}: ${host.address}:${host.port}` }));
 }

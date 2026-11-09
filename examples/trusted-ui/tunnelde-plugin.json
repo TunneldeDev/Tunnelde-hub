@@ -13,5 +13,8 @@
     { "id": "hello", "title": "UI example: Hello" },
     { "id": "inspect-host", "title": "Inspect host", "hostMenu": true }
   ],
-  "views": [{ "id": "main", "title": "UI example", "kind": "component", "location": "sidebar" }]
+  "views": [
+    { "id": "main", "title": "UI example", "kind": "component", "location": "sidebar" },
+    { "id": "desktop", "title": "Navigation on the right", "kind": "component", "provider": "workbench" }
+  ]
 }

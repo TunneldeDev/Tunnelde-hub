@@ -35,6 +35,16 @@ export interface ExtensionDirectory {
     manifest: "frontend";
     runtime: "frontend";
     viewKind: "component";
+    providers?: {
+      manifest: "views[].provider";
+      targets: ("hostList" | "workbench")[];
+      selection: "explicit-user";
+      hostListPermission: "hosts.read";
+      slots: string[];
+      requiredSlot: "Workspace";
+      limits: { perPlugin: number };
+      fallback: "built-in";
+    };
     components: string[];
     limits: { moduleBytes: number; totalBytes: number; owners: number };
   };
@@ -385,7 +395,9 @@ export interface PluginView {
   id: string;
   title: string;
   location?: "sidebar" | "workspace";
-  kind?: "blocks" | "chat";
+  kind?: "blocks" | "chat" | "component";
+  /** Component provider chosen explicitly in settings; omit location. */
+  provider?: "hostList" | "workbench";
   icon?: string;
 }
 export type ChatProtocol =
