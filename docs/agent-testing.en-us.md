@@ -37,6 +37,28 @@ supervisor, desktop chat interactions or every supported agent version. Those
 require separate acceptance evidence. A green fixture or loopback test must not
 be reported as a successful authenticated local/remote conversation.
 
+## Codex adapter
+
+Set `TUNNELDE_TEST_CODEX` to an explicitly selected native executable and run:
+
+```sh
+node --test tests/codex-native.test.mjs
+```
+
+The test isolates the agent home, configuration and workspace and clears inherited
+credentials. It checks signed-out readiness without a provider request, permission
+policy preflight, controlled provider errors, Unicode streaming and continuation of
+the same native thread across processes without replaying earlier user messages.
+The successful conversation uses Full Access only inside the owned fixture. A
+restricted policy that the platform cannot enforce must fail initialization without
+widening access; this does not count as successful restricted execution or tool
+approval acceptance. Test those operations separately on a supported host.
+
+Hub CI runs this test on Linux and Windows with pinned Codex 0.167.0 native binaries
+and verified SHA-256 digests. Reports are stored in `.tmp/qa/codex-native-*/` and
+uploaded as CI artifacts. The provider is a local controlled Responses endpoint;
+no public-provider login or system Node subprocess is required by the agent.
+
 ## Desktop and SSH acceptance
 
 Adapter tests and desktop acceptance cover different boundaries. For each published
