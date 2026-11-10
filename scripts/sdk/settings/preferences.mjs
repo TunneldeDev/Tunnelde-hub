@@ -4,7 +4,7 @@ import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 
 export async function syncPreferencesContracts(applicationDirectory, sdkDirectory, check) {
-  const root = join(applicationDirectory, "src/lib/preferences/contracts");
+  const root = join(applicationDirectory, "src/lib/extensions/contracts/preferences/data");
   const files = (await readdir(root, { recursive: true })).filter(name => name.endsWith(".ts"));
   assert.ok(files.length > 0);
   for (const name of files) {

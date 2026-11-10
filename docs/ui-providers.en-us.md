@@ -68,3 +68,5 @@ are unchanged.
 [Forwarding provider](forwarding-ui.en-us.md).
 
 [Background task extensions](background-tasks.en-us.md)
+
+[Preference form providers](preferences-ui.en-us.md).
