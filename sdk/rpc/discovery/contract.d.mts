@@ -8,9 +8,13 @@ export interface ExtensionDirectory {
     manifest: "frontend";
     runtime: "frontend";
     viewKind: "component";
+    backgroundTasks?: {
+      context: "backgroundTasks"; method: "run"; ownership: "runtime"; pendingLimit: number;
+      cancellation: "cooperative-settlement"; hidden: "blocks-webview-suspension";
+    };
     providers?: {
       manifest: "views[].provider";
-      targets: ("hostList" | "workbench" | "fileBrowser" | "terminal" | "history" | "forwarding" | "monitor")[];
+      targets: ("hostList" | "workbench" | "fileBrowser" | "terminal" | "history" | "forwarding" | "monitor" | "backgroundTasks")[];
       selection: "explicit-user";
       hostListPermission: "hosts.read";
       fileBrowserPermissions: string[];
@@ -21,6 +25,12 @@ export interface ExtensionDirectory {
       terminalPermissions: string[];
       historyPermissions: string[];
       forwardingPermissions?: string[];
+      backgroundTasksPermissions?: string[];
+      backgroundTasks?: {
+        context: "backgroundTasks"; ownership: "host-panel"; presentations: ("floating" | "embedded")[];
+        optionalSlot: "Entries"; pageSize: number; pageTextLimit: number; paging: "revision-bound";
+        writePermission: "backgroundTasks.write"; visibility: "visible-tasks-only"; recovery: "native-toolbar-and-confirmation";
+      };
       monitorPermissions?: string[];
       monitor?: {
         context: "monitor"; ownership: "host-view"; presentations: ("page" | "panel")[]; optionalSlot: "Charts";

@@ -6,6 +6,8 @@ import type { FrontendHistory } from "../history/provider.mjs";
 import type { FrontendForwarding } from "../forwarding/provider.mjs";
 import type { FrontendMonitor } from "../monitor/provider.mjs";
 
+import type { FrontendBackgroundTasks } from "../backgroundTasks/provider.mjs";
+
 export interface FrontendViewProps {
   pluginId: string;
   viewId: string;
@@ -24,4 +26,6 @@ export interface FrontendViewProps {
   forwarding?: FrontendForwarding;
   /** Present only for a selected monitoring provider; sampling stays host-owned. */
   monitor?: FrontendMonitor;
+  /** Present only for a selected shared background-task provider. */
+  backgroundTasks?: FrontendBackgroundTasks;
 }

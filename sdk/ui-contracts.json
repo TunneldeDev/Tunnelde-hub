@@ -3,6 +3,9 @@
   "entry": "tunnelde-ui.d.mts",
   "dependencies": {
     "tunnelde-ui.d.mts": [
+      "ui/backgroundTasks/entry.d.mts",
+      "ui/backgroundTasks/execution.d.mts",
+      "ui/backgroundTasks/provider.d.mts",
       "ui/components/controls.d.mts",
       "ui/components/emptyState.d.mts",
       "ui/components/sdk.d.mts",
@@ -20,6 +23,14 @@
       "ui/search/field.d.mts",
       "ui/terminal/surface.d.mts",
       "ui/workbench/slots.d.mts"
+    ],
+    "ui/backgroundTasks/entry.d.mts": [],
+    "ui/backgroundTasks/execution.d.mts": [
+      "ui/backgroundTasks/entry.d.mts"
+    ],
+    "ui/backgroundTasks/provider.d.mts": [
+      "react",
+      "ui/backgroundTasks/entry.d.mts"
     ],
     "ui/components/controls.d.mts": [
       "react"
@@ -43,12 +54,14 @@
     ],
     "ui/frontend/lifecycle.d.mts": [
       "react",
+      "ui/backgroundTasks/execution.d.mts",
       "ui/components/sdk.d.mts",
       "ui/frontend/views.d.mts",
       "ui/runtime/resources.d.mts"
     ],
     "ui/frontend/providers.d.mts": [],
     "ui/frontend/views.d.mts": [
+      "ui/backgroundTasks/provider.d.mts",
       "ui/files/browser.d.mts",
       "ui/forwarding/provider.d.mts",
       "ui/history/provider.d.mts",
