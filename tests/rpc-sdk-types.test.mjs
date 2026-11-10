@@ -56,22 +56,40 @@ test("all legacy RPC SDK imports and domain types retain their historical contra
       if (!checker.isTypeAssignableTo(typeOf(next), typeOf(original))) widened.push(name);
     }
   }
-  assert.deepEqual(widened.sort(), ["ExtensionDirectory", "Host", "HostMethodMap", "PluginView", "createPlugin"].sort());
+  // Experimental runner results always included notFound at runtime; the
+  // corrected declaration explicitly widens only those result contracts.
+  assert.deepEqual(widened.sort(), ["ExtensionDirectory", "Host", "HostMethodMap", "PluginView", "RunnerPoll", "RunnerState", "createPlugin"].sort());
   const oldMap = checker.getDeclaredTypeOfSymbol(before.get("HostMethodMap"));
   const newMap = checker.getDeclaredTypeOfSymbol(after.get("HostMethodMap"));
   const oldNames = new Set(oldMap.getProperties().map(p => p.name));
   assert.ok([...oldNames].every(name => newMap.getProperty(name)), "Missing historical RPC");
+  const widenedMethods = [];
   for (const property of oldMap.getProperties()) {
     const next = newMap.getProperty(property.name);
     const oldType = checker.getTypeOfSymbolAtLocation(property, property.valueDeclaration);
     const nextType = checker.getTypeOfSymbolAtLocation(next, next.valueDeclaration);
     assert.ok(checker.isTypeAssignableTo(oldType, nextType), `${property.name}: historical request/result changed`);
-    if (property.name !== "extensions.describe")
-      assert.ok(checker.isTypeAssignableTo(nextType, oldType), `${property.name}: historical request/result widened`);
+    if (!checker.isTypeAssignableTo(nextType, oldType)) widenedMethods.push(property.name);
+    const oldInput = checker.getTypeArguments(oldType)[0];
+    const nextInput = checker.getTypeArguments(nextType)[0];
+    assert.ok(checker.isTypeAssignableTo(oldInput, nextInput), `${property.name}: historical input rejected`);
+    assert.ok(checker.isTypeAssignableTo(nextInput, oldInput), `${property.name}: historical input widened`);
   }
+  assert.deepEqual(widenedMethods.sort(), ["extensions.describe", "runners.poll", "runners.status"]);
   assert.deepEqual(newMap.getProperties().map(p => p.name).filter(name => !oldNames.has(name)).sort(),
     ["configuration.backups", "configuration.deleteBackup", "configuration.migrate", "configuration.restore", "configuration.schema", "configuration.snapshot", "configuration.update", "preferences.schema", "preferences.snapshot", "preferences.update", "resources.release", "resources.snapshot"]);
   // Freeze normalized text so fixture changes cannot silently make compatibility pass.
   const hash = createHash("sha256").update(readFileSync(historical, "utf8").replaceAll("\r\n", "\n")).digest("hex");
   assert.equal(hash, "d50bf0fdcdbe2eb0dd6b538981ccd82a93d2eb0d2128b565c56c8b02a16fb309");
+});
+
+test("runner status consumers handle missing runners through both RPC results", () => {
+  const program = ts.createProgram([resolve("tests/fixtures/runner-state/consumer.mts")], {
+    target: ts.ScriptTarget.ES2022,
+    module: ts.ModuleKind.NodeNext,
+    moduleResolution: ts.ModuleResolutionKind.NodeNext,
+    strict: true, noEmit: true, skipLibCheck: false, types: ["node"],
+  });
+  const diagnostics = ts.getPreEmitDiagnostics(program);
+  assert.deepEqual(diagnostics.map(diagnostic => ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n")), []);
 });
