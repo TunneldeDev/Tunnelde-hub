@@ -25,3 +25,17 @@ const missingRevision: PreferenceUpdate = { changes: {} };
 // @ts-expect-error Network profiles never expose proxy passwords.
 snapshot.values.network.profiles[0].password;
 void privateField; void invalidTheme; void incompleteReplacement; void missingRevision;
+
+
+import type { FrontendPreferences, PreferenceUpdate as UiPreferenceUpdate } from "../../../sdk/tunnelde-ui.mjs";
+import type { FrontendPreferences as DomainPreferences } from "../../../sdk/ui/preferences/provider.mjs";
+import type { PreferenceUpdate as RpcPreferenceUpdate } from "../../../sdk/rpc/settings/preferences/update.mjs";
+declare const page: FrontendPreferences;
+const domain: DomainPreferences = page;
+const uiRequest: UiPreferenceUpdate = { revision: "read-first", changes: { appearance: { theme: "dark" } } };
+const rpcRequest: RpcPreferenceUpdate = uiRequest;
+await domain.update(rpcRequest);
+// @ts-expect-error A page update cannot modify the reserved UI provider selection.
+await domain.update({ revision: "r", changes: { uiProviders: {} } });
+// @ts-expect-error Persistent revision is mandatory even when the page has a revision.
+await domain.update({ changes: { appearance: { theme: "dark" } } });

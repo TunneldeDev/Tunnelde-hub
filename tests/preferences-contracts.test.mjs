@@ -11,8 +11,8 @@ test("preference synchronization checks both independent DTOs and schemas withou
   const write = async (path, value) => { await mkdir(dirname(path), { recursive: true }); await writeFile(path, value); };
   const app = join(root, "app"), sdk = join(root, "sdk");
   try {
-    await write(join(app, "src/lib/preferences/contracts/index.ts"), 'export type * from "./values.js";\n');
-    await write(join(app, "src/lib/preferences/contracts/values.ts"), 'export interface PreferenceValues { readonly theme: "dark" | "light"; }\n');
+    await write(join(app, "src/lib/extensions/contracts/preferences/data/index.ts"), 'export type * from "./values.js";\n');
+    await write(join(app, "src/lib/extensions/contracts/preferences/data/values.ts"), 'export interface PreferenceValues { readonly theme: "dark" | "light"; }\n');
     await write(join(app, "src-tauri/src/services/settings/preferences/mapping/mod.rs"), 'Group { id: "appearance" }');
     await write(join(app, "src-tauri/src/services/settings/preferences/schema/appearance.json"), '{"type":"object"}');
     await syncPreferencesContracts(app, sdk, false);
@@ -27,7 +27,7 @@ test("preference synchronization checks both independent DTOs and schemas withou
     await write(schema, "{}");
     await assert.rejects(syncPreferencesContracts(app, sdk, true), /Preference schemas differ/);
     assert.equal(await readFile(schema, "utf8"), "{}");
-    await write(join(app, "src/lib/preferences/contracts/values.ts"), 'import type { Settings } from "@/private";');
+    await write(join(app, "src/lib/extensions/contracts/preferences/data/values.ts"), 'import type { Settings } from "@/private";');
     await assert.rejects(syncPreferencesContracts(app, sdk, false), /Private preference/);
   } finally { await rm(root, { recursive: true, force: true }); }
 });

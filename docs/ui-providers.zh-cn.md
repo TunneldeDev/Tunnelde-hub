@@ -55,3 +55,5 @@ function Workbench({ workbench }) {
 [端口转发提供者](forwarding-ui.zh-cn.md)。
 
 [Background task extensions](background-tasks.zh-cn.md)
+
+[设置表单提供者](preferences-ui.zh-cn.md)。
