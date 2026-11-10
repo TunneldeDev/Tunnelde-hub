@@ -46,8 +46,8 @@ test("pure and combined frontends require explicit trust and safe manifest decla
 });
 
 test("interface providers require a trusted component declaration and explicit target metadata", () => {
-  for (const provider of ["workbench", "hostList"]) {
-    const valid = { ...structuredClone(manifest), permissions: ["ui.trusted", "hosts.read"] };
+  for (const provider of ["workbench", "hostList", "fileBrowser"]) {
+    const valid = { ...structuredClone(manifest), permissions: ["ui.trusted", "hosts.read", "fs.read", "sftp.read", "workspace.write"] };
     valid.views[0].provider = provider;
     validateManifest(valid, valid.id);
     const unicode = structuredClone(valid); unicode.views[0].title = "🖥".repeat(120);
@@ -68,6 +68,11 @@ test("interface providers require a trusted component declaration and explicit t
   }
   const bad = structuredClone(manifest); bad.views[0].provider = "hostList";
   assert.throws(() => validateManifest(bad, bad.id));
+  for (const omitted of ["fs.read", "sftp.read", "workspace.write"]) {
+    const bad = structuredClone(manifest); bad.views[0].provider = "fileBrowser";
+    bad.permissions = ["ui.trusted", "fs.read", "sftp.read", "workspace.write"].filter(p => p !== omitted);
+    assert.throws(() => validateManifest(bad, bad.id));
+  }
 });
 
 test("UI declarations synchronize from host discovery, reject drift and never expose private imports", async () => {
