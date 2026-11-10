@@ -1,3 +1,5 @@
+import { checkRuntimeResources } from "./sdk/runtime/resources/discovery.mjs";
+import { syncRuntimeResourceContracts } from "./sdk/runtime/resources/contracts.mjs";
 import assert from "node:assert/strict";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
@@ -85,6 +87,8 @@ async function syncWorkspaceTypes(applicationDirectory, sdkSource, catalogue, ch
 export async function syncSdk(applicationDirectory, { check = false, sdkDirectory = join(root, "sdk") } = {}) {
   const source = resolve(applicationDirectory);
   const catalogue = await loadRustCatalogue(source);
+  if (catalogue.methods.some(({ name }) => name === "resources.snapshot"))
+    await syncRuntimeResourceContracts(source, sdkDirectory, check);
   if (catalogue.methods.some(({name}) => name === "configuration.schema"))
     await syncConfigurationContracts(source,sdkDirectory,check);
   if (catalogue.methods.some(({ name }) => name === "preferences.schema"))
@@ -109,6 +113,7 @@ export async function syncSdk(applicationDirectory, { check = false, sdkDirector
   const extensionPath = join(source, "src-tauri/src/plugins/extensions.json");
   if (catalogue.methods.some(({ name }) => name === "extensions.describe")) {
     const directory = JSON.parse(await readFile(extensionPath, "utf8"));
+    if (catalogue.methods.some(({ name }) => name === "resources.snapshot")) checkRuntimeResources(directory,catalogue);
     if (directory.frontend) {
       const publicContracts = await loadUiContracts(source);
       const uiTypes = publicContracts.declarations;

@@ -177,3 +177,5 @@ kind 为 info、success 或 error；省略或 null 使用 info。返回 null 仅
 旧回调不能操作变更后的面板或替换后的提供者。路径、来源、筛选和恢复入口仍由宿主管理。
 完整语义见宿主双语 `docs/plugin-file-browser.en-us.md`、`docs/plugin-file-browser.zh-cn.md`；
 组合示例见 `examples/trusted-ui`。这是宿主上下文的可信代码，不是沙箱，也不额外授予权限。
+
+[运行资源生命周期](runtime-resources.zh-cn.md)：严格客户端、所有权、分页与释放语义。
