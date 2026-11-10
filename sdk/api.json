@@ -2832,6 +2832,39 @@
       "deprecated": null
     },
     {
+      "name": "preferences.schema",
+      "permissions": [
+        "settings.read"
+      ],
+      "params": "{}",
+      "description": "Read versioned preference groups and fixed input schemas; excludes credentials and host-controlled provider selection.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "preferences.snapshot",
+      "permissions": [
+        "settings.read"
+      ],
+      "params": "{}",
+      "description": "Read detached public preference values, platform defaults and a persistent global revision.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "preferences.update",
+      "permissions": [
+        "settings.write"
+      ],
+      "params": "{revision:string,changes:object}",
+      "description": "Compare the global revision and replace explicitly supplied public fields; rejects unknown or invalid values without silently sanitizing them.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
       "name": "sessions.list",
       "permissions": [
         "sessions.read"

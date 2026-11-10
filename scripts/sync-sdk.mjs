@@ -4,6 +4,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { checkUiContractFiles, loadUiContracts } from "./sdk/ui-contracts.mjs";
 import { loadRpcDeclarations } from "./sdk/rpc/declarations.mjs";
+import { syncPreferencesContracts } from "./sdk/settings/preferences.mjs";
 
 import { loadRustCatalogue } from "./sdk/catalogue/load.mjs";
 export { loadRustCatalogue } from "./sdk/catalogue/load.mjs";
@@ -82,6 +83,8 @@ async function syncWorkspaceTypes(applicationDirectory, sdkSource, catalogue, ch
 export async function syncSdk(applicationDirectory, { check = false, sdkDirectory = join(root, "sdk") } = {}) {
   const source = resolve(applicationDirectory);
   const catalogue = await loadRustCatalogue(source);
+  if (catalogue.methods.some(({ name }) => name === "preferences.schema"))
+    await syncPreferencesContracts(source, sdkDirectory, check);
   const declarations = await loadRpcDeclarations(sdkDirectory);
   const types = declarations.source;
   let projectedTypes = await syncWorkspaceTypes(source, types, catalogue, check);

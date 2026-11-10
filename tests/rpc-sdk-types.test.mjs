@@ -48,14 +48,29 @@ test("all legacy RPC SDK imports and domain types retain their historical contra
       const oldDeclaration = original.declarations[0], newDeclaration = next.declarations[0];
       assert.equal(oldDeclaration.getText().replace(/\s+/g, " "), newDeclaration.getText().replace(/\s+/g, " "), `${name}: generic declaration changed`);
     } else {
-      assert.ok(checker.isTypeAssignableTo(typeOf(original), typeOf(next)), `${name}: old to new`);
+      // Adding RPCs makes the complete map require more keys. Historical
+      // method contracts are checked individually below, without weakening
+      // the compatibility requirements for every other exported type.
+      if (name !== "HostMethodMap")
+        assert.ok(checker.isTypeAssignableTo(typeOf(original), typeOf(next)), `${name}: old to new`);
       if (!checker.isTypeAssignableTo(typeOf(next), typeOf(original))) widened.push(name);
     }
   }
   assert.deepEqual(widened.sort(), ["ExtensionDirectory", "Host", "HostMethodMap", "PluginView", "createPlugin"].sort());
   const oldMap = checker.getDeclaredTypeOfSymbol(before.get("HostMethodMap"));
   const newMap = checker.getDeclaredTypeOfSymbol(after.get("HostMethodMap"));
-  assert.deepEqual(oldMap.getProperties().map(p => p.name).sort(), newMap.getProperties().map(p => p.name).sort());
+  const oldNames = new Set(oldMap.getProperties().map(p => p.name));
+  assert.ok([...oldNames].every(name => newMap.getProperty(name)), "Missing historical RPC");
+  for (const property of oldMap.getProperties()) {
+    const next = newMap.getProperty(property.name);
+    const oldType = checker.getTypeOfSymbolAtLocation(property, property.valueDeclaration);
+    const nextType = checker.getTypeOfSymbolAtLocation(next, next.valueDeclaration);
+    assert.ok(checker.isTypeAssignableTo(oldType, nextType), `${property.name}: historical request/result changed`);
+    if (property.name !== "extensions.describe")
+      assert.ok(checker.isTypeAssignableTo(nextType, oldType), `${property.name}: historical request/result widened`);
+  }
+  assert.deepEqual(newMap.getProperties().map(p => p.name).filter(name => !oldNames.has(name)).sort(),
+    ["preferences.schema", "preferences.snapshot", "preferences.update"]);
   // Freeze normalized text so fixture changes cannot silently make compatibility pass.
   const hash = createHash("sha256").update(readFileSync(historical, "utf8").replaceAll("\r\n", "\n")).digest("hex");
   assert.equal(hash, "d50bf0fdcdbe2eb0dd6b538981ccd82a93d2eb0d2128b565c56c8b02a16fb309");
