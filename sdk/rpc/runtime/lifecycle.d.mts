@@ -2,7 +2,7 @@ import type { Host } from "../transport/host.mjs";
 
 export interface PluginHandlers {
   initialize?(
-    params: { apiVersion: number; pluginId: string },
+    params: { apiVersion: number; pluginId: string; permissions?: string[]; hostApiVersion?: number },
     host: Host,
   ): unknown | Promise<unknown>;
   run?(

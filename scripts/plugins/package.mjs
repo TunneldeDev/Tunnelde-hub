@@ -150,6 +150,7 @@ export async function packageOfficialPlugins(
         author: plugin.manifest.author,
         runtime: plugin.manifest.runtime,
         apiVersion: plugin.manifest.apiVersion,
+        ...(plugin.manifest.dependencies?.length ? { dependencies: plugin.manifest.dependencies } : {}),
         engines: plugin.manifest.engines,
         tags: catalogueTags(plugin.manifest),
         readme: (await readFile(join(repository, "plugins", plugin.id, "README.md"), "utf8")).replaceAll("\r\n", "\n"),

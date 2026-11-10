@@ -1,5 +1,8 @@
 # Tunnelde plugin SDK
 
+Required installed dependencies, manifest admission v2 and independent approval:
+[English](../docs/plugin-activation.en-us.md) · [简体中文](../docs/plugin-activation.zh-cn.md).
+
 The compatibility entry `tunnelde-plugin.d.mts` re-exports public declarations
 from `rpc/<domain>/`. DTOs, method maps, transport and lifecycle own separate
 files. Copy the declaration tree with the SDK for TypeScript development. Runtime
