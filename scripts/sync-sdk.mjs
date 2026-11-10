@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
-import { readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { checkUiContractFiles, loadUiContracts } from "./sdk/ui-contracts.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -155,10 +156,10 @@ export async function syncSdk(applicationDirectory, { check = false, sdkDirector
   if (catalogue.methods.some(({ name }) => name === "extensions.describe")) {
     const directory = JSON.parse(await readFile(extensionPath, "utf8"));
     if (directory.frontend) {
-      const uiTypes = (await readFile(join(source, "src/lib/extensions/uiSdkContract.ts"), "utf8")).replaceAll("\r\n", "\n");
+      const publicContracts = await loadUiContracts(source);
+      const uiTypes = publicContracts.declarations;
       assert.match(uiTypes, /readonly version: "0\.1\.0"/, "Unexpected UI SDK contract version");
       assert.equal(directory.frontend.sdkVersion, "0.1.0", "UI SDK version differs from host discovery");
-      assert.ok(!uiTypes.includes("@/") && !/from ["']\./.test(uiTypes), "UI contract exposes host-private types");
       if (directory.frontend.providers) {
         const providers = directory.frontend.providers;
         assert.equal(providers.manifest, "views[].provider");
@@ -188,7 +189,8 @@ export async function syncSdk(applicationDirectory, { check = false, sdkDirector
         assert.equal(providers.limits.perPlugin, 8);
         for (const slot of providers.slots) assert.match(uiTypes, new RegExp(`${slot}: React.ComponentType`));
       }
-      artifacts.push(["tunnelde-ui.d.mts", uiTypes]);
+      await checkUiContractFiles(sdkDirectory, publicContracts.artifacts);
+      artifacts.push(...publicContracts.artifacts);
     }
   }
   if (catalogue.methods.some(({ name }) => name === "extensions.describe")) {
@@ -327,6 +329,7 @@ export async function syncSdk(applicationDirectory, { check = false, sdkDirector
         `${name} differs from the selected host; run npm run sdk:sync`,
       );
     } else {
+      await mkdir(dirname(path), { recursive: true });
       await writeFile(path, expected);
     }
   }

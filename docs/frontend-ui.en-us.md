@@ -9,6 +9,30 @@ the host's public contract, not its stores or component source paths.
 
 Frontend commands can contribute [host menu actions](host-menu.en-us.md).
 
+## Domain type imports
+
+`sdk/tunnelde-ui.d.mts` remains the compatibility entry point. Its declarations are
+organized under `sdk/ui/<domain>/`: runtime resources, components, search, frontend
+lifecycle, workbench, files, terminal and history. Import all types from the old
+entry or choose a domain, for example:
+
+```ts
+import type { FrontendContext } from "./sdk/tunnelde-ui.mjs";
+import type { FrontendTerminal } from "./sdk/ui/terminal/surface.mjs";
+```
+
+These imports are erased by TypeScript; runtime SDK access still comes from the
+activation context. Copy the entire SDK declaration tree when developing a plugin.
+`sdk:sync` follows the host's public dependency graph, and `sdk:check` verifies all
+files and `ui-contracts.json`. Private types, runtime imports, cycles, unreachable
+contracts and abandoned generated files fail validation. Historical declarations
+remain a compatibility fixture. Organization does not change UI SDK 0.1.0's
+experimental status or the existing RPC protocol.
+
+For repository development, run `npm ci --ignore-scripts` before `npm test`.
+The pinned TypeScript and React/Node declarations are test tools only; plugins
+do not acquire an implicit Node runtime or a second React instance.
+
 ## Manifest and module
 
 A pure frontend plugin needs no Node runtime. Existing Node, WASM and declarative
