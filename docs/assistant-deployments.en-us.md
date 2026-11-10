@@ -34,3 +34,17 @@ runner is reused. Inspecting the current task displays its availability, status,
 exit code and error when available; inspection never starts another agent or sends
 a model prompt. Hosts that support task run identities also send the captured
 identity, so an old action cannot select a new operation on the same runner.
+
+During an active durable-runner observation, an explicit host-busy response retries
+only the status or journal read. Reads keep the same runner identity and event cursor,
+use a shared 30-second deadline, and stop after at most eight attempts. Cancelling
+also cancels pending reads and backoff. Permission failures, disconnections and timeouts
+are returned immediately; start, send, approval and stop operations are never retried
+by this observer. Manual inspection remains a single read.
+
+If contention persists or the runner reports `notFound`, the conversation becomes
+interrupted and retains its recovery identity. Reconnect the original host, inspect
+the task, and choose resume to observe its existing journal. Neither a missing runner
+nor a lost response proves that its previous operation did not run; recovery does
+not repeat the prompt. These rules apply to advanced durable profiles, not ordinary
+SSH-dependent agent processes.

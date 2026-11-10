@@ -33,6 +33,7 @@ import {
 } from "./targets.mjs";
 import { cleanupDeployment, deployFiles, runtimeFiles } from "./deployment.mjs";
 import { runRemoteAssistant } from "./remote-stdio.mjs";
+import { createRunnerObserver } from "./runner-observation.mjs";
 import { prepareAgent, preparationKey, executionKey } from "./readiness.mjs";
 import { installAgent } from "./installation.mjs";
 import path from "node:path";
@@ -49,7 +50,7 @@ const safeResult = (value) => {
 const snapshotSize = (value) => Buffer.byteLength(JSON.stringify(value));
 class RemoteRunnerInterrupted extends Error {
   constructor(error) {
-    super(`Remote runner connection interrupted. Reconnect the SSH host and resume to inspect the existing run; the request will not be sent again. ${String(error?.message ?? error)}`);
+    super(`Remote runner observation interrupted. Inspect or resume the existing run; reconnect the SSH host if disconnected. The request will not be sent again. ${String(error?.message ?? error)}`);
     this.name = "RemoteRunnerInterrupted";
   }
 }
@@ -81,6 +82,7 @@ export class AiPlugin {
     { fetchImpl = fetch, completion = streamCompletion, cli = runCli } = {},
   ) {
     this.host = host;
+    this.observeRunner = createRunnerObserver(host);
     this.fetchImpl = fetchImpl;
     this.completion = completion;
     this.cli = cli;
@@ -1093,14 +1095,17 @@ export class AiPlugin {
       throw new Error("Select at least one remote workspace root");
     let saved = session.remote;
     if (saved && saved.sessionId !== remote.sessionId) {
-      const status = await this.host.call("runners.status", {
+      const status = await this.observeRunner("runners.status", {
         sessionId: remote.sessionId,
         runnerId: saved.runnerId,
+      }, signal).catch((error) => {
+        signal.throwIfAborted();
+        throw new RemoteRunnerInterrupted(error);
       });
       if (!status || status.status === "notFound")
-        throw new Error(
+        throw new RemoteRunnerInterrupted(new Error(
           "Saved remote runner is unavailable on the selected SSH host",
-        );
+        ));
       // The host resolves runner ownership by stable host ID before executing this request.
       saved.sessionId = remote.sessionId;
       await this.persist();
@@ -1249,11 +1254,11 @@ export class AiPlugin {
     try {
       while (true) {
         signal.throwIfAborted();
-        const batch = await this.host.call("runners.poll", {
+        const batch = await this.observeRunner("runners.poll", {
           sessionId: saved.sessionId,
           runnerId: saved.runnerId,
           afterSeq: saved.afterSeq,
-        }).catch((error) => {
+        }, signal).catch((error) => {
           signal.throwIfAborted();
           throw new RemoteRunnerInterrupted(error);
         });
@@ -1347,6 +1352,8 @@ export class AiPlugin {
           saved.afterSeq = event.seq;
           this.checkpoint();
         }
+        if (batch.state?.status === "notFound")
+          throw new RemoteRunnerInterrupted(new Error("The remote runner is unavailable; its saved identity was preserved"));
         for (const item of batch.pendingApprovals ?? [])
           await handleApproval(item);
         if (
