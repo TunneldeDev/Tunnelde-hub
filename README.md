@@ -89,6 +89,7 @@ Node 22+ is required only for these development scripts. There is no `npm instal
 npm run agents:sync       # synchronize checked-in self-contained assistant runtimes
 npm run registry          # generate the reviewable catalogue and pinned checksums
 npm run check             # reject malformed manifests or registry drift
+npm ci --ignore-scripts   # pinned development tools for SDK declaration tests
 npm test                  # utilities, AI/MCP host mocks, SDK transport, ZIPs and validation
 npm run sdk:sync           # regenerate host catalogue from sibling ../Tunnelde source
 npm run package           # artifacts/plugins/{archives,index.json,SHA256SUMS,marketplace.json}

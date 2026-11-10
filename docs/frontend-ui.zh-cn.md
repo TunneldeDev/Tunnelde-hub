@@ -8,6 +8,27 @@
 
 前端命令可以贡献[主机菜单操作](host-menu.zh-cn.md)。
 
+## 按领域导入类型
+
+`sdk/tunnelde-ui.d.mts` 保留为兼容入口。声明按领域归属到 `sdk/ui/<领域>/`，
+分别管理运行资源、公共组件、搜索、前端生命周期、工作台、文件、终端和历史。
+可以继续从旧入口导入，也可以直接引用领域文件：
+
+```ts
+import type { FrontendContext } from "./sdk/tunnelde-ui.mjs";
+import type { FrontendTerminal } from "./sdk/ui/terminal/surface.mjs";
+```
+
+这些导入在 TypeScript 编译后被移除，运行时 SDK 仍来自激活上下文。
+开发插件时应复制完整 SDK 声明目录。`sdk:sync` 跟随宿主公开依赖图，
+`sdk:check` 校验全部文件及 `ui-contracts.json`。私有类型、运行时代码导入、
+循环依赖、未导出契约和遗留生成文件都会导致校验失败；历史声明保留为兼容样例。
+分类不改变 UI SDK 0.1.0 的实验性状态或既有 RPC 协议。
+
+仓库开发时先执行 `npm ci --ignore-scripts`，再执行 `npm test`。
+固定版本的 TypeScript 及 React/Node 声明仅用于测试，不会让插件隐式使用 Node
+运行时，也不会为插件引入第二份 React。
+
 ## 清单和模块
 
 纯前端插件不需要 Node。既有 Node、WASM 和声明式插件也可以增加相同的 `frontend`

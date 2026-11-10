@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "entry": "tunnelde-ui.d.mts",
+  "dependencies": {
+    "tunnelde-ui.d.mts": [
+      "ui/components/controls.d.mts",
+      "ui/components/emptyState.d.mts",
+      "ui/components/sdk.d.mts",
+      "ui/files/browser.d.mts",
+      "ui/frontend/lifecycle.d.mts",
+      "ui/frontend/providers.d.mts",
+      "ui/frontend/views.d.mts",
+      "ui/history/provider.d.mts",
+      "ui/runtime/resources.d.mts",
+      "ui/search/field.d.mts",
+      "ui/terminal/surface.d.mts",
+      "ui/workbench/slots.d.mts"
+    ],
+    "ui/components/controls.d.mts": [
+      "react"
+    ],
+    "ui/components/emptyState.d.mts": [
+      "react"
+    ],
+    "ui/components/sdk.d.mts": [
+      "react",
+      "ui/components/controls.d.mts",
+      "ui/components/emptyState.d.mts",
+      "ui/search/field.d.mts"
+    ],
+    "ui/files/browser.d.mts": [
+      "react"
+    ],
+    "ui/frontend/lifecycle.d.mts": [
+      "react",
+      "ui/components/sdk.d.mts",
+      "ui/frontend/views.d.mts",
+      "ui/runtime/resources.d.mts"
+    ],
+    "ui/frontend/providers.d.mts": [],
+    "ui/frontend/views.d.mts": [
+      "ui/files/browser.d.mts",
+      "ui/history/provider.d.mts",
+      "ui/terminal/surface.d.mts",
+      "ui/workbench/slots.d.mts"
+    ],
+    "ui/history/provider.d.mts": [
+      "react"
+    ],
+    "ui/runtime/resources.d.mts": [],
+    "ui/search/field.d.mts": [
+      "react"
+    ],
+    "ui/terminal/surface.d.mts": [
+      "react"
+    ],
+    "ui/workbench/slots.d.mts": [
+      "react"
+    ]
+  }
+}
