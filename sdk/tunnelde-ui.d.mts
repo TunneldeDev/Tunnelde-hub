@@ -26,3 +26,6 @@ export type * from "./ui/search/quickAccess/entry.mjs";
 export type * from "./ui/search/quickAccess/provider.mjs";
 export type * from "./ui/preferences/provider.mjs";
 export type * from "./ui/preferences/data/index.mjs";
+export type * from "./ui/configuration/schema.mjs";
+export type * from "./ui/configuration/document.mjs";
+export type * from "./ui/configuration/migration.mjs";

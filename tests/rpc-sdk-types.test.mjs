@@ -70,7 +70,7 @@ test("all legacy RPC SDK imports and domain types retain their historical contra
       assert.ok(checker.isTypeAssignableTo(nextType, oldType), `${property.name}: historical request/result widened`);
   }
   assert.deepEqual(newMap.getProperties().map(p => p.name).filter(name => !oldNames.has(name)).sort(),
-    ["preferences.schema", "preferences.snapshot", "preferences.update"]);
+    ["configuration.backups", "configuration.deleteBackup", "configuration.migrate", "configuration.restore", "configuration.schema", "configuration.snapshot", "configuration.update", "preferences.schema", "preferences.snapshot", "preferences.update"]);
   // Freeze normalized text so fixture changes cannot silently make compatibility pass.
   const hash = createHash("sha256").update(readFileSync(historical, "utf8").replaceAll("\r\n", "\n")).digest("hex");
   assert.equal(hash, "d50bf0fdcdbe2eb0dd6b538981ccd82a93d2eb0d2128b565c56c8b02a16fb309");

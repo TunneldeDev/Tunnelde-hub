@@ -5,6 +5,8 @@ import { fileURLToPath } from "node:url";
 import { checkUiContractFiles, loadUiContracts } from "./sdk/ui-contracts.mjs";
 import { loadRpcDeclarations } from "./sdk/rpc/declarations.mjs";
 import { syncPreferencesContracts } from "./sdk/settings/preferences.mjs";
+import { syncConfigurationContracts } from "./sdk/configuration/contracts.mjs";
+import { checkConfigurationPoint } from "./sdk/configuration/discovery.mjs";
 
 import { loadRustCatalogue } from "./sdk/catalogue/load.mjs";
 export { loadRustCatalogue } from "./sdk/catalogue/load.mjs";
@@ -83,6 +85,8 @@ async function syncWorkspaceTypes(applicationDirectory, sdkSource, catalogue, ch
 export async function syncSdk(applicationDirectory, { check = false, sdkDirectory = join(root, "sdk") } = {}) {
   const source = resolve(applicationDirectory);
   const catalogue = await loadRustCatalogue(source);
+  if (catalogue.methods.some(({name}) => name === "configuration.schema"))
+    await syncConfigurationContracts(source,sdkDirectory,check);
   if (catalogue.methods.some(({ name }) => name === "preferences.schema"))
     await syncPreferencesContracts(source, sdkDirectory, check);
   const declarations = await loadRpcDeclarations(sdkDirectory);
@@ -261,6 +265,7 @@ export async function syncSdk(applicationDirectory, { check = false, sdkDirector
           else projectedTypes = projectedTypes.replaceAll("\r\n","\n").replace(block(projectedTypes),expected);
           continue;
         }
+        if (point.id === "plugin.configuration") {checkConfigurationPoint(point,catalogue);continue;}
         assert.equal(point.id, "hostList.menu", "Unknown manifest extension point");
         assert.equal(point.registration.manifest, "commands[].hostMenu");
         assert.deepEqual(Object.keys(point.registration), ["manifest"]);
