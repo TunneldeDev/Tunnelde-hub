@@ -56,7 +56,7 @@ test("pure and combined frontends require explicit trust and safe manifest decla
 });
 
 test("interface providers require a trusted component declaration and explicit target metadata", () => {
-  for (const provider of ["workbench", "hostList", "fileBrowser", "terminal", "history", "forwarding", "monitor", "backgroundTasks"]) {
+  for (const provider of ["workbench", "hostList", "fileBrowser", "terminal", "history", "forwarding", "monitor", "backgroundTasks", "processes"]) {
     const valid = { ...structuredClone(manifest), permissions: ["ui.trusted", "hosts.read", "fs.read", "sftp.read", "workspace.write", "sessions.read", "ssh.exec", "history.read", "forwards.read", "monitor.read", "backgroundTasks.read"] };
     valid.views[0].provider = provider;
     validateManifest(valid, valid.id);
@@ -130,4 +130,16 @@ test("UI declarations synchronize from host discovery, reject drift and never ex
     await writeFile(path, contract + 'import type {Internal} from "@/store/private";\n');
     await assert.rejects(syncSdk(app, { sdkDirectory: sdk }), /private types/);
   } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+
+test("process providers require read authority but not terminate authority", () => {
+  for (const omitted of ["ui.trusted", "sessions.read", "monitor.read"]) {
+    const bad = structuredClone(manifest); bad.views[0].provider = "processes";
+    bad.permissions = ["ui.trusted", "sessions.read", "monitor.read"].filter(p => p !== omitted);
+    assert.throws(() => validateManifest(bad, bad.id));
+  }
+  const valid = structuredClone(manifest); valid.views[0].provider = "processes";
+  valid.permissions = ["ui.trusted", "sessions.read", "monitor.read"];
+  validateManifest(valid, valid.id);
 });

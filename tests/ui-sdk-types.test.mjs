@@ -29,7 +29,7 @@ test("legacy and domain SDK imports compile in NodeNext and preserve historical 
   }));
   const before = exportsOf(historical), after = exportsOf(current);
   const added = [...after.keys()].filter(name => !before.has(name));
-  assert.deepEqual(added.sort(), ["FrontendBackgroundTaskContext", "FrontendBackgroundTaskEntry", "FrontendBackgroundTaskOptions", "FrontendBackgroundTaskRunner", "FrontendBackgroundTasks", "FrontendBackgroundTasksSnapshot", "FrontendForwarding", "FrontendForwardingEntry", "FrontendForwardingSnapshot", "FrontendMonitor", "FrontendMonitorReading", "FrontendMonitorSample", "FrontendMonitorSnapshot", "FrontendTaskProgress"]);
+  assert.deepEqual(added.sort(), ["FrontendBackgroundTaskContext", "FrontendBackgroundTaskEntry", "FrontendBackgroundTaskOptions", "FrontendBackgroundTaskRunner", "FrontendBackgroundTasks", "FrontendBackgroundTasksSnapshot", "FrontendForwarding", "FrontendForwardingEntry", "FrontendForwardingSnapshot", "FrontendMonitor", "FrontendMonitorReading", "FrontendMonitorSample", "FrontendMonitorSnapshot", "FrontendProcessColumn", "FrontendProcessEntry", "FrontendProcessSort", "FrontendProcesses", "FrontendProcessesSnapshot", "FrontendTaskProgress"]);
   const widened = [];
   for (const [name, original] of before) {
     assert.ok(checker.isTypeAssignableTo(original, after.get(name)), `${name}: old to new`);

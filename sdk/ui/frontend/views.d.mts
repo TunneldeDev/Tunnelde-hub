@@ -8,6 +8,8 @@ import type { FrontendMonitor } from "../monitor/provider.mjs";
 
 import type { FrontendBackgroundTasks } from "../backgroundTasks/provider.mjs";
 
+import type { FrontendProcesses } from "../monitor/processes/provider.mjs";
+
 export interface FrontendViewProps {
   pluginId: string;
   viewId: string;
@@ -28,4 +30,6 @@ export interface FrontendViewProps {
   monitor?: FrontendMonitor;
   /** Present only for a selected shared background-task provider. */
   backgroundTasks?: FrontendBackgroundTasks;
+  /** Present only for a selected process manager provider. */
+  processes?: FrontendProcesses;
 }

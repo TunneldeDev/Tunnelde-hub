@@ -16,6 +16,9 @@
       "ui/frontend/providers.d.mts",
       "ui/frontend/views.d.mts",
       "ui/history/provider.d.mts",
+      "ui/monitor/processes/entry.d.mts",
+      "ui/monitor/processes/provider.d.mts",
+      "ui/monitor/processes/query.d.mts",
       "ui/monitor/provider.d.mts",
       "ui/monitor/reading.d.mts",
       "ui/monitor/sample.d.mts",
@@ -65,6 +68,7 @@
       "ui/files/browser.d.mts",
       "ui/forwarding/provider.d.mts",
       "ui/history/provider.d.mts",
+      "ui/monitor/processes/provider.d.mts",
       "ui/monitor/provider.d.mts",
       "ui/terminal/surface.d.mts",
       "ui/workbench/slots.d.mts"
@@ -72,6 +76,13 @@
     "ui/history/provider.d.mts": [
       "react"
     ],
+    "ui/monitor/processes/entry.d.mts": [],
+    "ui/monitor/processes/provider.d.mts": [
+      "react",
+      "ui/monitor/processes/entry.d.mts",
+      "ui/monitor/processes/query.d.mts"
+    ],
+    "ui/monitor/processes/query.d.mts": [],
     "ui/monitor/provider.d.mts": [
       "react",
       "ui/monitor/reading.d.mts",
