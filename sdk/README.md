@@ -1,5 +1,12 @@
 # Tunnelde plugin SDK
 
+The compatibility entry `tunnelde-plugin.d.mts` re-exports public declarations
+from `rpc/<domain>/`. DTOs, method maps, transport and lifecycle own separate
+files. Copy the declaration tree with the SDK for TypeScript development. Runtime
+imports of `createPlugin` still use `tunnelde-plugin.mjs`; the `rpc/` tree contains
+types only. See [English](../docs/plugin-api.en-us.md#sdk-source-organization) /
+[简体中文](../docs/plugin-api.zh-cn.md#sdk-源码分类) for domain imports and checks.
+
 File context-menu contributions are under development: [English](../docs/file-menu.en-us.md) · [简体中文](../docs/file-menu.zh-cn.md).
 
 Editor commands, formatting and contributed keybindings:

@@ -5,6 +5,23 @@
 请用 `host.describe()` 检查运行中的宿主。SDK 目录跟随应用 `dev`，用户安装的正式版可能
 提供较少的能力。清单的 `apiVersion: 1` 标识协议，不代表全部方法均已稳定。
 
+## SDK 源码分类
+
+RPC 声明按领域位于 `sdk/rpc/<领域>/`。主机元数据、字段、来源、列和菜单归属 `hosts/`；
+编辑、文件、转发、挂载、执行、历史等各自定义 DTO 和方法映射。传输及插件生命周期另设
+目录。`transport/methodMap.d.mts` 只组合领域映射，`tunnelde-plugin.d.mts` 只兼容导出。
+
+```ts
+import { createPlugin } from "./sdk/tunnelde-plugin.mjs";
+import type { ForwardRule } from "./sdk/rpc/forwarding/contract.mjs";
+import type { EditorDocument } from "./sdk/rpc/editor/contract.mjs";
+```
+
+运行时仍从原 SDK 入口导入，领域文件仅提供类型。同步检查跟随全部声明依赖，并将全部组合
+方法名与宿主发现结果比较；宿主生成 DTO 更新到所属领域文件。私有导入、循环依赖、
+不可达文件及未组合的方法映射均会导致检查失败。冻结的历史声明与新目录一起编译，验证
+导出、输入输出及传输类型兼容性。本次分类不改变协议方法名，也不提升实验接口稳定等级。
+
 首批稳定核心为 `api.describe`、`sessions.list`、`storage.get`、`storage.set` 和
 `storage.delete`。这些方法自 0.21.0 提供；`since` 表示首次可用版本，不表示稳定承诺建立
 的版本。稳定方法通过可选的版本 1 `contract` 提供 draft-07 的 `inputSchema`、

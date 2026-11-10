@@ -3,6 +3,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { checkUiContractFiles, loadUiContracts } from "./sdk/ui-contracts.mjs";
+import { loadRpcDeclarations } from "./sdk/rpc/declarations.mjs";
 
 import { loadRustCatalogue } from "./sdk/catalogue/load.mjs";
 export { loadRustCatalogue } from "./sdk/catalogue/load.mjs";
@@ -20,8 +21,20 @@ export function checkProviderTypes(types, targets) {
 }
 
 export function checkMethodTypes(source, catalogue) {
-  const body = source.match(/^export interface HostMethodMap \{\s*$([\s\S]*?)^\}/m)?.[1];
-  assert.ok(body, "SDK HostMethodMap was not found");
+  const composition = source.match(/^export interface HostMethodMap extends ([\w\s,]+)\{\}/m)?.[1];
+  const maps = composition ? composition.split(",").map(name => name.trim()) : ["HostMethodMap"];
+  assert.equal(new Set(maps).size, maps.length, "Duplicate SDK domain method map");
+  if (composition) {
+    const declared = [...source.matchAll(/^export interface (\w+MethodMap)\b/gm)].map(match => match[1]);
+    assert.deepEqual(declared.sort(), ["HostMethodMap", ...maps].sort(), "Uncomposed or duplicate SDK domain method map");
+  }
+  const bodies = maps.map(name => {
+    assert.match(name, /^\w+MethodMap$/);
+    const matches = [...source.matchAll(new RegExp(`^export interface ${name} \\{\\s*$([\\s\\S]*?)^\\}`, "gm"))];
+    assert.equal(matches.length, 1, `SDK ${name} was not found or is duplicated`);
+    return matches[0][1];
+  });
+  const body = bodies.join("\n");
   const names = [];
   for (const line of body.split(/\r?\n/)) {
     if (!/^  \S/.test(line) || /^  \];\s*$/.test(line)) continue;
@@ -69,8 +82,8 @@ async function syncWorkspaceTypes(applicationDirectory, sdkSource, catalogue, ch
 export async function syncSdk(applicationDirectory, { check = false, sdkDirectory = join(root, "sdk") } = {}) {
   const source = resolve(applicationDirectory);
   const catalogue = await loadRustCatalogue(source);
-  const typesPath = join(sdkDirectory, "tunnelde-plugin.d.mts");
-  const types = await readFile(typesPath, "utf8");
+  const declarations = await loadRpcDeclarations(sdkDirectory);
+  const types = declarations.source;
   let projectedTypes = await syncWorkspaceTypes(source, types, catalogue, check);
   const { version } = JSON.parse(await readFile(join(source, "package.json"), "utf8"));
   const json = JSON.stringify(catalogue, null, 2) + "\n";
@@ -255,6 +268,7 @@ export async function syncSdk(applicationDirectory, { check = false, sdkDirector
       JSON.stringify(extensions, null, 2) + "\n",
     ]);
   }
+  if (!check && projectedTypes !== types) artifacts.push(...declarations.project(projectedTypes));
   for (const [name, expected] of artifacts) {
     const path = join(sdkDirectory, name);
     if (check) {
@@ -269,8 +283,6 @@ export async function syncSdk(applicationDirectory, { check = false, sdkDirector
   }
   if (check) {
     checkMethodTypes(types, catalogue);
-  } else if (projectedTypes !== types) {
-    await writeFile(typesPath, projectedTypes);
   }
   return catalogue;
 }

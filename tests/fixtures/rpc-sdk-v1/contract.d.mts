@@ -1,0 +1,1097 @@
+import type { Readable, Writable } from "node:stream";
+
+/** Experimental additive host-list appearance. Does not modify saved host metadata. */
+export interface HostDecoration {
+  hostId: string;
+  badge?: string | null;
+  description?: string | null;
+  tooltip?: string | null;
+  icon?:
+    | "server"
+    | "cloud"
+    | "container"
+    | "database"
+    | "globe"
+    | "code"
+    | "terminal"
+    | "shield"
+    | "key"
+    | "activity"
+    | null;
+  tone?: "neutral" | "info" | "success" | "warning" | "error";
+}
+export interface HostDecorationCollection {
+  id: string;
+  priority?: number;
+  decorations: HostDecoration[];
+}
+/** Experimental directory; discovery does not authorize calls or promise complete coverage. */
+export interface ExtensionDirectory {
+  frontend?: {
+    sdkVersion: string;
+    stability: "experimental";
+    trust: "host-context";
+    permission: "ui.trusted";
+    manifest: "frontend";
+    runtime: "frontend";
+    viewKind: "component";
+    providers?: {
+      manifest: "views[].provider";
+      targets: ("hostList" | "workbench" | "fileBrowser" | "terminal" | "history")[];
+      selection: "explicit-user";
+      hostListPermission: "hosts.read";
+      fileBrowserPermissions: string[];
+      fileBrowser: {
+        context: "fileBrowser"; ownership: "host-pane"; pageSize: number;
+        paging: "revision-bound"; recovery: "native-path-and-actions";
+      };
+      terminalPermissions: string[];
+      historyPermissions: string[];
+      history: {
+        context: "history"; ownership: "host-panel"; optionalSlot: "Entries";
+        pageSize: number; pageTextLimit: number; paging: "revision-bound";
+        writePermission: "history.write"; executePermission: "ssh.exec";
+        recovery: "native-search-and-confirmation";
+      };
+      terminal: {
+        context: "terminal"; ownership: "host-session"; requiredSlot: "Screen";
+        pageSize: number; pageTextLimit: number; lineTextLimit: number; inputTextLimit: number;
+        subscriptions: number; notificationIntervalMs: number;
+        paging: "revision-bound"; stream: "coalesced-dirty"; recovery: "native-toolbar-and-screen";
+      };
+      slots: string[];
+      requiredSlot: "Workspace";
+      limits: { perPlugin: number };
+      fallback: "built-in";
+    };
+    components: string[];
+    limits: { moduleBytes: number; totalBytes: number; owners: number };
+  };
+  version: 1;
+  stability: "experimental";
+  layers: Array<
+    "contract" | "runtime" | "data" | "presentation" | "behavior" | "governance"
+  >;
+  domains: Array<{ id: string; namespaces: string[] }>;
+  points: Array<{
+    id: string;
+    domain: string;
+    layer: string;
+    stability: string;
+    composition: string;
+    registration: { set: string; remove: string } | { manifest: string; read?: string; replace?: string };
+    ownership: "runtime" | "manifest";
+    permissions: string[];
+    writePermissions?: string[];
+    limits: Record<string, number>;
+  }>;
+}
+
+export type AuthMethod = "password" | "key" | "agent" | "keyboardInteractive";
+
+/** Stable v1 tab-bar controls, available since 0.32.0-beta.6. Set replaces the whole item. */
+export interface TabBarItem {
+  id: string;
+  title: string;
+  kind: "button" | "select" | "text";
+  /** Default trailing. Leading controls appear before the tabs. */
+  placement?: "leading" | "trailing";
+  /** Plugin-scoped group ID; adjacent groups have subtle separators. */
+  group?: string | null;
+  /** Plain-text hover description, at most 512 characters. */
+  tooltip?: string | null;
+  /** Keep button text next to its icon. */
+  showLabel?: boolean;
+  /** Button-only toggle state. Update with set() after a successful command. */
+  checked?: boolean | null;
+  priority?: number;
+  icon?:
+    | "activity"
+    | "check"
+    | "alert"
+    | "info"
+    | "sync"
+    | "terminal"
+    | "cloud"
+    | "code"
+    | "plug"
+    | "copy"
+    | "clear"
+    | "folder"
+    | "file"
+    | "wrap"
+    | "follow"
+    | "play"
+    | "pause"
+    | "filter"
+    | null;
+  command?: string | null;
+  disabled?: boolean;
+  /** Omit to target own plugin views; {} targets all tabs. IDs are opaque. */
+  when?: { tabKind?: string | null; tabId?: string | null } | null;
+  options?: Array<{ value: string; label: string }>;
+  value?: string | null;
+}
+/** Advisory command input; does not grant editor, file or SSH permissions. */
+export interface TabBarCommandContext {
+  itemId: string;
+  tabId: string;
+  tabKind: string;
+  paneId: string;
+  value: string | null;
+}
+/** Input passed to the manifest command; context never grants resource permissions. */
+export interface TabBarCommandInput {
+  _locale: string | null;
+  _tabBar: TabBarCommandContext;
+}
+
+export interface Group {
+  id: string;
+  name: string;
+  parentId: string | null;
+  sortOrder: number;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface SavedHost {
+  id: string;
+  groupId: string | null;
+  name: string;
+  host: string;
+  port: number;
+  username: string;
+  authMethod: AuthMethod;
+  keyPath: string | null;
+  favorite: boolean;
+  color: string | null;
+  tags: string[];
+  note: string | null;
+  sortOrder: number;
+  lastUsedAt: number | null;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface HostInput {
+  name: string;
+  groupId?: string | null;
+  host: string;
+  port?: number;
+  username?: string;
+  authMethod?: AuthMethod;
+  keyPath?: string | null;
+  favorite?: boolean;
+  color?: string | null;
+  tags?: string[];
+  note?: string | null;
+}
+
+export interface SshSession {
+  id: string;
+  hostId: string;
+  title: string;
+  address: string;
+  cols: number;
+  rows: number;
+  /** Unix epoch milliseconds; internal connection-purpose fields are not exposed. */
+  connectedAt: number;
+}
+
+/** Experimental: 8 pending/live connections per plugin, 64 total; released with this runtime. */
+export interface SshConnectRequest {
+  hostId: string;
+  /** Opens a transport without requesting a PTY or shell. Still runtime-owned. */
+  background?: boolean;
+  purpose?: "forwarding";
+  jumpCredentials?: Record<string, { password?: string; passphrase?: string }>;
+  password?: string | null;
+  passphrase?: string | null;
+  cols?: number;
+  rows?: number;
+}
+
+export interface FileEntry {
+  isHidden: boolean;
+  name: string;
+  path: string;
+  isDir: boolean;
+  size: number;
+  modified: number | null;
+  permissions: number | null;
+}
+
+export interface Listing {
+  path: string;
+  entries: FileEntry[];
+}
+
+export interface TransferEvent {
+  id: string;
+  /** Optional attribution; never an authorization to resume an expired runtime. */
+  pluginId?: string;
+  direction: "transfer";
+  name: string;
+  transferred: number;
+  total: number;
+  status: "running" | "done" | "failed" | "cancelled" | "cleanupPending";
+  phase?: "queued" | "preparing" | "verifying" | "cleaning";
+  error: string | null;
+}
+
+export interface MethodDescription {
+  name: string;
+  permissions: string[];
+  params: string;
+  description: string;
+  /** Missing on hosts released before stability metadata was introduced. */
+  stability?: "stable" | "experimental" | "deprecated";
+  since?: string | null;
+  deprecated?: string | null;
+  /** Optional machine-readable contract, absent on older hosts and experimental methods. */
+  contract?: MethodContract;
+}
+
+export interface MethodContract {
+  version: 1;
+  /** JSON Schema draft-07; encoded byte limits are documented separately. */
+  inputSchema: Record<string, unknown>;
+  resultSchema: Record<string, unknown>;
+  errorSchema: Record<string, unknown>;
+  /** Optional schema of advisory input passed to a contribution's manifest command. */
+  commandContextSchema?: Record<string, unknown>;
+  /** Optional schema of the host-generated event envelope, not every custom payload. */
+  eventSchema?: Record<string, unknown>;
+  /** Stable application error messages; IO/internal error text remains platform-specific. */
+  knownErrors: string[];
+  /** Events emitted by this method; an empty list means snapshot/RPC behavior only. */
+  events: string[];
+}
+
+/** Stable editor v1 DTO. UTF-8 content is bounded to 128 KiB; excludes internal state. */
+export interface EditorDocument {
+  tabId: string;
+  documentId: string;
+  version: number;
+  path: string;
+  name: string;
+  content: string;
+  dirty: boolean;
+}
+/** Stable result of one undoable buffer replacement; no automatic disk save. */
+export interface EditorWriteResult {
+  tabId: string;
+  documentId: string;
+  version: number;
+  dirty: boolean;
+}
+
+export interface PluginCommand {
+  /** Dispatch in the approved frontend module of a combined runtime. */
+  frontend?: boolean;
+  id: string;
+  title: string;
+  keybindings?: string[];
+  macKeybindings?: string[];
+  /** Receive the matching document as input.source; return {text:string}. */
+  editor?: { extensions: string[]; format?: boolean };
+  /** Offer this command for a user-selected file or directory. */
+  fileMenu?: FileMenuContribution;
+  /** Offer this command on saved hosts; requires hosts.read. At most 16 per plugin. */
+  hostMenu?: boolean;
+}
+export interface FileMenuContribution {
+  sources: ("local" | "remote")[];
+  kinds: ("file" | "directory")[];
+  /** Case-insensitive file suffixes without the leading dot; directories ignore this filter. */
+  extensions?: string[];
+}
+/** Optional manifest field: register native reveal for this plugin's active mounts. */
+export interface MountedFileRevealContribution {
+  mountedFileReveal?: boolean;
+}
+/** Optional experimental Manifest metadata; editing does not start a runtime. */
+export interface HostFieldsContribution {
+  hostFields?: HostFieldsSchema;
+}
+export interface FileMenuCommandInput {
+  file: {
+    path: string;
+    name: string;
+    isDirectory: boolean;
+    source: { kind: "local" } | { kind: "remote"; sessionId: string };
+  };
+}
+export interface EditorCommandInput {
+  source: string;
+  document: Pick<
+    EditorDocument,
+    "tabId" | "documentId" | "version" | "path" | "name"
+  >;
+  indent: string;
+  _locale: string;
+}
+export interface EditorCommandResult {
+  text: string;
+  error?: boolean;
+}
+export type ToolMode = "ask" | "approve" | "full" | "readOnly";
+export type RemotePlatform = "posix" | "windows";
+export interface ToolScope {
+  sessionIds?: string[];
+  hostIds?: string[];
+  localRoots?: string[];
+  remoteRoots?: { sessionId: string; path: string }[];
+}
+export interface ToolInvocation {
+  method: string;
+  params: Record<string, unknown>;
+  mode: ToolMode;
+  scope: ToolScope;
+  /** Only a trusted plugin's independent reviewer may supply this decision. */
+  review?: { approved: boolean; reason: string };
+  clientId?: string;
+  requestId?: string;
+}
+export type TaskStatus =
+  "running" | "completed" | "cancelled" | "timedOut" | "failed" | "interrupted";
+export interface TaskSnapshot {
+  taskId: string;
+  status: TaskStatus;
+  exitCode: number | null;
+  error: string | null;
+  seq: number;
+}
+export interface TaskOutputEvent {
+  taskId: string;
+  seq: number;
+  stream: "stdout" | "stderr" | "status";
+  data: string;
+  status: TaskStatus;
+  exitCode: number | null;
+}
+export interface TaskOutput {
+  taskId: string;
+  events: TaskOutputEvent[];
+  nextSeq: number;
+  status: TaskStatus;
+  exitCode: number | null;
+  /** Host failure detail from the same snapshot; absent on older hosts. */
+  error?: string | null;
+  truncated: boolean;
+}
+export interface RunnerDeployment {
+  hostId: string;
+  directory: string;
+  platform: RemotePlatform;
+  executable: string;
+  runner: string;
+  entry: string;
+}
+export interface RunnerRecord {
+  runnerId: string;
+  deployment: RunnerDeployment;
+  stopPending: boolean;
+}
+export interface RunnerState {
+  status:
+    "starting" | "running" | "stopping" | "stopped" | "failed" | "unresponsive";
+  error?: string | null;
+}
+export interface RunnerApproval {
+  type: "approval";
+  approvalId: string;
+  method: string;
+  params: Record<string, unknown>;
+}
+export interface RunnerPoll {
+  runnerId: string;
+  events: { seq: number; message: unknown }[];
+  nextSeq: number;
+  truncated: boolean;
+  state: RunnerState;
+  pendingApprovals: RunnerApproval[];
+}
+/** The host supplies plugin identity and generation; plugins cannot impersonate another runtime. */
+export interface PluginEvent<T = unknown> {
+  pluginId: string;
+  generation: number;
+  event: string;
+  payload: T;
+}
+export interface PluginView {
+  id: string;
+  title: string;
+  location?: "sidebar" | "workspace";
+  kind?: "blocks" | "chat" | "component";
+  /** Component provider chosen explicitly in settings; omit location. */
+  provider?: "hostList" | "workbench" | "fileBrowser" | "terminal" | "history";
+  icon?: string;
+}
+export type ChatProtocol =
+  | "openai-chat"
+  | "openai-responses"
+  | "anthropic"
+  | "gemini"
+  | "codex"
+  | "claude-code"
+  | "pi";
+export interface ChatProfilePolicy {
+  primaryProtocols: ChatProtocol[];
+  reviewerProtocols: ChatProtocol[];
+  defaultProtocol: ChatProtocol;
+}
+export interface ChatSession {
+  id: string;
+  title: string;
+  untitled?: boolean;
+  updatedAt?: number;
+  running?: boolean;
+  runId?: string;
+}
+export interface ChatExecution {
+  kind: "local" | "remote";
+  sessionId?: string;
+  hostId?: string;
+  title: string;
+  address?: string;
+  cwd: string;
+  home: string;
+  platform: "windows" | "posix";
+  executable?: string;
+  runtime?: string;
+}
+export interface PluginChatBlock {
+  type: "chat";
+  id: string;
+  title?: string;
+  profilePolicy?: ChatProfilePolicy;
+  commands: {
+    send: string;
+    stop: string;
+    configure?: string;
+    session?: string;
+    approve?: string;
+    recover?: string;
+    target?: string;
+    prepare?: string;
+    install?: string;
+  };
+  sessions?: ChatSession[];
+  activeSessionId?: string;
+  mode?: ToolMode;
+  models?: { id: string; label: string }[];
+  modelId?: string;
+  messages?: {
+    id: string;
+    role: "user" | "assistant" | "system" | "tool";
+    content: string;
+    status?: string;
+    name?: string;
+    activity?: {
+      id: string;
+      kind: "reasoning" | "tool" | "commentary";
+      title: string;
+      content: string;
+      status?: string;
+    }[];
+  }[];
+  run?: {
+    id: string;
+    status:
+      | "idle"
+      | "running"
+      | "waiting"
+      | "done"
+      | "cancelled"
+      | "failed"
+      | "interrupted";
+    seq: number;
+  } | null;
+  approvals?: {
+    id: string;
+    tool?: string;
+    title?: string;
+    detail?: string;
+    command?: string;
+    risk?: string;
+  }[];
+  tasks?: {
+    id: string;
+    /** Captured operation identity; forwarded as taskRunId when inspecting/resuming. */
+    runId?: string;
+    title?: string;
+    status:
+      "queued" | "running" | "done" | "failed" | "cancelled" | "interrupted";
+    output?: string;
+    recoverable?: boolean;
+    /** Optional process inspection details, separate from saved agent output. */
+    inspection?: string;
+  }[];
+  configured?: boolean;
+  notice?: string;
+  config?: Record<string, unknown>;
+  execution?: ChatExecution | null;
+  readiness?: {
+    status: "required" | "checking" | "ready" | "error";
+    profileId: string;
+    targetKey: string;
+    detail?: string;
+  };
+}
+export interface ForwardRule {
+  id: string;
+  hostId: string;
+  name: string;
+  mode: "local" | "remote";
+  bindHost: string;
+  bindPort: number;
+  targetHost: string;
+  targetPort: number;
+}
+export interface ForwardInfo extends ForwardRule {
+  sessionId: string | null;
+  active: boolean;
+}
+export interface MountInfo {
+  id: string;
+  owner: string;
+  sessionId: string;
+  remotePath: string;
+  mountPoint: string;
+  readOnly: boolean;
+  cleanupError: string | null;
+}
+export interface MountDependencies {
+  available: boolean;
+  executable: string | null;
+  platform: string;
+  instructions: string;
+  documentation: string;
+  transport: string | null;
+}
+/** Stable status bar contract v1 (host >= 0.31.1). IDs belong to one runtime. */
+export interface StatusBarItem {
+  id: string;
+  text: string;
+  alignment?: "left" | "right";
+  priority?: number;
+  tooltip?: string | null;
+  icon?:
+    | "activity"
+    | "check"
+    | "alert"
+    | "info"
+    | "sync"
+    | "terminal"
+    | "cloud"
+    | "code"
+    | "plug"
+    | null;
+  /** This plugin's manifest command; editor/file-menu commands require context and are excluded. */
+  command?: string | null;
+}
+
+// BEGIN GENERATED WORKSPACE V1 TYPES
+/** Wire DTOs for the v1 workspace snapshot, independent of workbench stores. */
+export interface PluginFileViewPreferences {
+  filesColumns?: string[];
+  filesColumnWidths?: Partial<Record<"name" | "type" | "size" | "modified", number>>;
+  filesLayout?: string;
+  filesShowHidden: boolean;
+  filesFoldersFirst: boolean;
+  filesSortBy: string;
+  filesSortDirection: string;
+  filesGroupBy?: string;
+}
+
+export interface PluginFilePane {
+  source: { kind: "local" } | { kind: "remote"; sessionId: string };
+  path: string | null;
+  ownerSessionId: string;
+  view?: PluginFileViewPreferences;
+  remoteIdentity?: { hostId: string; address: string };
+  offline?: boolean;
+}
+
+export interface PluginWorkspaceTab {
+  id: string;
+  /** Open vocabulary: plugins must tolerate tab kinds they do not recognize. */
+  kind: string;
+  title: string;
+  hostId: string | null;
+  pinned: boolean;
+  preview?: boolean;
+  hidden?: boolean;
+  filePane?: PluginFilePane;
+  fileSessionId?: string | null;
+}
+
+export interface PluginWorkspacePane {
+  id: string;
+  tabIds: string[];
+  activeId: string | null;
+  locked?: boolean;
+}
+
+export type PluginWorkspaceLayout =
+  | { kind: "pane"; paneId: string }
+  | {
+      kind: "split";
+      id: string;
+      direction: "row" | "column";
+      ratio: number;
+      first: PluginWorkspaceLayout;
+      second: PluginWorkspaceLayout;
+    };
+
+export interface PluginWorkspaceSnapshot {
+  tabs: PluginWorkspaceTab[];
+  panes: PluginWorkspacePane[];
+  activeId: string | null;
+  activePaneId: string;
+  layout: PluginWorkspaceLayout;
+}
+// END GENERATED WORKSPACE V1 TYPES
+
+// BEGIN GENERATED HOST MENU V1 TYPES
+/** Experimental, advisory context. No credentials, key paths or internal store fields. */
+export interface HostMenuCommandInput {
+  host: {
+    id: string;
+    name: string;
+    address: string;
+    port: number;
+    username: string;
+    groupId: string | null;
+    tags: string[];
+  };
+}
+// END GENERATED HOST MENU V1 TYPES
+
+// BEGIN GENERATED HOST FIELDS V1 TYPES
+/** Experimental public metadata, independent of Host and internal settings. */
+export interface HostField {
+  id: string;
+  label: string;
+  type: "text" | "number" | "boolean" | "select";
+  description?: string;
+  maxLength?: number;
+  minimum?: number;
+  maximum?: number;
+  options?: { value: string; label: string }[];
+}
+export interface HostFieldsSchema {
+  version: number;
+  fields: HostField[];
+}
+export type HostFieldValue = string | number | boolean;
+export interface HostFieldsDocument {
+  hostId: string;
+  revision: number;
+  schemaDigest: string;
+  schemaVersion: number;
+  storedSchemaVersion: number | null;
+  schemaChanged: boolean;
+  values: Record<string, HostFieldValue>;
+}
+export interface HostFieldsSnapshot {
+  schema: HostFieldsSchema;
+  document: HostFieldsDocument;
+}
+export interface HostFieldsUpdate {
+  hostId: string;
+  expectedRevision: number;
+  schemaDigest: string;
+  values: Record<string, HostFieldValue>;
+}
+// END GENERATED HOST FIELDS V1 TYPES
+
+// BEGIN GENERATED HOST COLUMNS V1 TYPES
+/** Experimental runtime-owned host table presentation. No executable cell content. */
+export interface HostColumn {
+  id: string;
+  label: string;
+  type: "text" | "number" | "boolean";
+  width?: number;
+  cells: { hostId: string; value: string | number | boolean; tooltip?: string }[];
+}
+export interface HostColumnContribution extends HostColumn {
+  pluginId: string;
+  pluginName: string;
+}
+export interface HostColumnsSnapshot {
+  revision: number;
+  items: HostColumnContribution[];
+}
+// END GENERATED HOST COLUMNS V1 TYPES
+
+// BEGIN GENERATED HOST SOURCES V1 TYPES
+/** Experimental discovery entries contain public metadata only. */
+export interface HostSourceEntry {
+  id: string;
+  name: string;
+  host: string;
+  port?: number;
+  username: string;
+  tags?: string[];
+  note?: string | null;
+}
+export interface HostSource {
+  id: string;
+  label: string;
+  entries: HostSourceEntry[];
+}
+export interface HostSourcesSnapshot {
+  revision: number;
+  items: Array<{
+    pluginId: string;
+    pluginName: string;
+    id: string;
+    label: string;
+    entries: Array<HostSourceEntry & { hostId: string }>;
+  }>;
+}
+export interface HostSourcesPage extends HostSourcesSnapshot {
+  total: number;
+  nextOffset: number | null;
+}
+// END GENERATED HOST SOURCES V1 TYPES
+
+export interface HostMethodMap {
+  "hosts.setSource": [HostSource, null];
+  "hosts.removeSource": [{ id: string }, boolean];
+  "hosts.sourcesSnapshot": [{ offset?: number; revision?: number }, HostSourcesPage];
+  "extensions.describe": [Record<string, never>, ExtensionDirectory];
+  "hostList.setDecorations": [HostDecorationCollection, null];
+  "hostList.setColumn": [HostColumn, null];
+  "hostList.removeColumn": [{ id: string }, boolean];
+  "hostList.removeDecorations": [{ id: string }, boolean];
+  "tabBar.set": [TabBarItem, null];
+  "tabBar.remove": [{ id: string }, boolean];
+  "statusBar.set": [StatusBarItem, null];
+  "statusBar.remove": [{ id: string }, boolean];
+  "forwards.list": [Record<string, never>, ForwardInfo[]];
+  "forwards.save": [{ rule: ForwardRule }, ForwardRule];
+  "forwards.remove": [{ id: string }, null];
+  "forwards.start": [{ id: string; sessionId: string }, null];
+  "forwards.stop": [{ id: string }, null];
+  "mounts.dependencies": [Record<string, never>, MountDependencies];
+  "mounts.list": [Record<string, never>, MountInfo[]];
+  "mounts.mount": [
+    {
+      sessionId: string;
+      remotePath: string;
+      mountPoint: string;
+      readOnly?: boolean;
+    },
+    MountInfo,
+  ];
+  "mounts.unmount": [{ id: string; force?: boolean }, null];
+  "mounts.browse": [{ sessionId: string; path?: string }, Listing];
+  "mounts.open": [{ id: string }, null];
+  "mounts.documentation": [Record<string, never>, null];
+  "editor.active": [Record<string, never>, EditorDocument | null];
+  "editor.replace": [
+    { tabId: string; documentId: string; version: number; text: string },
+    EditorWriteResult,
+  ];
+  "workspace.showQuickAccess": [{ query?: string }, unknown];
+  "workspace.setPaneLocked": [{ paneId: string; locked: boolean }, unknown];
+  "workspace.resizeSplit": [{ splitId: string; ratio: number }, unknown];
+  "events.publish": [{ event: string; payload?: unknown }, null];
+  "secrets.get": [{ key: string }, string | null];
+  "secrets.set": [{ key: string; value: string }, null];
+  "secrets.delete": [{ key: string }, null];
+  "tasks.start": [
+    {
+      executable: string;
+      args?: string[];
+      cwd?: string;
+      sessionId?: string;
+      platform?: RemotePlatform;
+      timeoutMs?: number;
+    },
+    { taskId: string; status: "running" },
+  ];
+  "tasks.list": [Record<string, never>, TaskSnapshot[]];
+  "tasks.status": [{ taskId: string }, TaskSnapshot];
+  "tasks.readOutput": [{ taskId: string; afterSeq?: number }, TaskOutput];
+  "tasks.write": [{ taskId: string; data: string }, boolean];
+  "tasks.closeInput": [{ taskId: string }, boolean];
+  "tasks.cancel": [{ taskId: string }, boolean];
+  "tools.invoke": [ToolInvocation, unknown];
+  "tools.cancel": [{ requestId: string }, { cancelled: number }];
+  "tools.revokeClient": [{ clientId: string }, { cancelled: number }];
+  "runners.deploy": [
+    {
+      sessionId: string;
+      platform: RemotePlatform;
+      directory: string;
+      runnerPath: string;
+      executable: string;
+    },
+    { deployed: boolean; directory: string },
+  ];
+  "runners.start": [
+    {
+      sessionId: string;
+      directory: string;
+      config: Record<string, unknown>;
+      secrets?: Record<string, unknown>;
+    },
+    { runnerId: string; status: "starting" },
+  ];
+  "runners.list": [Record<string, never>, RunnerRecord[]];
+  "runners.send": [
+    { sessionId: string; runnerId: string; message: Record<string, unknown> },
+    { accepted: boolean },
+  ];
+  "runners.poll": [
+    { sessionId: string; runnerId: string; afterSeq?: number },
+    RunnerPoll,
+  ];
+  "runners.status": [{ sessionId: string; runnerId: string }, RunnerState];
+  "runners.stop": [
+    { sessionId: string; runnerId: string },
+    { stopRequested: boolean; status: "stopping" },
+  ];
+  "files.transferStatus": [{ transferId: string }, TransferEvent | null];
+  "files.upload": [
+    {
+      sessionId: string;
+      localPath: string;
+      remotePath: string;
+      overwrite?: boolean;
+    },
+    string,
+  ];
+  "files.download": [
+    {
+      sessionId: string;
+      localPath: string;
+      remotePath: string;
+      overwrite?: boolean;
+    },
+    string,
+  ];
+  "files.cancelTransfer": [{ transferId: string }, boolean];
+  "files.local.home": [Record<string, never>, string];
+  "files.local.list": [{ path?: string }, Listing];
+  "files.local.readText": [{ path: string }, { content: string; size: number }];
+  "files.local.writeText": [
+    { path: string; content: string; baseline?: string },
+    null,
+  ];
+  "files.local.createFile": [{ path: string }, null];
+  "files.local.mkdir": [{ path: string }, null];
+  "files.local.rename": [
+    { from: string; to: string; overwrite?: boolean },
+    null,
+  ];
+  "files.local.copy": [{ from: string; to: string; overwrite?: boolean }, null];
+  "files.local.delete": [{ path: string; isDir: boolean }, null];
+  "files.sftp.list": [{ sessionId: string; path?: string }, Listing];
+  "files.sftp.resolveDirectory": [
+    { sessionId: string; path?: string },
+    { home: string; path: string },
+  ];
+  "files.sftp.readText": [
+    { sessionId: string; path: string },
+    { content: string; size: number },
+  ];
+  "files.sftp.writeText": [
+    { sessionId: string; path: string; content: string; baseline?: string },
+    null,
+  ];
+  "files.sftp.createFile": [{ sessionId: string; path: string }, null];
+  "files.sftp.mkdir": [{ sessionId: string; path: string }, null];
+  "files.sftp.rename": [
+    { sessionId: string; from: string; to: string; overwrite?: boolean },
+    null,
+  ];
+  "files.sftp.copy": [
+    { sessionId: string; from: string; to: string; overwrite?: boolean },
+    null,
+  ];
+  "files.sftp.delete": [
+    { sessionId: string; path: string; isDir: boolean },
+    null,
+  ];
+  "monitor.system": [Record<string, never>, unknown];
+  "monitor.stats": [{ sessionId: string }, unknown];
+  "monitor.processes": [{ sessionId: string }, unknown];
+  "monitor.kill": [{ sessionId: string; pid: number }, null];
+  "history.list": [{ hostId: string; limit?: number }, unknown];
+  "history.record": [
+    { hostId: string; command: string },
+    Record<string, unknown> | null,
+  ];
+  "history.delete": [{ id: number }, null];
+  "history.clear": [{ hostId: string }, null];
+
+  "api.describe": [
+    Record<string, never>,
+    { version: number; methods: MethodDescription[] },
+  ];
+  "app.info": [Record<string, never>, Record<string, unknown>];
+  "app.openExternal": [{ url: string }, null];
+  "settings.get": [Record<string, never>, Record<string, unknown>];
+  "settings.update": [
+    { patch: Record<string, unknown> },
+    Record<string, unknown>,
+  ];
+  "hosts.snapshot": [
+    Record<string, never>,
+    { hosts: SavedHost[]; groups: Group[] },
+  ];
+  "hosts.create": [{ input: HostInput }, SavedHost];
+  "hosts.getFields": [{ hostId: string }, HostFieldsSnapshot];
+  "hosts.setFields": [HostFieldsUpdate, HostFieldsSnapshot];
+  "hosts.update": [{ id: string; input: HostInput }, SavedHost];
+  "hosts.delete": [{ id: string }, null];
+  "hosts.markUsed": [{ id: string }, null];
+  "hosts.reorder": [{ ids: string[] }, null];
+  "groups.create": [
+    { input: { name: string; parentId?: string | null } },
+    Record<string, unknown>,
+  ];
+  "groups.update": [
+    { id: string; input: { name: string; parentId?: string | null } },
+    Record<string, unknown>,
+  ];
+  "groups.delete": [{ id: string }, null];
+  "sessions.list": [Record<string, never>, SshSession[]];
+  "sessions.connect": [{ request: SshConnectRequest }, SshSession];
+  "sessions.disconnect": [{ sessionId: string }, null];
+  "sessions.requestHandoff": [{ sessionId: string }, boolean];
+  "sessions.exec": [
+    { sessionId: string; command: string; timeoutMs?: number },
+    {
+      stdout: string;
+      stderr: string;
+      exitCode: number | null;
+      signal: string | null;
+    },
+  ];
+  "terminal.write": [{ sessionId: string; data: string }, null];
+  "terminal.resize": [{ sessionId: string; cols: number; rows: number }, null];
+  "storage.get": [{ key: string }, unknown];
+  "storage.set": [{ key: string; value: unknown }, null];
+  "storage.delete": [{ key: string }, null];
+  "workspace.snapshot": [Record<string, never>, PluginWorkspaceSnapshot];
+  "workspace.openPage": [
+    { kind: "welcome" | "settings" | "about" | "updates" | "knownHosts" },
+    unknown,
+  ];
+  "workspace.openHost": [{ hostId: string }, unknown];
+  "workspace.openTerminal": [{ sessionId: string }, unknown];
+  "workspace.openFiles": [{ sessionId: string }, unknown];
+  "workspace.openSidebar": [
+    { view: "hosts" | "knownHosts" | "plugins" },
+    unknown,
+  ];
+  "workspace.activate": [{ tabId: string }, unknown];
+  "workspace.close": [{ tabId: string }, unknown];
+  "workspace.split": [
+    {
+      tabId: string;
+      direction: "row" | "column";
+      position?: "before" | "after";
+      targetPaneId?: string;
+    },
+    unknown,
+  ];
+  "workspace.move": [
+    { tabId: string; paneId: string; beforeTabId?: string | null },
+    unknown,
+  ];
+  "workspace.returnSidebar": [
+    { view: "hosts" | "knownHosts" | "plugins" },
+    unknown,
+  ];
+  "clipboard.readText": [Record<string, never>, string];
+  "clipboard.writeText": [{ text: string }, null];
+  "ui.showMessage": [
+    { message: string; kind?: "info" | "success" | "error" | null },
+    null,
+  ];
+  "ui.confirm": [{ message: string }, boolean];
+  log: [PluginLogOptions & { message: string }, null];
+}
+export type PluginLogValue =
+  | string
+  | number
+  | boolean
+  | null
+  | PluginLogValue[]
+  | { [key: string]: PluginLogValue };
+/** Stable v1 when discovery includes the log contract; structured options and
+ * requested-severity handling require 0.33.0-beta.5+. Message/level exist since
+ * 0.21.0. Success means accepted, not durable delivery. Never log secrets in prose.
+ */
+export interface PluginLogOptions {
+  level?: string;
+  domain?: string | null;
+  operation?: string | null;
+  requestId?: string | null;
+  fields?: Record<string, PluginLogValue>;
+}
+export interface Host {
+  /** Experimental runtime-owned discovery. Never supplies credentials. */
+  readonly sources: {
+    set(source: HostSource): Promise<null>;
+    remove(id: string): Promise<boolean>;
+    snapshot(page?: { offset?: number; revision?: number }): Promise<HostSourcesPage>;
+  };
+  /** Stable v1; use describe() to detect support and contracts on older hosts. */
+  readonly hostList: {
+    setDecorations(collection: HostDecorationCollection): Promise<null>;
+    removeDecorations(id: string): Promise<boolean>;
+  };
+  readonly extensions: { describe(): Promise<ExtensionDirectory> };
+  readonly tabBar: {
+    set(item: TabBarItem): Promise<null>;
+    remove(id: string): Promise<boolean>;
+  };
+  readonly statusBar: {
+    set(item: StatusBarItem): Promise<null>;
+    remove(id: string): Promise<boolean>;
+  };
+  call<M extends keyof HostMethodMap>(
+    method: M,
+    params?: HostMethodMap[M][0],
+    options?: { signal?: AbortSignal; timeoutMs?: number },
+  ): Promise<HostMethodMap[M][1]>;
+  /** Additional methods and exact parameters are discoverable through describe(). */
+  call<T = unknown>(
+    method: string,
+    params?: Record<string, unknown>,
+    options?: { signal?: AbortSignal; timeoutMs?: number },
+  ): Promise<T>;
+  describe(): Promise<HostMethodMap["api.describe"][1]>;
+  log(message: string, level?: string): Promise<null>;
+  log(message: string, options: PluginLogOptions): Promise<null>;
+}
+export interface PluginHandlers {
+  initialize?(
+    params: { apiVersion: number; pluginId: string },
+    host: Host,
+  ): unknown | Promise<unknown>;
+  run?(
+    command: string,
+    input: Record<string, unknown>,
+    host: Host,
+  ): unknown | Promise<unknown>;
+  render?(
+    view: string,
+    locale: string | undefined,
+    host: Host,
+  ): unknown | Promise<unknown>;
+  shutdown?(host: Host): unknown | Promise<unknown>;
+}
+export function createPlugin(
+  handlers?: PluginHandlers,
+  options?: { input?: Readable; output?: Writable; timeout?: number },
+): { readonly host: Host; close(): void };
