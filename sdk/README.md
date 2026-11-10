@@ -222,6 +222,11 @@ non-idempotent writes on reconnect. `runners.stop` reports a stop request; an un
 runner remains pending in `runners.list` until stopping can be confirmed. Revocation
 requests stopping but cannot prove a disconnected remote process has ended.
 
+New deployments also bind the observed server key. Legacy destination review and
+per-task package handoff require native consent through experimental `runners.review`.
+See [durable runner recovery](../docs/runner-recovery.en-us.md) for the contract and
+the host-owned recovery interface available without starting a plugin.
+
 ## Controlled workspace and chat views
 
 See [view contributions and chat events](../plugins/README.md#sidebar-and-chat-views).

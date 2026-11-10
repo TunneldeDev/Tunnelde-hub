@@ -2198,6 +2198,17 @@
       "deprecated": null
     },
     {
+      "name": "runners.review",
+      "permissions": [
+        "ssh.exec"
+      ],
+      "params": "{sessionId:string,runnerId:string,directory:string,kind:destination|control}",
+      "description": "Request native consent to bind an unknown legacy destination or hand control of one durable task to the current authorized package. Exact record and connection rechecked; never starts, sends or clears a stop request. Returns {reviewed:boolean}.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
       "name": "runners.send",
       "permissions": [
         "ssh.exec"
