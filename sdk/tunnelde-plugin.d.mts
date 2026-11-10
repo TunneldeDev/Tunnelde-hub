@@ -39,6 +39,8 @@ export type * from "./rpc/mounts/menu.mjs";
 export type * from "./rpc/mounts/methods.mjs";
 export type * from "./rpc/runtime/lifecycle.mjs";
 export type * from "./rpc/settings/methods.mjs";
+export type * from "./rpc/settings/preferences/index.mjs";
+export type * from "./rpc/settings/preferences/methods.mjs";
 export type * from "./rpc/storage/methods.mjs";
 export type * from "./rpc/terminal/methods.mjs";
 export type * from "./rpc/tools/contract.mjs";

@@ -28,6 +28,16 @@ test("domain loading preserves composition order and includes every method", asy
   });
 });
 
+test("nested subdomains remain classified and checked for unreferenced files", async () => {
+  await fixture(async (root, write) => {
+    await write("api/catalogue/mod.rs", '#[path = "hosts/methods.rs"]\nmod hosts;\n#[path = "files/methods.rs"]\nmod files;\n#[path = "files/editor/methods.rs"]\nmod editor;\nconst DOMAINS: &[&[ApiMethod]] = &[\n hosts::METHODS, files::METHODS, editor::METHODS,\n];\n');
+    await write("api/catalogue/files/editor/methods.rs", 'pub const METHODS: &[ApiMethod] = &[\n method!("editor.snapshot", [], "{}", "Editor."),\n];');
+    assert.deepEqual((await loadRustCatalogue(root)).methods.map(method => method.name), ["hosts.snapshot", "files.local.list", "editor.snapshot"]);
+    await write("api/catalogue/files/orphan/methods.rs", "");
+    await assert.rejects(loadRustCatalogue(root), /Unreferenced/);
+  });
+});
+
 test("domain loading rejects malformed, duplicated, missing and unreferenced declarations", async () => {
   for (const [path, text, error] of [
     ["api/catalogue/files/methods.rs", 'pub const METHODS: &[ApiMethod] = &[\n future!("files.list"),\n];', /Unparsed/],

@@ -30,18 +30,23 @@ export async function loadRustCatalogue(applicationDirectory) {
   assert.equal(body.replace(domainPattern, "").replace(/[\s,]/g, ""), "", "Unparsed domain catalogue entry");
   assert.ok(domains.length > 0, "Empty domain catalogue");
   assert.equal(new Set(domains).size, domains.length, "Duplicate catalogue domain");
-  const modulePattern = /#\[path\s*=\s*"([a-z][a-z0-9_]*\/methods\.rs)"\]\s*mod ([a-z][a-z0-9_]*);/g;
+  const modulePattern = /#\[path\s*=\s*"((?:[a-z][a-z0-9_]*\/)+methods\.rs)"\]\s*mod ([a-z][a-z0-9_]*);/g;
   const modules = [...index.matchAll(modulePattern)].map(match => [match[2], match[1]]);
   assert.equal(new Set(modules.map(([name]) => name)).size, modules.length, "Duplicate catalogue module");
   assert.deepEqual(modules.map(([name]) => name).sort(), [...domains].sort(), "Catalogue modules and composition differ");
   const actual = [];
-  for (const item of await readdir(directory, { withFileTypes: true })) {
-    if (item.name === "mod.rs" && item.isFile()) continue;
-    assert.ok(item.isDirectory() && /^[a-z][a-z0-9_]*$/.test(item.name), `Unexpected catalogue entry: ${item.name}`);
-    const nested = await readdir(join(directory, item.name), { withFileTypes: true });
-    assert.ok(nested.length === 1 && nested[0].name === "methods.rs" && nested[0].isFile(), `Unexpected domain catalogue files: ${item.name}`);
-    actual.push(`${item.name}/methods.rs`);
+  async function visit(prefix = "", depth = 0) {
+    assert.ok(depth <= 8, "Catalogue nesting exceeds its limit");
+    for (const item of await readdir(join(directory, prefix), { withFileTypes: true })) {
+      if (!prefix && item.name === "mod.rs" && item.isFile()) continue;
+      if (prefix && item.name === "methods.rs" && item.isFile()) actual.push(prefix + item.name);
+      else {
+        assert.ok(item.isDirectory() && /^[a-z][a-z0-9_]*$/.test(item.name), `Unexpected catalogue entry: ${prefix}${item.name}`);
+        await visit(prefix + item.name + "/", depth + 1);
+      }
+    }
   }
+  await visit();
   assert.deepEqual(actual.sort(), modules.map(([, path]) => path).sort(), "Unreferenced catalogue files");
   const methods = [];
   for (const domain of domains) {
