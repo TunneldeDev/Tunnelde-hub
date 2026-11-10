@@ -182,6 +182,24 @@ export async function syncSdk(applicationDirectory, { check = false, sdkDirector
       "Extension directory stability changed",
     );
     const ids = new Set();
+    if (catalogue.methods.some(method => method.name === "hosts.setSource")) {
+      assert.ok(extensions.points.some(point => point.id === "hosts.sources"), "Missing host sources extension point");
+      assert.match(projectedTypes, /"hosts\.setSource":\s*\[HostSource,\s*null\]/);
+      assert.match(projectedTypes, /"hosts\.removeSource":\s*\[\{\s*id:\s*string\s*\},\s*boolean\]/);
+      assert.match(projectedTypes, /"hosts\.sourcesSnapshot":\s*\[\{ offset\?: number; revision\?: number \},\s*HostSourcesPage\]/);
+      const begin = "// BEGIN GENERATED HOST SOURCES V1 TYPES", end = "// END GENERATED HOST SOURCES V1 TYPES";
+      const block = text => {
+        assert.equal(text.split(begin).length, 2, "Missing host sources DTO start");
+        assert.equal(text.split(end).length, 2, "Missing host sources DTO end");
+        assert.ok(text.indexOf(end) > text.indexOf(begin));
+        return text.slice(text.indexOf(begin), text.indexOf(end) + end.length).replaceAll("\r\n", "\n");
+      };
+      const expected = block(await readFile(join(source, "src/lib/hosts/sources.ts"), "utf8"));
+      assert.ok(!expected.includes("@/") && !/\bimport\b/.test(expected), "Host sources expose private types");
+      if (check) assert.equal(block(projectedTypes), expected, "Host source DTOs differ; run npm run sdk:sync");
+      else if (!projectedTypes.includes(begin) && !projectedTypes.includes(end)) projectedTypes = projectedTypes.replace(/^export interface HostMethodMap \{/m, `${expected}\n\nexport interface HostMethodMap {`);
+      else projectedTypes = projectedTypes.replaceAll("\r\n", "\n").replace(block(projectedTypes), expected);
+    }
     if (catalogue.methods.some(method => method.name === "hostList.setColumn")) {
       assert.ok(extensions.points.some(point => point.id === "hostList.columns"), "Missing host columns extension point");
       assert.match(projectedTypes, /"hostList\.setColumn":\s*\[HostColumn,\s*null\]/, "hostList.setColumn must accept HostColumn and return null");
@@ -254,12 +272,12 @@ export async function syncSdk(applicationDirectory, { check = false, sdkDirector
         }
         continue;
       }
-      for (const name of Object.values(point.registration)) {
+      for (const [action, name] of Object.entries(point.registration)) {
         const method = catalogue.methods.find((method) => method.name === name);
         assert.ok(method, `Unknown registration method: ${name}`);
         assert.deepEqual(
           method.permissions,
-          point.permissions,
+          action === "read" ? (point.readPermissions ?? point.permissions) : point.permissions,
           `Extension permissions differ: ${point.id}`,
         );
         assert.equal(

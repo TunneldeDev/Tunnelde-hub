@@ -1748,6 +1748,41 @@
       "deprecated": null
     },
     {
+      "name": "hosts.setSource",
+      "permissions": [
+        "hosts.read",
+        "hosts.write"
+      ],
+      "params": "{id:string,label:string,entries:{id:string,name:string,host:string,port?:number,username:string,tags?:string[],note?:string}[]}",
+      "description": "Atomically replace runtime-owned, nonsecret discovered hosts. No connection or persistence is implied. At most 256 unique entries per source, 8 sources/512 entries per plugin, 128 sources/4096 entries and 4 MiB total. Host IDs bind owner, source and complete entry content, so stale dialogs cannot connect a changed target. Stop, crash and revocation remove discovery data; user-opened live connections remain user-owned. Connect using the normal SSH flow; save a copy to configure keys or persistent credentials.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "hosts.removeSource",
+      "permissions": [
+        "hosts.read",
+        "hosts.write"
+      ],
+      "params": "{id:string}",
+      "description": "Remove this runtime's discovery source; returns false when absent. Does not delete saved hosts, credentials or existing user connections.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "hosts.sourcesSnapshot",
+      "permissions": [
+        "hosts.read"
+      ],
+      "params": "{offset?:number,revision?:number}",
+      "description": "Read one active discovery source per page, with nonsecret entries and content-bound hostIds. Returns {revision,total,nextOffset,items:[{pluginId,pluginName,id,label,entries:[{hostId,id,name,host,port,username,tags,note}]}]}. Start at offset 0; pass revision with nextOffset. A changed revision rejects continuation; restart from zero. Separate from saved hosts.snapshot; bounded by one source and the shared request budget.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
       "name": "hosts.getFields",
       "permissions": [
         "hosts.read"

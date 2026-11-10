@@ -708,7 +708,42 @@ export interface HostColumnsSnapshot {
 }
 // END GENERATED HOST COLUMNS V1 TYPES
 
+// BEGIN GENERATED HOST SOURCES V1 TYPES
+/** Experimental discovery entries contain public metadata only. */
+export interface HostSourceEntry {
+  id: string;
+  name: string;
+  host: string;
+  port?: number;
+  username: string;
+  tags?: string[];
+  note?: string | null;
+}
+export interface HostSource {
+  id: string;
+  label: string;
+  entries: HostSourceEntry[];
+}
+export interface HostSourcesSnapshot {
+  revision: number;
+  items: Array<{
+    pluginId: string;
+    pluginName: string;
+    id: string;
+    label: string;
+    entries: Array<HostSourceEntry & { hostId: string }>;
+  }>;
+}
+export interface HostSourcesPage extends HostSourcesSnapshot {
+  total: number;
+  nextOffset: number | null;
+}
+// END GENERATED HOST SOURCES V1 TYPES
+
 export interface HostMethodMap {
+  "hosts.setSource": [HostSource, null];
+  "hosts.removeSource": [{ id: string }, boolean];
+  "hosts.sourcesSnapshot": [{ offset?: number; revision?: number }, HostSourcesPage];
   "extensions.describe": [Record<string, never>, ExtensionDirectory];
   "hostList.setDecorations": [HostDecorationCollection, null];
   "hostList.setColumn": [HostColumn, null];
@@ -985,6 +1020,12 @@ export interface PluginLogOptions {
   fields?: Record<string, PluginLogValue>;
 }
 export interface Host {
+  /** Experimental runtime-owned discovery. Never supplies credentials. */
+  readonly sources: {
+    set(source: HostSource): Promise<null>;
+    remove(id: string): Promise<boolean>;
+    snapshot(page?: { offset?: number; revision?: number }): Promise<HostSourcesPage>;
+  };
   /** Stable v1; use describe() to detect support and contracts on older hosts. */
   readonly hostList: {
     setDecorations(collection: HostDecorationCollection): Promise<null>;

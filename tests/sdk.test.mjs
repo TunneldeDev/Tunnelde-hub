@@ -63,6 +63,31 @@ test("SDK handles a nested host API call without blocking command replies", asyn
   }
 });
 
+test("SDK source helpers preserve host payloads and explicit page revisions", async () => {
+  const t = transport();
+  try {
+    const source = { id: "inventory", label: "Nodes", entries: [] };
+    const set = t.plugin.host.sources.set(source);
+    let request = await t.next();
+    assert.equal(request.method, "hosts.setSource");
+    assert.deepEqual(request.params, source);
+    t.send({ jsonrpc: "2.0", id: request.id, result: null });
+    assert.equal(await set, null);
+    const page = t.plugin.host.sources.snapshot({ offset: 1, revision: 7 });
+    request = await t.next();
+    assert.equal(request.method, "hosts.sourcesSnapshot");
+    assert.deepEqual(request.params, { offset: 1, revision: 7 });
+    t.send({ jsonrpc: "2.0", id: request.id, result: { revision: 7, total: 2, nextOffset: null, items: [] } });
+    assert.equal((await page).nextOffset, null);
+    const remove = t.plugin.host.sources.remove("inventory");
+    request = await t.next();
+    assert.equal(request.method, "hosts.removeSource");
+    assert.deepEqual(request.params, { id: "inventory" });
+    t.send({ jsonrpc: "2.0", id: request.id, result: true });
+    assert.equal(await remove, true);
+  } finally { t.close(); }
+});
+
 test("SDK preserves Unicode separators and split UTF-8 across LF frames", async () => {
   const input = new PassThrough(), output = new PassThrough();
   const frames = [];
