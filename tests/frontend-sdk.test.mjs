@@ -4,7 +4,15 @@ import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { validateManifest } from "../scripts/validate.mjs";
-import { syncSdk } from "../scripts/sync-sdk.mjs";
+import { syncSdk, checkProviderTypes } from "../scripts/sync-sdk.mjs";
+
+test("both RPC and manifest provider target types must match the discovery catalogue", async () => {
+  const types = await readFile(new URL("../sdk/tunnelde-plugin.d.mts", import.meta.url), "utf8");
+  const directory = JSON.parse(await readFile(new URL("../sdk/extensions.json", import.meta.url), "utf8"));
+  checkProviderTypes(types, directory.frontend.providers.targets);
+  assert.throws(() => checkProviderTypes(types.replaceAll(' | "terminal"', ''), directory.frontend.providers.targets), /targets differ/);
+  assert.throws(() => checkProviderTypes(types.replace(/provider\?:[^;]+;/, 'provider?: "workbench";'), directory.frontend.providers.targets), /targets differ/);
+});
 
 const manifest = {
   id: "custom-ui", name: "Custom UI", description: "Trusted frontend", author: "Example",
@@ -46,8 +54,8 @@ test("pure and combined frontends require explicit trust and safe manifest decla
 });
 
 test("interface providers require a trusted component declaration and explicit target metadata", () => {
-  for (const provider of ["workbench", "hostList", "fileBrowser"]) {
-    const valid = { ...structuredClone(manifest), permissions: ["ui.trusted", "hosts.read", "fs.read", "sftp.read", "workspace.write"] };
+  for (const provider of ["workbench", "hostList", "fileBrowser", "terminal"]) {
+    const valid = { ...structuredClone(manifest), permissions: ["ui.trusted", "hosts.read", "fs.read", "sftp.read", "workspace.write", "sessions.read", "ssh.exec"] };
     valid.views[0].provider = provider;
     validateManifest(valid, valid.id);
     const unicode = structuredClone(valid); unicode.views[0].title = "🖥".repeat(120);
@@ -65,6 +73,11 @@ test("interface providers require a trusted component declaration and explicit t
       const bad = structuredClone(valid); mutate(bad);
       assert.throws(() => validateManifest(bad, bad.id));
     }
+  }
+  for (const omitted of ["ui.trusted", "sessions.read", "ssh.exec"]) {
+    const bad = structuredClone(manifest); bad.views[0].provider = "terminal";
+    bad.permissions = ["ui.trusted", "sessions.read", "ssh.exec"].filter(p => p !== omitted);
+    assert.throws(() => validateManifest(bad, bad.id));
   }
   const bad = structuredClone(manifest); bad.views[0].provider = "hostList";
   assert.throws(() => validateManifest(bad, bad.id));

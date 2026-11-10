@@ -98,3 +98,5 @@ for the host list and workbench presentation. The remaining domain services and
 dependency management are still under development.
 
 A runnable plain-ESM example is in [examples/trusted-ui](../examples/trusted-ui/README.en-us.md).
+
+[Terminal screen composition and bounded subscriptions](terminal-ui.en-us.md).

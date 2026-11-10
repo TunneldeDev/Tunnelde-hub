@@ -86,3 +86,5 @@ EmptyState，继承宿主主题。SearchField 预设与应用统一使用强制 
 
 
 界面替换及恢复流程见[界面提供者](ui-providers.zh-cn.md)。其余领域服务和依赖管理仍在实施。
+
+[终端屏幕组合与有界订阅](terminal-ui.zh-cn.md)。
