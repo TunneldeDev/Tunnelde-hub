@@ -17,7 +17,8 @@
         "fileBrowser",
         "terminal",
         "history",
-        "forwarding"
+        "forwarding",
+        "monitor"
       ],
       "selection": "explicit-user",
       "hostListPermission": "hosts.read",
@@ -77,6 +78,24 @@
         "perPlugin": 8
       },
       "fallback": "built-in",
+      "monitorPermissions": [
+        "sessions.read",
+        "monitor.read"
+      ],
+      "monitor": {
+        "context": "monitor",
+        "ownership": "host-view",
+        "presentations": [
+          "page",
+          "panel"
+        ],
+        "optionalSlot": "Charts",
+        "sampleLimit": 240,
+        "pageSize": 128,
+        "paging": "revision-bound",
+        "sampling": "shared-visible-consumers",
+        "refresh": "coalesced-existing-sampler"
+      },
       "forwardingPermissions": [
         "hosts.read",
         "forwards.read"

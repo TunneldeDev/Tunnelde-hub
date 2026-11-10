@@ -2,6 +2,8 @@
 
 [简体中文](ui-providers.zh-cn.md) · [Trusted UI SDK](frontend-ui.en-us.md)
 
+[Monitoring provider contract](monitor-ui.en-us.md)
+
 The experimental UI SDK supports explicit replacement of the host list and the
 workbench presentation. Declare a component view with `provider: "hostList"` or
 `provider: "workbench"`, omit `location`, and register that view normally through
