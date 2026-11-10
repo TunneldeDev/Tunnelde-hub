@@ -22,3 +22,5 @@ export type * from "./ui/backgroundTasks/provider.mjs";
 export type * from "./ui/monitor/processes/entry.mjs";
 export type * from "./ui/monitor/processes/query.mjs";
 export type * from "./ui/monitor/processes/provider.mjs";
+export type * from "./ui/search/quickAccess/entry.mjs";
+export type * from "./ui/search/quickAccess/provider.mjs";

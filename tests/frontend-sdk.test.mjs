@@ -56,8 +56,8 @@ test("pure and combined frontends require explicit trust and safe manifest decla
 });
 
 test("interface providers require a trusted component declaration and explicit target metadata", () => {
-  for (const provider of ["workbench", "hostList", "fileBrowser", "terminal", "history", "forwarding", "monitor", "backgroundTasks", "processes"]) {
-    const valid = { ...structuredClone(manifest), permissions: ["ui.trusted", "hosts.read", "fs.read", "sftp.read", "workspace.write", "sessions.read", "ssh.exec", "history.read", "forwards.read", "monitor.read", "backgroundTasks.read"] };
+  for (const provider of ["workbench", "hostList", "fileBrowser", "terminal", "history", "forwarding", "monitor", "backgroundTasks", "processes", "quickAccess"]) {
+    const valid = { ...structuredClone(manifest), permissions: ["ui.trusted", "hosts.read", "fs.read", "sftp.read", "workspace.write", "workspace.read", "editor.read", "sessions.read", "ssh.exec", "history.read", "forwards.read", "monitor.read", "backgroundTasks.read"] };
     valid.views[0].provider = provider;
     validateManifest(valid, valid.id);
     const unicode = structuredClone(valid); unicode.views[0].title = "🖥".repeat(120);
@@ -142,4 +142,14 @@ test("process providers require read authority but not terminate authority", () 
   const valid = structuredClone(manifest); valid.views[0].provider = "processes";
   valid.permissions = ["ui.trusted", "sessions.read", "monitor.read"];
   validateManifest(valid, valid.id);
+});
+
+test("quick-access providers require domain read permissions without invocation authority", () => {
+  const permissions = ["ui.trusted", "hosts.read", "sessions.read", "fs.read", "sftp.read", "workspace.read", "editor.read"];
+  const valid = {...structuredClone(manifest), permissions}; valid.views[0].provider = "quickAccess";
+  validateManifest(valid, valid.id);
+  for (const omitted of permissions) {
+    const bad = {...structuredClone(valid), permissions: permissions.filter(p => p !== omitted)};
+    assert.throws(() => validateManifest(bad, bad.id));
+  }
 });
