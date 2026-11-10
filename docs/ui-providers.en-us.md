@@ -62,3 +62,5 @@ acceptance; those contracts remain under development. Existing stable RPC method
 are unchanged.
 
 [Forwarding provider](forwarding-ui.en-us.md).
+
+[Background task extensions](background-tasks.en-us.md)

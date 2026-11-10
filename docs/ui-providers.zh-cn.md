@@ -49,3 +49,5 @@ function Workbench({ workbench }) {
 本能力不代表全领域服务、依赖管理及跨平台验收已经完成；既有稳定 RPC 契约保持不变。
 
 [端口转发提供者](forwarding-ui.zh-cn.md)。
+
+[Background task extensions](background-tasks.zh-cn.md)
