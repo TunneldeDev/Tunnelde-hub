@@ -40,6 +40,10 @@ export interface ExecutionMethodMap {
     { runnerId: string; status: "starting" },
   ];
   "runners.list": [Record<string, never>, RunnerRecord[]];
+  "runners.review": [
+    { sessionId: string; runnerId: string; directory: string; kind: "destination" | "control" },
+    { reviewed: boolean },
+  ];
   "runners.send": [
     { sessionId: string; runnerId: string; message: Record<string, unknown> },
     { accepted: boolean },
