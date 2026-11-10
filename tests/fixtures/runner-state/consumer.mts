@@ -1,0 +1,27 @@
+import type { Host, RunnerState } from "../../../sdk/tunnelde-plugin.mjs";
+
+declare const host: Host;
+const target = { sessionId: "ssh", runnerId: "runner" };
+
+function describe(state: RunnerState): string {
+  switch (state.status) {
+    case "notFound": return "The runner is unavailable; inspect before starting another run";
+    case "starting":
+    case "running":
+    case "stopping":
+    case "stopped":
+    case "failed":
+    case "unresponsive": return state.error ?? state.status;
+    default: {
+      const exhaustive: never = state.status;
+      return exhaustive;
+    }
+  }
+}
+
+const missing: RunnerState = { status: "notFound" };
+describe(missing);
+describe(await host.call("runners.status", target));
+describe((await host.call("runners.poll", { ...target, afterSeq: 0 })).state);
+// @ts-expect-error Unknown states must not become accepted through a string fallback.
+describe({ status: "unknown" });

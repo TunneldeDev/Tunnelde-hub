@@ -17,7 +17,7 @@ export interface RunnerRecord {
 
 export interface RunnerState {
   status:
-    "starting" | "running" | "stopping" | "stopped" | "failed" | "unresponsive";
+    "starting" | "running" | "stopping" | "stopped" | "failed" | "unresponsive" | "notFound";
   error?: string | null;
 }
 
