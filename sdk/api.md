@@ -6,6 +6,8 @@ Stability is part of the compatibility contract: `stable` methods include their 
 
 | Method | Permissions | Parameters | Stability | Since | Deprecated | Behavior |
 | --- | --- | --- | --- | --- | --- | --- |
+| `resources.snapshot` | Approved execution | `{offset?:number,revision?:string}` | `experimental` |  |  | Observe committed live domain resources (connections must also have accepted ownership) owned by this plugin's current runtime. Returns bounded revision-checked pages of opaque handles, kinds and lifecycle states, without paths, commands or credentials. Covers connections, forwards, mounts, process tasks and active transfers; not a global atomic transaction or durable runner catalogue. |
+| `resources.release` | Approved execution | `{handle:string}` | `experimental` |  |  | Release only an exact current-runtime owned resource. Revalidates domain ownership; cannot stop user-owned or transferred connections or a replacement instance. Returns released only after synchronous disposal or completed cleanup, cancellationRequested for cooperative task/transfer cancellation. Never forces unmount, deletes history or promises remote command rollback. Accepted cleanup keeps bounded capacity until settled even if its caller disappears. |
 | `configuration.schema` | Approved execution | `{}` | `experimental` |  |  | Read this runtime owner's declarative configuration schema. |
 | `configuration.snapshot` | Approved execution | `{}` | `experimental` |  |  | Read owned settings and schema status; never migrates or writes defaults. |
 | `configuration.update` | Approved execution | `{expectedRevision:string,schemaDigest:string,values:object}` | `experimental` |  |  | CAS replace a complete validated owned configuration; schema drift blocks writes. |

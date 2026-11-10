@@ -29,3 +29,6 @@ export type * from "./ui/preferences/data/index.mjs";
 export type * from "./ui/configuration/schema.mjs";
 export type * from "./ui/configuration/document.mjs";
 export type * from "./ui/configuration/migration.mjs";
+export type * from "./ui/runtime/lifecycle/resource.mjs";
+export type * from "./ui/runtime/lifecycle/snapshot.mjs";
+export type * from "./ui/runtime/lifecycle/release.mjs";

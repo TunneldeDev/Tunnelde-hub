@@ -219,3 +219,5 @@ path/source/filter/restore controls remain available. See the host's bilingual
 `docs/plugin-file-browser.en-us.md` and `docs/plugin-file-browser.zh-cn.md` for
 complete semantics, and `examples/trusted-ui` for a composition example. This is
 trusted host-context code, not a sandbox or a new permission grant.
+
+[Runtime resource lifecycle](runtime-resources.en-us.md): strict facade, ownership, paging and disposal semantics.
