@@ -10,7 +10,7 @@ export interface ExtensionDirectory {
     viewKind: "component";
     providers?: {
       manifest: "views[].provider";
-      targets: ("hostList" | "workbench" | "fileBrowser" | "terminal" | "history" | "forwarding")[];
+      targets: ("hostList" | "workbench" | "fileBrowser" | "terminal" | "history" | "forwarding" | "monitor")[];
       selection: "explicit-user";
       hostListPermission: "hosts.read";
       fileBrowserPermissions: string[];
@@ -21,6 +21,12 @@ export interface ExtensionDirectory {
       terminalPermissions: string[];
       historyPermissions: string[];
       forwardingPermissions?: string[];
+      monitorPermissions?: string[];
+      monitor?: {
+        context: "monitor"; ownership: "host-view"; presentations: ("page" | "panel")[]; optionalSlot: "Charts";
+        sampleLimit: number; pageSize: number; paging: "revision-bound";
+        sampling: "shared-visible-consumers"; refresh: "coalesced-existing-sampler";
+      };
       forwarding?: {
         context: "forwarding"; ownership: "host-panel"; optionalSlot: "Entries";
         pageSize: number; pageTextLimit: number; paging: "revision-bound";

@@ -2,6 +2,8 @@
 
 [English](ui-providers.en-us.md) · [可信 UI SDK](frontend-ui.zh-cn.md)
 
+[监控界面提供者契约](monitor-ui.zh-cn.md)
+
 实验性 UI SDK 支持由用户显式选择主机列表和工作台的替代界面。为组件视图声明
 `provider: "hostList"` 或 `provider: "workbench"`，不设置 `location`，仍通过
 `context.views.register` 注册。每个包最多声明八个提供者视图。两种目标都要求可信

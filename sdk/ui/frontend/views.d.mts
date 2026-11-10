@@ -4,6 +4,7 @@ import type { FrontendFileBrowser } from "../files/browser.mjs";
 import type { FrontendTerminal } from "../terminal/surface.mjs";
 import type { FrontendHistory } from "../history/provider.mjs";
 import type { FrontendForwarding } from "../forwarding/provider.mjs";
+import type { FrontendMonitor } from "../monitor/provider.mjs";
 
 export interface FrontendViewProps {
   pluginId: string;
@@ -21,4 +22,6 @@ export interface FrontendViewProps {
   history?: FrontendHistory;
   /** Present only for an explicitly selected forwarding provider, scoped to one saved host. */
   forwarding?: FrontendForwarding;
+  /** Present only for a selected monitoring provider; sampling stays host-owned. */
+  monitor?: FrontendMonitor;
 }

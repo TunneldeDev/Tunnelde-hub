@@ -13,3 +13,6 @@ export type * from "./ui/frontend/providers.mjs";
 export type * from "./ui/frontend/lifecycle.mjs";
 export type * from "./ui/forwarding/entry.mjs";
 export type * from "./ui/forwarding/provider.mjs";
+export type { FrontendMonitorSample } from "./ui/monitor/sample.mjs";
+export type { FrontendMonitorReading } from "./ui/monitor/reading.mjs";
+export type { FrontendMonitor, FrontendMonitorSnapshot } from "./ui/monitor/provider.mjs";
