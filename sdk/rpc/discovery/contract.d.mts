@@ -1,0 +1,90 @@
+/** Experimental directory; discovery does not authorize calls or promise complete coverage. */
+export interface ExtensionDirectory {
+  frontend?: {
+    sdkVersion: string;
+    stability: "experimental";
+    trust: "host-context";
+    permission: "ui.trusted";
+    manifest: "frontend";
+    runtime: "frontend";
+    viewKind: "component";
+    providers?: {
+      manifest: "views[].provider";
+      targets: ("hostList" | "workbench" | "fileBrowser" | "terminal" | "history")[];
+      selection: "explicit-user";
+      hostListPermission: "hosts.read";
+      fileBrowserPermissions: string[];
+      fileBrowser: {
+        context: "fileBrowser"; ownership: "host-pane"; pageSize: number;
+        paging: "revision-bound"; recovery: "native-path-and-actions";
+      };
+      terminalPermissions: string[];
+      historyPermissions: string[];
+      history: {
+        context: "history"; ownership: "host-panel"; optionalSlot: "Entries";
+        pageSize: number; pageTextLimit: number; paging: "revision-bound";
+        writePermission: "history.write"; executePermission: "ssh.exec";
+        recovery: "native-search-and-confirmation";
+      };
+      terminal: {
+        context: "terminal"; ownership: "host-session"; requiredSlot: "Screen";
+        pageSize: number; pageTextLimit: number; lineTextLimit: number; inputTextLimit: number;
+        subscriptions: number; notificationIntervalMs: number;
+        paging: "revision-bound"; stream: "coalesced-dirty"; recovery: "native-toolbar-and-screen";
+      };
+      slots: string[];
+      requiredSlot: "Workspace";
+      limits: { perPlugin: number };
+      fallback: "built-in";
+    };
+    components: string[];
+    limits: { moduleBytes: number; totalBytes: number; owners: number };
+  };
+  version: 1;
+  stability: "experimental";
+  layers: Array<
+    "contract" | "runtime" | "data" | "presentation" | "behavior" | "governance"
+  >;
+  domains: Array<{ id: string; namespaces: string[] }>;
+  points: Array<{
+    id: string;
+    domain: string;
+    layer: string;
+    stability: string;
+    composition: string;
+    registration: { set: string; remove: string } | { manifest: string; read?: string; replace?: string };
+    ownership: "runtime" | "manifest";
+    permissions: string[];
+    writePermissions?: string[];
+    limits: Record<string, number>;
+  }>;
+}
+
+export interface MethodDescription {
+  name: string;
+  permissions: string[];
+  params: string;
+  description: string;
+  /** Missing on hosts released before stability metadata was introduced. */
+  stability?: "stable" | "experimental" | "deprecated";
+  since?: string | null;
+  deprecated?: string | null;
+  /** Optional machine-readable contract, absent on older hosts and experimental methods. */
+  contract?: MethodContract;
+}
+
+export interface MethodContract {
+  version: 1;
+  /** JSON Schema draft-07; encoded byte limits are documented separately. */
+  inputSchema: Record<string, unknown>;
+  resultSchema: Record<string, unknown>;
+  errorSchema: Record<string, unknown>;
+  /** Optional schema of advisory input passed to a contribution's manifest command. */
+  commandContextSchema?: Record<string, unknown>;
+  /** Optional schema of the host-generated event envelope, not every custom payload. */
+  eventSchema?: Record<string, unknown>;
+  /** Stable application error messages; IO/internal error text remains platform-specific. */
+  knownErrors: string[];
+  /** Events emitted by this method; an empty list means snapshot/RPC behavior only. */
+  events: string[];
+}

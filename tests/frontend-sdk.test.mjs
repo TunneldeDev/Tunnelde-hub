@@ -5,9 +5,11 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { validateManifest } from "../scripts/validate.mjs";
 import { syncSdk, checkProviderTypes } from "../scripts/sync-sdk.mjs";
+import { loadRpcDeclarations } from "../scripts/sdk/rpc/declarations.mjs";
+import { fileURLToPath } from "node:url";
 
 test("both RPC and manifest provider target types must match the discovery catalogue", async () => {
-  const types = await readFile(new URL("../sdk/tunnelde-plugin.d.mts", import.meta.url), "utf8");
+  const { source: types } = await loadRpcDeclarations(fileURLToPath(new URL("../sdk", import.meta.url)));
   const directory = JSON.parse(await readFile(new URL("../sdk/extensions.json", import.meta.url), "utf8"));
   checkProviderTypes(types, directory.frontend.providers.targets);
   assert.throws(() => checkProviderTypes(types.replaceAll(' | "terminal"', ''), directory.frontend.providers.targets), /targets differ/);

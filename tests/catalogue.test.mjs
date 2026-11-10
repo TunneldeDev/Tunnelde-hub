@@ -1,20 +1,16 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { test } from "node:test";
-import { parseRustCatalogue } from "../scripts/sync-sdk.mjs";
+import { parseRustCatalogue, checkMethodTypes } from "../scripts/sync-sdk.mjs";
+import { loadRpcDeclarations } from "../scripts/sdk/rpc/declarations.mjs";
+import { fileURLToPath } from "node:url";
 
 test("SDK types cover the complete generated host catalogue", async () => {
   const catalogue = JSON.parse(await readFile(new URL("../sdk/api.json", import.meta.url), "utf8"));
-  const types = await readFile(new URL("../sdk/tunnelde-plugin.d.mts", import.meta.url), "utf8");
-  const map = types
-    .split("export interface HostMethodMap {")[1]
-    .split("\nexport interface Host {")[0];
-  const names = [...map.matchAll(/^\s*"([a-zA-Z][\w.-]+)":/gm)].map((entry) => entry[1]);
-  if (/^\s*log:/m.test(map)) names.push("log");
-  assert.deepEqual(names.sort(), catalogue.methods.map((method) => method.name).sort());
+  const { source: types } = await loadRpcDeclarations(fileURLToPath(new URL("../sdk", import.meta.url)));
+  checkMethodTypes(types, catalogue);
   const docs = await readFile(new URL("../sdk/api.md", import.meta.url), "utf8");
   for (const { name } of catalogue.methods) assert.ok(docs.includes(`\`${name}\``), name);
-  assert.equal(new Set(names).size, names.length);
 });
 
 test("Rust catalogue import rejects silently omitted method declarations", () => {

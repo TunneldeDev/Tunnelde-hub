@@ -1,0 +1,9 @@
+export interface PluginView {
+  id: string;
+  title: string;
+  location?: "sidebar" | "workspace";
+  kind?: "blocks" | "chat" | "component";
+  /** Component provider chosen explicitly in settings; omit location. */
+  provider?: "hostList" | "workbench" | "fileBrowser" | "terminal" | "history";
+  icon?: string;
+}

@@ -6,6 +6,28 @@ Use `host.describe()` to inspect the running host. The SDK catalogue follows app
 `dev`; an installed stable release can have fewer capabilities. The manifest's
 `apiVersion: 1` identifies the protocol and does not make every method stable.
 
+## SDK source organization
+
+RPC declarations live under `sdk/rpc/<domain>/`. Host metadata, fields, sources,
+columns and menus belong to `hosts/`; editor, files, forwarding, mounts, execution,
+history and other domains define independent DTOs and method maps. Transport and
+plugin lifecycle have separate directories. `transport/methodMap.d.mts` composes
+domain maps; `tunnelde-plugin.d.mts` only re-exports public declarations.
+
+```ts
+import { createPlugin } from "./sdk/tunnelde-plugin.mjs";
+import type { ForwardRule } from "./sdk/rpc/forwarding/contract.mjs";
+import type { EditorDocument } from "./sdk/rpc/editor/contract.mjs";
+```
+
+Keep runtime imports on the existing SDK entry; domain files provide types only.
+The synchronization checker follows every declaration dependency and compares
+all composed method names with host discovery. Generated host DTOs update their
+own domain files. Private imports, cycles, unreachable files and uncomposed method
+maps fail checks. Frozen historical declarations compile beside the new tree and
+verify export, input/result and transport compatibility. This reorganization does
+not rename wire methods or promote experimental APIs to stable.
+
 The first stable core consists of `api.describe`, `sessions.list`, `storage.get`,
 `storage.set` and `storage.delete`. These methods have been available since 0.21.0;
 `since` records availability, not when their stability commitment was established.
