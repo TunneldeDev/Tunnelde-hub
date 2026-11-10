@@ -37,9 +37,21 @@ export interface ExtensionDirectory {
     viewKind: "component";
     providers?: {
       manifest: "views[].provider";
-      targets: ("hostList" | "workbench")[];
+      targets: ("hostList" | "workbench" | "fileBrowser" | "terminal")[];
       selection: "explicit-user";
       hostListPermission: "hosts.read";
+      fileBrowserPermissions: string[];
+      fileBrowser: {
+        context: "fileBrowser"; ownership: "host-pane"; pageSize: number;
+        paging: "revision-bound"; recovery: "native-path-and-actions";
+      };
+      terminalPermissions: string[];
+      terminal: {
+        context: "terminal"; ownership: "host-session"; requiredSlot: "Screen";
+        pageSize: number; pageTextLimit: number; lineTextLimit: number; inputTextLimit: number;
+        subscriptions: number; notificationIntervalMs: number;
+        paging: "revision-bound"; stream: "coalesced-dirty"; recovery: "native-toolbar-and-screen";
+      };
       slots: string[];
       requiredSlot: "Workspace";
       limits: { perPlugin: number };
@@ -407,7 +419,7 @@ export interface PluginView {
   location?: "sidebar" | "workspace";
   kind?: "blocks" | "chat" | "component";
   /** Component provider chosen explicitly in settings; omit location. */
-  provider?: "hostList" | "workbench";
+  provider?: "hostList" | "workbench" | "fileBrowser" | "terminal";
   icon?: string;
 }
 export type ChatProtocol =

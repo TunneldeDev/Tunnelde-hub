@@ -5,6 +5,15 @@ import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
+export function checkProviderTypes(types, targets) {
+  for (const pattern of [/targets:\s*\(([^)]+)\)\[\]/, /provider\?:\s*([^;]+);/]) {
+    const declaration = types.match(pattern)?.[1];
+    assert.ok(declaration, "SDK provider target type was not found");
+    const names = [...declaration.matchAll(/"([^"\r\n]+)"/g)].map(match => match[1]);
+    assert.deepEqual(names, targets, "SDK provider targets differ from host discovery");
+  }
+}
+
 export function parseRustCatalogue(source, contracts) {
   const body = source.match(/pub const METHODS:[\s\S]*?=\s*&\[([\s\S]*?)\n\];/)?.[1];
   assert.ok(body, "Rust METHODS catalogue was not found");
@@ -153,12 +162,19 @@ export async function syncSdk(applicationDirectory, { check = false, sdkDirector
       if (directory.frontend.providers) {
         const providers = directory.frontend.providers;
         assert.equal(providers.manifest, "views[].provider");
-        assert.deepEqual(providers.targets, ["hostList", "workbench", "fileBrowser"]);
+        assert.deepEqual(providers.targets, ["hostList", "workbench", "fileBrowser", "terminal"]);
         assert.deepEqual(providers.fileBrowserPermissions, ["fs.read", "sftp.read", "workspace.write"]);
+        assert.deepEqual(providers.terminalPermissions, ["sessions.read", "ssh.exec"]);
+        assert.equal(providers.terminal.pageSize, 128);
+        assert.equal(providers.terminal.requiredSlot, "Screen");
+        assert.equal(providers.terminal.pageTextLimit, 65536);
+        assert.equal(providers.terminal.subscriptions, 16);
+        assert.equal(providers.terminal.stream, "coalesced-dirty");
         assert.equal(providers.fileBrowser.pageSize, 256);
         assert.equal(providers.fileBrowser.paging, "revision-bound");
-        for (const type of ["FrontendFileBrowser", "FrontendFileBrowserSnapshot", "FrontendFileEntry"])
+        for (const type of ["FrontendFileBrowser", "FrontendFileBrowserSnapshot", "FrontendFileEntry", "FrontendTerminal", "FrontendTerminalSnapshot", "FrontendTerminalChange"])
           assert.match(uiTypes, new RegExp(`export interface ${type}\\b`));
+        checkProviderTypes(types, providers.targets);
         assert.equal(providers.selection, "explicit-user");
         assert.equal(providers.fallback, "built-in");
         assert.deepEqual(providers.slots, ["Workspace", "Navigation", "Inspector", "StatusBar"]);
