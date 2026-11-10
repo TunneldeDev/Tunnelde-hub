@@ -9,6 +9,9 @@
       "ui/components/controls.d.mts",
       "ui/components/emptyState.d.mts",
       "ui/components/sdk.d.mts",
+      "ui/configuration/document.d.mts",
+      "ui/configuration/migration.d.mts",
+      "ui/configuration/schema.d.mts",
       "ui/files/browser.d.mts",
       "ui/forwarding/entry.d.mts",
       "ui/forwarding/provider.d.mts",
@@ -50,6 +53,13 @@
       "ui/components/controls.d.mts",
       "ui/components/emptyState.d.mts",
       "ui/search/field.d.mts"
+    ],
+    "ui/configuration/document.d.mts": [
+      "ui/configuration/schema.d.mts"
+    ],
+    "ui/configuration/migration.d.mts": [],
+    "ui/configuration/schema.d.mts": [
+      "ui/configuration/migration.d.mts"
     ],
     "ui/files/browser.d.mts": [
       "react"

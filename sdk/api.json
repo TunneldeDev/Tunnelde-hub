@@ -2,6 +2,69 @@
   "version": 1,
   "methods": [
     {
+      "name": "configuration.schema",
+      "permissions": [],
+      "params": "{}",
+      "description": "Read this runtime owner's declarative configuration schema.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "configuration.snapshot",
+      "permissions": [],
+      "params": "{}",
+      "description": "Read owned settings and schema status; never migrates or writes defaults.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "configuration.update",
+      "permissions": [],
+      "params": "{expectedRevision:string,schemaDigest:string,values:object}",
+      "description": "CAS replace a complete validated owned configuration; schema drift blocks writes.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "configuration.migrate",
+      "permissions": [],
+      "params": "{expectedRevision:string,schemaDigest:string}",
+      "description": "Explicitly apply declared data migrations and atomically retain the original backup.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "configuration.backups",
+      "permissions": [],
+      "params": "{}",
+      "description": "Read at most eight owned configuration backups; values are private to the owner.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "configuration.restore",
+      "permissions": [],
+      "params": "{expectedRevision:string,schemaDigest:string,backupId:string}",
+      "description": "Restore an owned backup with a fresh revision and retain the superseded document.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "configuration.deleteBackup",
+      "permissions": [],
+      "params": "{expectedRevision:string,schemaDigest:string,backupId:string}",
+      "description": "Explicitly remove one owned backup; no automatic retention eviction.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
       "name": "extensions.describe",
       "permissions": [],
       "params": "{}",
