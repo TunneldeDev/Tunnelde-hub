@@ -15,7 +15,8 @@
         "hostList",
         "workbench",
         "fileBrowser",
-        "terminal"
+        "terminal",
+        "history"
       ],
       "selection": "explicit-user",
       "hostListPermission": "hosts.read",
@@ -28,6 +29,21 @@
         "sessions.read",
         "ssh.exec"
       ],
+      "historyPermissions": [
+        "sessions.read",
+        "history.read"
+      ],
+      "history": {
+        "context": "history",
+        "ownership": "host-panel",
+        "optionalSlot": "Entries",
+        "pageSize": 128,
+        "pageTextLimit": 65536,
+        "paging": "revision-bound",
+        "writePermission": "history.write",
+        "executePermission": "ssh.exec",
+        "recovery": "native-search-and-confirmation"
+      },
       "terminal": {
         "context": "terminal",
         "ownership": "host-session",

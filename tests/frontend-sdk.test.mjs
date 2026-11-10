@@ -54,8 +54,8 @@ test("pure and combined frontends require explicit trust and safe manifest decla
 });
 
 test("interface providers require a trusted component declaration and explicit target metadata", () => {
-  for (const provider of ["workbench", "hostList", "fileBrowser", "terminal"]) {
-    const valid = { ...structuredClone(manifest), permissions: ["ui.trusted", "hosts.read", "fs.read", "sftp.read", "workspace.write", "sessions.read", "ssh.exec"] };
+  for (const provider of ["workbench", "hostList", "fileBrowser", "terminal", "history"]) {
+    const valid = { ...structuredClone(manifest), permissions: ["ui.trusted", "hosts.read", "fs.read", "sftp.read", "workspace.write", "sessions.read", "ssh.exec", "history.read"] };
     valid.views[0].provider = provider;
     validateManifest(valid, valid.id);
     const unicode = structuredClone(valid); unicode.views[0].title = "🖥".repeat(120);
@@ -77,6 +77,11 @@ test("interface providers require a trusted component declaration and explicit t
   for (const omitted of ["ui.trusted", "sessions.read", "ssh.exec"]) {
     const bad = structuredClone(manifest); bad.views[0].provider = "terminal";
     bad.permissions = ["ui.trusted", "sessions.read", "ssh.exec"].filter(p => p !== omitted);
+    assert.throws(() => validateManifest(bad, bad.id));
+  }
+  for (const omitted of ["ui.trusted", "sessions.read", "history.read"]) {
+    const bad = structuredClone(manifest); bad.views[0].provider = "history";
+    bad.permissions = ["ui.trusted", "sessions.read", "history.read"].filter(p => p !== omitted);
     assert.throws(() => validateManifest(bad, bad.id));
   }
   const bad = structuredClone(manifest); bad.views[0].provider = "hostList";
