@@ -110,7 +110,7 @@ export async function syncSdk(applicationDirectory, { check = false, sdkDirector
       if (directory.frontend.providers) {
         const providers = directory.frontend.providers;
         assert.equal(providers.manifest, "views[].provider");
-        assert.deepEqual(providers.targets, ["hostList", "workbench", "fileBrowser", "terminal", "history", "forwarding", "monitor", "backgroundTasks", "processes"]);
+        assert.deepEqual(providers.targets, ["hostList", "workbench", "fileBrowser", "terminal", "history", "forwarding", "monitor", "backgroundTasks", "processes", "quickAccess"]);
         assert.deepEqual(providers.fileBrowserPermissions, ["fs.read", "sftp.read", "workspace.write"]);
         assert.deepEqual(providers.terminalPermissions, ["sessions.read", "ssh.exec"]);
         assert.deepEqual(providers.forwardingPermissions, ["hosts.read", "forwards.read"]);
@@ -120,6 +120,12 @@ export async function syncSdk(applicationDirectory, { check = false, sdkDirector
         assert.equal(providers.backgroundTasks.pageTextLimit, 65536);
         assert.equal(directory.frontend.backgroundTasks.pendingLimit, 8);
         assert.equal(directory.frontend.backgroundTasks.cancellation, "cooperative-settlement");
+        assert.deepEqual(providers.quickAccessPermissions, ["hosts.read", "sessions.read", "fs.read", "sftp.read", "workspace.read", "editor.read"]);
+        assert.equal(providers.quickAccess.optionalSlot, "Entries");
+        assert.equal(providers.quickAccess.pageSize, 128);
+        assert.equal(providers.quickAccess.pageTextLimit, 65536);
+        assert.equal(providers.quickAccess.invokePermission, "workspace.write");
+        assert.equal(providers.quickAccess.activation, "invoke-only-native-consent");
         assert.deepEqual(providers.processesPermissions, ["sessions.read", "monitor.read"]);
         assert.equal(providers.processes.optionalSlot, "Entries");
         assert.equal(providers.processes.pageSize, 128);

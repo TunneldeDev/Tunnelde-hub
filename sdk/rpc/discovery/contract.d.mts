@@ -14,7 +14,7 @@ export interface ExtensionDirectory {
     };
     providers?: {
       manifest: "views[].provider";
-      targets: ("hostList" | "workbench" | "fileBrowser" | "terminal" | "history" | "forwarding" | "monitor" | "backgroundTasks" | "processes")[];
+      targets: ("hostList" | "workbench" | "fileBrowser" | "terminal" | "history" | "forwarding" | "monitor" | "backgroundTasks" | "processes" | "quickAccess")[];
       selection: "explicit-user";
       hostListPermission: "hosts.read";
       fileBrowserPermissions: string[];
@@ -30,6 +30,13 @@ export interface ExtensionDirectory {
         context: "backgroundTasks"; ownership: "host-panel"; presentations: ("floating" | "embedded")[];
         optionalSlot: "Entries"; pageSize: number; pageTextLimit: number; paging: "revision-bound";
         writePermission: "backgroundTasks.write"; visibility: "visible-tasks-only"; recovery: "native-toolbar-and-confirmation";
+      };
+      quickAccessPermissions?: string[];
+      quickAccess?: {
+        context: "quickAccess"; ownership: "host-dialog"; optionalSlot: "Entries";
+        pageSize: number; pageTextLimit: number; paging: "revision-bound";
+        invokePermission: "workspace.write"; activation: "invoke-only-native-consent";
+        recovery: "native-input-roots-and-dismissal";
       };
       processesPermissions?: string[];
       processes?: {

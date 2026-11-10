@@ -192,7 +192,7 @@ export function validateManifest(manifest, id) {
     `${id}: too many interface providers`);
   for (const view of manifest.views ?? []) {
     if (view.provider !== undefined) {
-      assert.ok(["hostList", "workbench", "fileBrowser", "terminal", "history", "forwarding", "monitor", "backgroundTasks", "processes"].includes(view.provider) &&
+      assert.ok(["hostList", "workbench", "fileBrowser", "terminal", "history", "forwarding", "monitor", "backgroundTasks", "processes", "quickAccess"].includes(view.provider) &&
         view.kind === "component" && manifest.frontend && view.location === undefined &&
         typeof view.title === "string" && Array.from(view.title).length <= 120 &&
         !/\p{Cc}/u.test(view.title) &&
@@ -200,6 +200,7 @@ export function validateManifest(manifest, id) {
         (view.provider !== "fileBrowser" || ["fs.read", "sftp.read", "workspace.write"].every(p => manifest.permissions.includes(p))) &&
         (view.provider !== "terminal" || ["sessions.read", "ssh.exec"].every(p => manifest.permissions.includes(p))) &&
         (view.provider !== "backgroundTasks" || manifest.permissions.includes("backgroundTasks.read")) &&
+        (view.provider !== "quickAccess" || ["hosts.read", "sessions.read", "fs.read", "sftp.read", "workspace.read", "editor.read"].every(p => manifest.permissions.includes(p))) &&
         (!["monitor", "processes"].includes(view.provider) || ["sessions.read", "monitor.read"].every(p => manifest.permissions.includes(p))) &&
         (view.provider !== "forwarding" || ["hosts.read", "forwards.read"].every(p => manifest.permissions.includes(p))) &&
         (view.provider !== "history" || ["sessions.read", "history.read"].every(p => manifest.permissions.includes(p))),
