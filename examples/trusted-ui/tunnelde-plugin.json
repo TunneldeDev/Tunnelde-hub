@@ -8,13 +8,14 @@
   "apiVersion": 1,
   "runtime": "frontend",
   "frontend": { "entry": "ui/index.mjs", "sdk": "^0.1.0" },
-  "permissions": ["ui.trusted", "hosts.read"],
+  "permissions": ["ui.trusted", "hosts.read", "fs.read", "sftp.read", "workspace.write"],
   "commands": [
     { "id": "hello", "title": "UI example: Hello" },
     { "id": "inspect-host", "title": "Inspect host", "hostMenu": true }
   ],
   "views": [
     { "id": "main", "title": "UI example", "kind": "component", "location": "sidebar" },
-    { "id": "desktop", "title": "Navigation on the right", "kind": "component", "provider": "workbench" }
+    { "id": "desktop", "title": "Navigation on the right", "kind": "component", "provider": "workbench" },
+    { "id": "files", "title": "File list with summary", "kind": "component", "provider": "fileBrowser" }
   ]
 }

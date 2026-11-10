@@ -153,7 +153,12 @@ export async function syncSdk(applicationDirectory, { check = false, sdkDirector
       if (directory.frontend.providers) {
         const providers = directory.frontend.providers;
         assert.equal(providers.manifest, "views[].provider");
-        assert.deepEqual(providers.targets, ["hostList", "workbench"]);
+        assert.deepEqual(providers.targets, ["hostList", "workbench", "fileBrowser"]);
+        assert.deepEqual(providers.fileBrowserPermissions, ["fs.read", "sftp.read", "workspace.write"]);
+        assert.equal(providers.fileBrowser.pageSize, 256);
+        assert.equal(providers.fileBrowser.paging, "revision-bound");
+        for (const type of ["FrontendFileBrowser", "FrontendFileBrowserSnapshot", "FrontendFileEntry"])
+          assert.match(uiTypes, new RegExp(`export interface ${type}\\b`));
         assert.equal(providers.selection, "explicit-user");
         assert.equal(providers.fallback, "built-in");
         assert.deepEqual(providers.slots, ["Workspace", "Navigation", "Inspector", "StatusBar"]);

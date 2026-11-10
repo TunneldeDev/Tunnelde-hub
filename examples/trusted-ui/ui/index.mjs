@@ -23,6 +23,16 @@ export function activate(context) {
     React.createElement(StatusBar));
   }
   context.views.register("desktop", Workbench);
+  function Files({ fileBrowser }) {
+    const { snapshot, Entries } = fileBrowser;
+    return React.createElement("section", {
+      style: { display: "flex", flexDirection: "column", flex: 1, minHeight: 0 },
+    }, React.createElement(Button, {
+      disabled: snapshot.busy || !snapshot.path,
+      onClick: () => fileBrowser.refresh(),
+    }, `Refresh · ${snapshot.total}`), React.createElement(Entries));
+  }
+  context.views.register("files", Files);
   context.commands.register("hello", () => ({ text: "Hello from the shared UI runtime" }));
   context.commands.register("inspect-host", ({ host }) => ({ text: `${host.name}: ${host.address}:${host.port}` }));
 }

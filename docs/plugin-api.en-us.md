@@ -181,3 +181,19 @@ The built-in list groups entries by source and identifies the supplying plugin. 
 `hosts.sourcesSnapshot({ offset?, revision? })` returns `{ revision, total, nextOffset, items }`, with at most one source per page. Begin with `{}`. For subsequent pages pass `nextOffset` as `offset` and the original `revision`. On `plugin.hostSources.changed`, restart from zero; pages are not a pinned snapshot or a resource reservation. Each source includes `pluginId`, `pluginName`, `id`, `label` and `entries`, and each entry includes an authoritative `hostId`. This API is separate from `hosts.snapshot`, which continues to describe saved hosts.
 
 Use the returned `hostId` in `sessions.connect` or `workspace.openHost`. IDs bind plugin identity, source ID and the complete entry, including the connection endpoint. Changing any entry metadata changes its ID; a stale dialog fails instead of connecting a replacement endpoint. Source disappearance during setup rejects the pending connection. This does not revoke a connection that has already been established by the user. Plugin-created connections still follow runtime/client ownership and explicit handoff rules. Stop, crash, restart, revocation and restricted mode remove the runtime's sources; no discovery records are persisted implicitly. Runtime source removal does not erase saved copies or trusted server keys.
+
+## File browser providers (experimental)
+
+A trusted component view may declare `provider: "fileBrowser"` without `location`.
+It requires `ui.trusted`, `fs.read`, `sftp.read` and `workspace.write`; the user
+explicitly selects it in interface settings. `FrontendViewProps.fileBrowser`
+provides an immutable pane/source/path/selection/loading snapshot, revision-bound
+`read({revision, offset?})` pages of at most 256 visible sorted entries, and
+`navigate`, `refresh`, `select`, `open` actions using the native host flows.
+The optional `Entries` component composes the existing live file list; mount it
+at most once. Stop, revocation, failure and restricted mode restore native rows.
+Stale callbacks cannot act on a changed pane or a replacement provider. Native
+path/source/filter/restore controls remain available. See the host's bilingual
+`docs/plugin-file-browser.en-us.md` and `docs/plugin-file-browser.zh-cn.md` for
+complete semantics, and `examples/trusted-ui` for a composition example. This is
+trusted host-context code, not a sandbox or a new permission grant.

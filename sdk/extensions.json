@@ -13,10 +13,23 @@
       "manifest": "views[].provider",
       "targets": [
         "hostList",
-        "workbench"
+        "workbench",
+        "fileBrowser"
       ],
       "selection": "explicit-user",
       "hostListPermission": "hosts.read",
+      "fileBrowserPermissions": [
+        "fs.read",
+        "sftp.read",
+        "workspace.write"
+      ],
+      "fileBrowser": {
+        "context": "fileBrowser",
+        "ownership": "host-pane",
+        "pageSize": 256,
+        "paging": "revision-bound",
+        "recovery": "native-path-and-actions"
+      },
       "slots": [
         "Workspace",
         "Navigation",

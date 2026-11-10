@@ -148,3 +148,15 @@ kind 为 info、success 或 error；省略或 null 使用 info。返回 null 仅
 `hosts.sourcesSnapshot({ offset?, revision? })` 返回 `{ revision, total, nextOffset, items }`，每页至多一个来源。首次传 `{}`；后续将 `nextOffset` 作为 `offset` 并携带原 `revision`。收到 `plugin.hostSources.changed` 时从头读取；分页不预留资源，也不冻结快照。来源包含 `pluginId`、`pluginName`、`id`、`label` 和 `entries`；每条记录还包含宿主生成的 `hostId`。此接口独立于仍只返回已保存主机的 `hosts.snapshot`。
 
 可将返回的 `hostId` 用于 `sessions.connect` 或 `workspace.openHost`。ID 绑定插件身份、来源 ID 和完整条目（包括连接目标）。条目任意信息变化都会改变 ID，因此旧弹窗会失败，不会连接被替换的目标；建立过程中来源消失也会拒绝本次连接。用户已建立的连接继续保留。插件创建的连接仍遵守运行实例／客户端所有权与显式交接规则。插件停止、崩溃、重启、撤权及进入受限模式会移除其来源，不会隐式持久化发现记录，也不会删除用户保存的副本或已信任的服务器密钥。
+
+## 文件浏览器提供者（实验性）
+
+可信组件视图可声明 `provider: "fileBrowser"`，不设置 `location`；要求 `ui.trusted`、
+`fs.read`、`sftp.read`、`workspace.write`，由用户在界面设置中显式选择。
+`FrontendViewProps.fileBrowser` 提供不可变面板/来源/路径/选择/加载快照，
+`read({revision, offset?})` 按修订号分页返回当前排序与筛选后的条目，每页最多 256 条。
+`navigate`、`refresh`、`select`、`open` 复用宿主原生流程。
+可选 `Entries` 组件组合现有实际列表，最多挂载一次。停用、撤权、失败和受限模式恢复原生列表；
+旧回调不能操作变更后的面板或替换后的提供者。路径、来源、筛选和恢复入口仍由宿主管理。
+完整语义见宿主双语 `docs/plugin-file-browser.en-us.md`、`docs/plugin-file-browser.zh-cn.md`；
+组合示例见 `examples/trusted-ui`。这是宿主上下文的可信代码，不是沙箱，也不额外授予权限。
