@@ -162,9 +162,15 @@ export async function syncSdk(applicationDirectory, { check = false, sdkDirector
       if (directory.frontend.providers) {
         const providers = directory.frontend.providers;
         assert.equal(providers.manifest, "views[].provider");
-        assert.deepEqual(providers.targets, ["hostList", "workbench", "fileBrowser", "terminal"]);
+        assert.deepEqual(providers.targets, ["hostList", "workbench", "fileBrowser", "terminal", "history"]);
         assert.deepEqual(providers.fileBrowserPermissions, ["fs.read", "sftp.read", "workspace.write"]);
         assert.deepEqual(providers.terminalPermissions, ["sessions.read", "ssh.exec"]);
+        assert.deepEqual(providers.historyPermissions, ["sessions.read", "history.read"]);
+        assert.equal(providers.history.pageSize, 128);
+        assert.equal(providers.history.pageTextLimit, 65536);
+        assert.equal(providers.history.paging, "revision-bound");
+        assert.equal(providers.history.writePermission, "history.write");
+        assert.equal(providers.history.executePermission, "ssh.exec");
         assert.equal(providers.terminal.pageSize, 128);
         assert.equal(providers.terminal.requiredSlot, "Screen");
         assert.equal(providers.terminal.pageTextLimit, 65536);
@@ -172,7 +178,7 @@ export async function syncSdk(applicationDirectory, { check = false, sdkDirector
         assert.equal(providers.terminal.stream, "coalesced-dirty");
         assert.equal(providers.fileBrowser.pageSize, 256);
         assert.equal(providers.fileBrowser.paging, "revision-bound");
-        for (const type of ["FrontendFileBrowser", "FrontendFileBrowserSnapshot", "FrontendFileEntry", "FrontendTerminal", "FrontendTerminalSnapshot", "FrontendTerminalChange"])
+        for (const type of ["FrontendFileBrowser", "FrontendFileBrowserSnapshot", "FrontendFileEntry", "FrontendTerminal", "FrontendTerminalSnapshot", "FrontendTerminalChange", "FrontendHistory", "FrontendHistorySnapshot", "FrontendHistoryEntry"])
           assert.match(uiTypes, new RegExp(`export interface ${type}\\b`));
         checkProviderTypes(types, providers.targets);
         assert.equal(providers.selection, "explicit-user");
