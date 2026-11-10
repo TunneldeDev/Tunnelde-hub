@@ -1,7 +1,8 @@
 import type { RuntimeResourcesDiscovery } from "../runtime/resources/discovery.mjs";
+import type { ActivationDiscovery } from "../runtime/activation/discovery.mjs";
 /** Experimental directory; discovery does not authorize calls or promise complete coverage. */
 export interface ExtensionDirectory {
-  runtime?: { resources?: RuntimeResourcesDiscovery };
+  runtime?: { resources?: RuntimeResourcesDiscovery; activation?: ActivationDiscovery };
   frontend?: {
     sdkVersion: string;
     stability: "experimental";

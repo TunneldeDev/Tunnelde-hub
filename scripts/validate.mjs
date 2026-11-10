@@ -9,6 +9,7 @@ import { validateFileIconThemes, validateTags } from "./plugins/file-icons.mjs";
 import { validateFilePreviews } from "./plugins/previews.mjs";
 import { validateHostFields } from "./plugins/host-fields.mjs";
 import { validateConfiguration } from "./plugins/configuration/manifest.mjs";
+import { validateDependencies } from "./plugins/activation/manifest.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const idPattern = /^[a-z0-9][a-z0-9_-]{0,63}$/;
@@ -25,7 +26,7 @@ export function validateManifest(manifest, id) {
       `${id}: ${key} is required`,
     );
   assert.ok(/^\d+\.\d+\.\d+$/.test(manifest.version), `${id}: use a semantic version`);
-  assert.equal(manifest.apiVersion, 1, `${id}: unsupported API`);
+  validateDependencies(manifest);
   assert.ok(
     ["node", "wasm", "theme", "declarative", "frontend"].includes(manifest.runtime ?? "node"),
     `${id}: unknown runtime`,
