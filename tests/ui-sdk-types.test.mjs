@@ -28,10 +28,13 @@ test("legacy and domain SDK imports compile in NodeNext and preserve historical 
     return [symbol.name, checker.getDeclaredTypeOfSymbol(target)];
   }));
   const before = exportsOf(historical), after = exportsOf(current);
-  assert.deepEqual([...before.keys()].sort(), [...after.keys()].sort());
+  const added = [...after.keys()].filter(name => !before.has(name));
+  assert.deepEqual(added.sort(), ["FrontendForwarding", "FrontendForwardingEntry", "FrontendForwardingSnapshot"]);
+  const widened = [];
   for (const [name, original] of before) {
     assert.ok(checker.isTypeAssignableTo(original, after.get(name)), `${name}: old to new`);
-    assert.ok(checker.isTypeAssignableTo(after.get(name), original), `${name}: new to old`);
+    if (!checker.isTypeAssignableTo(after.get(name), original)) widened.push(name);
   }
+  assert.deepEqual(widened.sort(), ["FrontendProviderContribution", "FrontendProviderTarget"]);
   assert.deepEqual([...new Map(domains.flatMap(path => [...exportsOf(path)])).keys()].sort(), [...after.keys()].sort());
 });

@@ -58,3 +58,5 @@ mode remains the recovery route if trusted code prevents the UI from responding.
 This does not complete all domain services, dependency management or platform
 acceptance; those contracts remain under development. Existing stable RPC methods
 are unchanged.
+
+[Forwarding provider](forwarding-ui.en-us.md).

@@ -11,3 +11,5 @@ export type * from "./ui/files/browser.mjs";
 export type * from "./ui/workbench/slots.mjs";
 export type * from "./ui/frontend/providers.mjs";
 export type * from "./ui/frontend/lifecycle.mjs";
+export type * from "./ui/forwarding/entry.mjs";
+export type * from "./ui/forwarding/provider.mjs";

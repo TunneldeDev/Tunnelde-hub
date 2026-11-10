@@ -110,9 +110,15 @@ export async function syncSdk(applicationDirectory, { check = false, sdkDirector
       if (directory.frontend.providers) {
         const providers = directory.frontend.providers;
         assert.equal(providers.manifest, "views[].provider");
-        assert.deepEqual(providers.targets, ["hostList", "workbench", "fileBrowser", "terminal", "history"]);
+        assert.deepEqual(providers.targets, ["hostList", "workbench", "fileBrowser", "terminal", "history", "forwarding"]);
         assert.deepEqual(providers.fileBrowserPermissions, ["fs.read", "sftp.read", "workspace.write"]);
         assert.deepEqual(providers.terminalPermissions, ["sessions.read", "ssh.exec"]);
+        assert.deepEqual(providers.forwardingPermissions, ["hosts.read", "forwards.read"]);
+        assert.equal(providers.forwarding.pageSize, 128);
+        assert.equal(providers.forwarding.pageTextLimit, 65536);
+        assert.equal(providers.forwarding.optionalSlot, "Entries");
+        assert.equal(providers.forwarding.writePermission, "forwards.write");
+        assert.equal(providers.forwarding.acceptedOwnership, "plugin-runtime");
         assert.deepEqual(providers.historyPermissions, ["sessions.read", "history.read"]);
         assert.equal(providers.history.pageSize, 128);
         assert.equal(providers.history.pageTextLimit, 65536);
@@ -126,7 +132,7 @@ export async function syncSdk(applicationDirectory, { check = false, sdkDirector
         assert.equal(providers.terminal.stream, "coalesced-dirty");
         assert.equal(providers.fileBrowser.pageSize, 256);
         assert.equal(providers.fileBrowser.paging, "revision-bound");
-        for (const type of ["FrontendFileBrowser", "FrontendFileBrowserSnapshot", "FrontendFileEntry", "FrontendTerminal", "FrontendTerminalSnapshot", "FrontendTerminalChange", "FrontendHistory", "FrontendHistorySnapshot", "FrontendHistoryEntry"])
+        for (const type of ["FrontendFileBrowser", "FrontendFileBrowserSnapshot", "FrontendFileEntry", "FrontendTerminal", "FrontendTerminalSnapshot", "FrontendTerminalChange", "FrontendHistory", "FrontendHistorySnapshot", "FrontendHistoryEntry", "FrontendForwarding", "FrontendForwardingSnapshot", "FrontendForwardingEntry"])
           assert.match(uiTypes, new RegExp(`export interface ${type}\\b`));
         checkProviderTypes(types, providers.targets);
         assert.equal(providers.selection, "explicit-user");
