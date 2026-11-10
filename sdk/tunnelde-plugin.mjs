@@ -64,6 +64,11 @@ export function createPlugin(
   }
   const host = Object.freeze({
     call,
+    sources: Object.freeze({
+      set: source => call("hosts.setSource", source),
+      remove: id => call("hosts.removeSource", { id }),
+      snapshot: (page = {}) => call("hosts.sourcesSnapshot", page),
+    }),
     hostList: Object.freeze({
       setDecorations: (collection) =>
         call("hostList.setDecorations", collection),

@@ -278,3 +278,5 @@ plain text. For a confirmation that can wait for the host's 55-second UI deadlin
 `host.call("ui.confirm", { message: "Continue?" }, { timeoutMs: 65000 })`; true means
 explicit confirmation, false means dismissal or UI expiry. Stop/revocation and transport
 errors can reject. See the bilingual API guide for limits and busy-dialog behavior.
+
+Experimental host discovery: `host.sources.set(source)`, `host.sources.remove(id)` and `host.sources.snapshot({ offset?, revision? })`. Discovery is runtime-owned, nonsecret and separate from saved hosts. See the [English](../docs/plugin-api.en-us.md#dynamic-host-sources-experimental) / [中文](../docs/plugin-api.zh-cn.md#动态主机来源实验性) contract for limits, revisioned pagination and connection lifetime.
