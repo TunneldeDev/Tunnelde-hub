@@ -25,6 +25,10 @@ import type { FrontendTerminal } from "./sdk/ui/terminal/surface.mjs";
 循环依赖、未导出契约和遗留生成文件都会导致校验失败；历史声明保留为兼容样例。
 分类不改变 UI SDK 0.1.0 的实验性状态或既有 RPC 协议。
 
+RPC 目录读取器单独放在 `scripts/sdk/catalogue/`，兼容历史单文件目录及按领域组合的
+新目录格式，校验全部方法文件，并在完整组装后应用稳定 Schema。
+不认识的条目、重复方法及未引用领域都会导致检查失败，避免拆文件时静默漏掉方法。
+
 仓库开发时先执行 `npm ci --ignore-scripts`，再执行 `npm test`。
 固定版本的 TypeScript 及 React/Node 声明仅用于测试，不会让插件隐式使用 Node
 运行时，也不会为插件引入第二份 React。

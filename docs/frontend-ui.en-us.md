@@ -29,6 +29,11 @@ contracts and abandoned generated files fail validation. Historical declarations
 remain a compatibility fixture. Organization does not change UI SDK 0.1.0's
 experimental status or the existing RPC protocol.
 
+The RPC catalogue reader is organized separately under `scripts/sdk/catalogue/`.
+It accepts the historical single-file catalogue and the domain composition form,
+checks all referenced method files and applies stable schemas only after complete
+assembly. Unknown entries, duplicate methods and unreferenced domains fail closed.
+
 For repository development, run `npm ci --ignore-scripts` before `npm test`.
 The pinned TypeScript and React/Node declarations are test tools only; plugins
 do not acquire an implicit Node runtime or a second React instance.
