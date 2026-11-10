@@ -16,7 +16,8 @@
         "workbench",
         "fileBrowser",
         "terminal",
-        "history"
+        "history",
+        "forwarding"
       ],
       "selection": "explicit-user",
       "hostListPermission": "hosts.read",
@@ -75,7 +76,23 @@
       "limits": {
         "perPlugin": 8
       },
-      "fallback": "built-in"
+      "fallback": "built-in",
+      "forwardingPermissions": [
+        "hosts.read",
+        "forwards.read"
+      ],
+      "forwarding": {
+        "context": "forwarding",
+        "ownership": "host-panel",
+        "optionalSlot": "Entries",
+        "pageSize": 128,
+        "pageTextLimit": 65536,
+        "paging": "revision-bound",
+        "writePermission": "forwards.write",
+        "connection": "independent-host-confirmation",
+        "acceptedOwnership": "plugin-runtime",
+        "recovery": "native-editor-and-confirmation"
+      }
     },
     "components": [
       "Button",

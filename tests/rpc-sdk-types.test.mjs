@@ -18,7 +18,17 @@ test("all legacy RPC SDK imports and domain types retain their historical contra
     moduleResolution: ts.ModuleResolutionKind.NodeNext,
     strict: true, noEmit: true, skipLibCheck: false, types: ["node"],
   });
-  assert.deepEqual(ts.getPreEmitDiagnostics(program).map(d => ts.flattenDiagnosticMessageText(d.messageText, "\n")), []);
+  // The frozen consumer deliberately assigns a new host to its old exhaustive
+  // experimental target union. That one assignment is expected to reject the
+  // additive forwarding target; every other historical consumer must compile.
+  const diagnostics = ts.getPreEmitDiagnostics(program);
+  assert.equal(diagnostics.length, 1);
+  const diagnostic = diagnostics[0];
+  assert.equal(diagnostic.code, 2322);
+  assert.equal(diagnostic.file.fileName, consumer.replaceAll("\\", "/"));
+  const location = diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start);
+  assert.match(diagnostic.file.text.split(/\r?\n/)[location.line], /^const hostToOld:/);
+  assert.match(ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n"), /extensions\.describe/);
   const checker = program.getTypeChecker();
   // Generic parameters from separate modules have distinct compiler identities;
   // their declaration text is checked alongside instantiated consumer assignments.
@@ -27,6 +37,7 @@ test("all legacy RPC SDK imports and domain types retain their historical contra
     return [symbol.name, target];
   }));
   const before = exportsOf(historical), after = exportsOf(current);
+  const widened = [];
   for (const [name, original] of before) {
     assert.ok(after.has(name), `Missing legacy export: ${name}`);
     const next = after.get(name);
@@ -38,9 +49,10 @@ test("all legacy RPC SDK imports and domain types retain their historical contra
       assert.equal(oldDeclaration.getText().replace(/\s+/g, " "), newDeclaration.getText().replace(/\s+/g, " "), `${name}: generic declaration changed`);
     } else {
       assert.ok(checker.isTypeAssignableTo(typeOf(original), typeOf(next)), `${name}: old to new`);
-      assert.ok(checker.isTypeAssignableTo(typeOf(next), typeOf(original)), `${name}: new to old`);
+      if (!checker.isTypeAssignableTo(typeOf(next), typeOf(original))) widened.push(name);
     }
   }
+  assert.deepEqual(widened.sort(), ["ExtensionDirectory", "Host", "HostMethodMap", "PluginView", "createPlugin"].sort());
   const oldMap = checker.getDeclaredTypeOfSymbol(before.get("HostMethodMap"));
   const newMap = checker.getDeclaredTypeOfSymbol(after.get("HostMethodMap"));
   assert.deepEqual(oldMap.getProperties().map(p => p.name).sort(), newMap.getProperties().map(p => p.name).sort());

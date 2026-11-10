@@ -7,6 +7,8 @@
       "ui/components/emptyState.d.mts",
       "ui/components/sdk.d.mts",
       "ui/files/browser.d.mts",
+      "ui/forwarding/entry.d.mts",
+      "ui/forwarding/provider.d.mts",
       "ui/frontend/lifecycle.d.mts",
       "ui/frontend/providers.d.mts",
       "ui/frontend/views.d.mts",
@@ -31,6 +33,11 @@
     "ui/files/browser.d.mts": [
       "react"
     ],
+    "ui/forwarding/entry.d.mts": [],
+    "ui/forwarding/provider.d.mts": [
+      "react",
+      "ui/forwarding/entry.d.mts"
+    ],
     "ui/frontend/lifecycle.d.mts": [
       "react",
       "ui/components/sdk.d.mts",
@@ -40,6 +47,7 @@
     "ui/frontend/providers.d.mts": [],
     "ui/frontend/views.d.mts": [
       "ui/files/browser.d.mts",
+      "ui/forwarding/provider.d.mts",
       "ui/history/provider.d.mts",
       "ui/terminal/surface.d.mts",
       "ui/workbench/slots.d.mts"
