@@ -10,6 +10,7 @@ import path from "node:path";
 import { createPlugin } from "../lib/sdk.mjs";
 import { startRemote } from "../remote-entry.mjs";
 import { AiPlugin } from "../lib/engine.mjs";
+import { createRunnerObserver } from "../lib/runner-observation.mjs";
 import { validateConfig } from "../lib/config.mjs";
 import { PLUGIN_ID, PROFILE_POLICY } from "../lib/identity.mjs";
 
@@ -378,6 +379,34 @@ test("lost send acknowledgement resumes from the journal without resending the o
   assert.equal(calls.filter((item) => item.method === "runners.send").length, 1);
 });
 
+for (const failure of ["busy", "notFound"]) {
+  test(`reconnecting with ${failure} preserves the original runner binding`, async () => {
+    const calls = [];
+    const host = { async call(method, params) {
+      calls.push(method);
+      assert.equal(method, "runners.status");
+      assert.deepEqual(params, { sessionId: "new-ssh", runnerId: "runner" });
+      if (failure === "busy") throw new Error("plugin.runners.busy");
+      return { status: "notFound" };
+    } };
+    const engine = new AiPlugin(host);
+    let time = 0;
+    engine.observeRunner = createRunnerObserver(host, { now: () => time, wait: async ms => { time += ms; } });
+    const session = engine.newSession();
+    session.remote = { pluginId: PLUGIN_ID, profilePolicy: structuredClone(PROFILE_POLICY),
+      sessionId: "old-ssh", runnerId: "runner", profileId: "main", revision: engine.configRevision,
+      afterSeq: 11, runId: "run-original", requestId: 42, acknowledged: true };
+    session.run = { id: "run-original" };
+    const before = structuredClone(session.remote);
+    const profile = { id: "main", remote: { sessionId: "new-ssh" } };
+    const config = { scope: { sessionIds: ["new-ssh"], remoteRoots: [{ sessionId: "new-ssh", path: "/work" }] } };
+    await assert.rejects(engine.executeRemote(profile, config, session, "ignored", new AbortController().signal, true),
+      error => error.name === "RemoteRunnerInterrupted");
+    assert.deepEqual(session.remote, before);
+    assert.equal(calls.length, failure === "busy" ? 8 : 1);
+  });
+}
+
 test("failed request identity persistence never sends a remote operation", async () => {
   const calls = [];
   const host = { async call(method) {
@@ -396,10 +425,10 @@ test("failed request identity persistence never sends a remote operation", async
   assert.deepEqual(calls, ["storage.set"]);
 });
 
-for (const failurePoint of ["send", "poll"]) {
-  test(`remote ${failurePoint} disconnect exposes recovery and never resends`, async () => {
+for (const failurePoint of ["send", "poll", "busy", "notFound", "transient-busy", "notFound-done"]) {
+  test(`remote ${failurePoint} preserves the request without resending`, async () => {
     const data = new Map();
-    let request, disconnected = true, sends = 0;
+    let request, disconnected = true, sends = 0, polls = 0;
     const host = { async call(method, params) {
       if (method === "storage.get") return data.get(params.key) ?? null;
       if (method === "storage.set") { data.set(params.key, structuredClone(params.value)); return null; }
@@ -414,8 +443,13 @@ for (const failurePoint of ["send", "poll"]) {
         return true;
       }
       if (method === "runners.poll") {
+        polls++;
+        assert.equal(params.afterSeq, 0);
         if (disconnected && failurePoint === "poll") throw new Error("connection lost");
-        return { events: [
+        if ((disconnected && failurePoint === "busy") || (failurePoint === "transient-busy" && polls < 3))
+          throw new Error("plugin.runners.busy");
+        if (disconnected && failurePoint === "notFound") return { events: [], state: { status: "notFound" } };
+        return { state: { status: failurePoint === "notFound-done" ? "notFound" : "running" }, events: [
           { seq: 1, message: { type: "response", message: { id: request.id, result: { block: {
             activeSessionId: "remote", run: { id: request.params.input.runId }, messages: [], tasks: [],
           } } } } },
@@ -425,6 +459,8 @@ for (const failurePoint of ["send", "poll"]) {
       throw new Error(`Unexpected ${method}`);
     } };
     const engine = new AiPlugin(host);
+    let time = 0;
+    engine.observeRunner = createRunnerObserver(host, { now: () => time, wait: async ms => { time += ms; } });
     await engine.command("ai.configure", { config: {
       profiles: [{ id: "main", protocol: "openai-chat", model: "model", helperBinary: "/runner",
         remote: { sessionId: "ssh", platform: "posix", directory: "/runner", executable: "/node" } }],
@@ -433,14 +469,23 @@ for (const failurePoint of ["send", "poll"]) {
     await preparedRuntime(engine);
     await engine.command("ai.send", { message: "hello" });
     await [...engine.runs.values()][0].done;
+    if (["transient-busy", "notFound-done"].includes(failurePoint)) {
+      assert.equal(engine.block().run.status, "done");
+      assert.equal(polls, failurePoint === "transient-busy" ? 3 : 1);
+      assert.equal(sends, 1);
+      await engine.shutdown();
+      return;
+    }
     assert.equal(engine.block().run.status, "interrupted");
     assert.ok(engine.block().tasks.some((task) => task.recoverable && task.status === "interrupted"));
     assert.equal(data.get("ai.sessions").sessions[0].run.status, "interrupted");
+    assert.equal(polls, failurePoint === "send" ? 0 : failurePoint === "busy" ? 8 : 1);
     disconnected = false;
     await engine.command("ai.recover", { action: "resume" });
     await [...engine.runs.values()][0].done;
     assert.equal(engine.block().run.status, "done");
     assert.equal(sends, 1);
+    await engine.shutdown();
   });
 }
 
@@ -514,7 +559,7 @@ test("native runner and real plugin protocol recover a lost enqueue acknowledgem
     await callRunner("start", ["--config", configPath, "--executable", process.execPath, "--entry", path.resolve("plugins/tunnelde-ai/remote-entry.mjs")], { secrets: { "provider.main": "fixture" } });
     started = true;
     const data = new Map();
-    let sends = 0;
+    let sends = 0, polls = 0;
     const host = { async call(method, params) {
       if (method === "storage.get") return data.get(params.key) ?? null;
       if (method === "storage.set") { data.set(params.key, structuredClone(params.value)); return null; }
@@ -525,7 +570,10 @@ test("native runner and real plugin protocol recover a lost enqueue acknowledgem
         await callRunner("send", [], params.message);
         throw new Error("simulated lost acknowledgement");
       }
-      if (method === "runners.poll") return callRunner("poll", ["--after", String(params.afterSeq)]);
+      if (method === "runners.poll") {
+        if (++polls <= 2) throw new Error("plugin.runners.busy");
+        return callRunner("poll", ["--after", String(params.afterSeq)]);
+      }
       throw new Error(`Unexpected ${method}`);
     } };
     const engine = new AiPlugin(host);
@@ -542,6 +590,7 @@ test("native runner and real plugin protocol recover a lost enqueue acknowledgem
     await restarted.executeRemote(outerProfile, outerConfig, restored, "ignored", new AbortController().signal, true);
     assert.equal(sends, 1);
     assert.equal(requests, 1);
+    assert.ok(polls >= 3);
     assert.ok(restored.history.some((item) => item.content?.includes("recovered answer")));
   } finally {
     if (started) {
