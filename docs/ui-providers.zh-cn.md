@@ -1,5 +1,7 @@
 # 界面提供者
 
+[进程管理提供者契约](processes-ui.zh-cn.md)
+
 [English](ui-providers.en-us.md) · [可信 UI SDK](frontend-ui.zh-cn.md)
 
 [监控界面提供者契约](monitor-ui.zh-cn.md)

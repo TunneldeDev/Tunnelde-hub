@@ -110,7 +110,7 @@ export async function syncSdk(applicationDirectory, { check = false, sdkDirector
       if (directory.frontend.providers) {
         const providers = directory.frontend.providers;
         assert.equal(providers.manifest, "views[].provider");
-        assert.deepEqual(providers.targets, ["hostList", "workbench", "fileBrowser", "terminal", "history", "forwarding", "monitor", "backgroundTasks"]);
+        assert.deepEqual(providers.targets, ["hostList", "workbench", "fileBrowser", "terminal", "history", "forwarding", "monitor", "backgroundTasks", "processes"]);
         assert.deepEqual(providers.fileBrowserPermissions, ["fs.read", "sftp.read", "workspace.write"]);
         assert.deepEqual(providers.terminalPermissions, ["sessions.read", "ssh.exec"]);
         assert.deepEqual(providers.forwardingPermissions, ["hosts.read", "forwards.read"]);
@@ -120,6 +120,12 @@ export async function syncSdk(applicationDirectory, { check = false, sdkDirector
         assert.equal(providers.backgroundTasks.pageTextLimit, 65536);
         assert.equal(directory.frontend.backgroundTasks.pendingLimit, 8);
         assert.equal(directory.frontend.backgroundTasks.cancellation, "cooperative-settlement");
+        assert.deepEqual(providers.processesPermissions, ["sessions.read", "monitor.read"]);
+        assert.equal(providers.processes.optionalSlot, "Entries");
+        assert.equal(providers.processes.pageSize, 128);
+        assert.equal(providers.processes.pageTextLimit, 65536);
+        assert.equal(providers.processes.writePermission, "monitor.write");
+        assert.equal(providers.processes.termination, "native-confirmation-with-live-authorization-and-identity");
         assert.deepEqual(providers.monitorPermissions, ["sessions.read", "monitor.read"]);
         assert.equal(providers.monitor.ownership, "host-view");
         assert.deepEqual(providers.monitor.presentations, ["page", "panel"]);
@@ -146,7 +152,7 @@ export async function syncSdk(applicationDirectory, { check = false, sdkDirector
         assert.equal(providers.terminal.stream, "coalesced-dirty");
         assert.equal(providers.fileBrowser.pageSize, 256);
         assert.equal(providers.fileBrowser.paging, "revision-bound");
-        for (const type of ["FrontendFileBrowser", "FrontendFileBrowserSnapshot", "FrontendFileEntry", "FrontendTerminal", "FrontendTerminalSnapshot", "FrontendTerminalChange", "FrontendHistory", "FrontendHistorySnapshot", "FrontendHistoryEntry", "FrontendForwarding", "FrontendForwardingSnapshot", "FrontendForwardingEntry", "FrontendMonitor", "FrontendMonitorSnapshot", "FrontendMonitorReading", "FrontendMonitorSample", "FrontendBackgroundTaskEntry", "FrontendTaskProgress", "FrontendBackgroundTasks", "FrontendBackgroundTasksSnapshot", "FrontendBackgroundTaskRunner", "FrontendBackgroundTaskOptions", "FrontendBackgroundTaskContext"])
+        for (const type of ["FrontendFileBrowser", "FrontendFileBrowserSnapshot", "FrontendFileEntry", "FrontendTerminal", "FrontendTerminalSnapshot", "FrontendTerminalChange", "FrontendHistory", "FrontendHistorySnapshot", "FrontendHistoryEntry", "FrontendForwarding", "FrontendForwardingSnapshot", "FrontendForwardingEntry", "FrontendMonitor", "FrontendMonitorSnapshot", "FrontendMonitorReading", "FrontendMonitorSample", "FrontendBackgroundTaskEntry", "FrontendTaskProgress", "FrontendBackgroundTasks", "FrontendBackgroundTasksSnapshot", "FrontendBackgroundTaskRunner", "FrontendBackgroundTaskOptions", "FrontendBackgroundTaskContext", "FrontendProcessEntry", "FrontendProcessSort", "FrontendProcesses", "FrontendProcessesSnapshot"])
           assert.match(uiTypes, new RegExp(`export interface ${type}\\b`));
         checkProviderTypes(types, providers.targets);
         assert.equal(providers.selection, "explicit-user");

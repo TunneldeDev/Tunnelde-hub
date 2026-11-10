@@ -19,3 +19,6 @@ export type { FrontendMonitor, FrontendMonitorSnapshot } from "./ui/monitor/prov
 export type * from "./ui/backgroundTasks/entry.mjs";
 export type * from "./ui/backgroundTasks/execution.mjs";
 export type * from "./ui/backgroundTasks/provider.mjs";
+export type * from "./ui/monitor/processes/entry.mjs";
+export type * from "./ui/monitor/processes/query.mjs";
+export type * from "./ui/monitor/processes/provider.mjs";

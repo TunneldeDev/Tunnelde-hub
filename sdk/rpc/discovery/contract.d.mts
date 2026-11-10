@@ -14,7 +14,7 @@ export interface ExtensionDirectory {
     };
     providers?: {
       manifest: "views[].provider";
-      targets: ("hostList" | "workbench" | "fileBrowser" | "terminal" | "history" | "forwarding" | "monitor" | "backgroundTasks")[];
+      targets: ("hostList" | "workbench" | "fileBrowser" | "terminal" | "history" | "forwarding" | "monitor" | "backgroundTasks" | "processes")[];
       selection: "explicit-user";
       hostListPermission: "hosts.read";
       fileBrowserPermissions: string[];
@@ -30,6 +30,14 @@ export interface ExtensionDirectory {
         context: "backgroundTasks"; ownership: "host-panel"; presentations: ("floating" | "embedded")[];
         optionalSlot: "Entries"; pageSize: number; pageTextLimit: number; paging: "revision-bound";
         writePermission: "backgroundTasks.write"; visibility: "visible-tasks-only"; recovery: "native-toolbar-and-confirmation";
+      };
+      processesPermissions?: string[];
+      processes?: {
+        context: "processes"; ownership: "host-dialog"; optionalSlot: "Entries";
+        pageSize: number; pageTextLimit: number; paging: "revision-bound";
+        writePermission: "monitor.write";
+        termination: "native-confirmation-with-live-authorization-and-identity";
+        sampling: "shared-visible-consumers"; query: "at-prefixed-filters";
       };
       monitorPermissions?: string[];
       monitor?: {

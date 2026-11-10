@@ -1,5 +1,7 @@
 # Interface providers
 
+[Process manager provider contract](processes-ui.en-us.md)
+
 [简体中文](ui-providers.zh-cn.md) · [Trusted UI SDK](frontend-ui.en-us.md)
 
 [Monitoring provider contract](monitor-ui.en-us.md)
