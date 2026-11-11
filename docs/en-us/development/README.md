@@ -34,3 +34,4 @@
 - [Loaded editor buffer data](editor-buffers.md)
 
 - [Profile metadata subscriptions](profiles-observation.md)
+- [Persisted log reading and subscriptions](logging.md)

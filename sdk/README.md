@@ -1,5 +1,8 @@
 # Tunnelde plugin SDK
 
+Experimental persisted log reading and cancellable cursor subscriptions:
+[English](../docs/en-us/development/logging.md) · [简体中文](../docs/zh-cn/development/logging.md).
+
 Public preference conditional reads and abortable observation:
 [English](../docs/en-us/development/preferences-observation.md) · [简体中文](../docs/zh-cn/development/preferences-observation.md).
 

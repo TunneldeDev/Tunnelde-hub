@@ -378,6 +378,7 @@
       "namespaces": [
         "events",
         "log",
+        "logs",
         "secrets"
       ]
     }

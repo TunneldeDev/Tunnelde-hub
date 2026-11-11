@@ -2852,6 +2852,17 @@
       "deprecated": null
     },
     {
+      "name": "logs.read",
+      "permissions": [
+        "logs.read"
+      ],
+      "params": "{source?:'diagnostics'|'operations',cursor?:string,filter?:{domains?:string[],plugins?:string[],levels?:string[],text?:string},limit?:number}",
+      "description": "Read bounded persisted structured log pages under an independent grant covering application and other plugins. Opaque cursors are bound to owner/runtime/process/source/filter, never select paths. Reports gaps/reset on rotation, truncation or malformed records; partial tails wait for append. Initial diagnostics start within recent 256KiB of current log; operations retention1000. Page<=128KiB, limit1..200(default100). Not reliable audit delivery. See logging read schema for exact wire contract.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
       "name": "log",
       "permissions": [
         "log"

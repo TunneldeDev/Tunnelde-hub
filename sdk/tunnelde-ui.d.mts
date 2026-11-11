@@ -47,3 +47,6 @@ export type * from "./ui/storage/locations/location.mjs";
 export type * from "./ui/storage/locations/snapshot.mjs";
 export type * from "./ui/storage/locations/observation.mjs";
 export type * from "./ui/storage/locations/mutation.mjs";
+export type * from "./ui/logging/entry.mjs";
+export type * from "./ui/logging/query.mjs";
+export type * from "./ui/logging/page.mjs";
