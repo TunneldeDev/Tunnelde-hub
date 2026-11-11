@@ -100,8 +100,12 @@
       "ui/editor/data/identity.d.mts"
     ],
     "ui/files/browser.d.mts": [
-      "react"
+      "react",
+      "ui/files/browser/actions.d.mts",
+      "ui/files/browser/data.d.mts"
     ],
+    "ui/files/browser/actions.d.mts": [],
+    "ui/files/browser/data.d.mts": [],
     "ui/forwarding/entry.d.mts": [],
     "ui/forwarding/provider.d.mts": [
       "react",

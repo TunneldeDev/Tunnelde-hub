@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { knownPermissions } from "./plugins/permissions.mjs";
 import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve, dirname } from "node:path";
@@ -41,43 +42,6 @@ export function validateManifest(manifest, id) {
   validateHostFields(manifest.hostFields, manifest.permissions);
   validateConfiguration(manifest.configuration);
   validateRemoteRunner(manifest);
-  const knownPermissions = new Set([
-    "ui.trusted",
-    "log",
-    "app.read",
-    "settings.read",
-    "settings.write",
-    "hosts.read",
-    "hosts.write",
-    "sessions.read",
-    "ssh.exec",
-    "fs.read",
-    "fs.write",
-    "sftp.read",
-    "sftp.write",
-    "monitor.read",
-    "monitor.write",
-    "history.read",
-    "history.write",
-    "workspace.read",
-    "workspace.write",
-    "editor.read",
-    "editor.write",
-    "clipboard.read",
-    "clipboard.write",
-    "app.openExternal",
-    "network",
-    "process.exec",
-    "secrets",
-    "mounts.read",
-    "mounts.write",
-    "forwards.read",
-    "forwards.write",
-    "storage.locations.read",
-    "storage.locations.write",
-    "backgroundTasks.read",
-    "backgroundTasks.write",
-  ]);
   for (const permission of manifest.permissions)
     assert.ok(knownPermissions.has(permission), `${id}: unknown permission ${permission}`);
   if (manifest.frontend !== undefined) {

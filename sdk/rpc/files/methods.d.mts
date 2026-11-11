@@ -1,7 +1,12 @@
 import type { Listing } from "./contract.mjs";
 import type { TransferEvent } from "./transfers.mjs";
+import type { FileBrowserObservationRequest, FileBrowserObservation, FileBrowserReadRequest, FileBrowserPage } from "./browser/data.mjs";
+import type { FileBrowserAction, FileBrowserActionResult } from "./browser/actions.mjs";
 
 export interface FilesMethodMap {
+  "fileBrowser.observe": [FileBrowserObservationRequest, FileBrowserObservation];
+  "fileBrowser.read": [FileBrowserReadRequest, FileBrowserPage];
+  "fileBrowser.action": [FileBrowserAction, FileBrowserActionResult];
   "files.transferStatus": [{ transferId: string }, TransferEvent | null];
   "files.upload": [
     {

@@ -38,3 +38,5 @@
 - [公共 Profile 正文](profiles-content.md)
 
 - [公共 Profile 写入与启用](profiles-mutations.md)
+
+- [文件浏览器实时数据与操作](file-browser-data.md)
