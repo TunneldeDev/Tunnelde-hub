@@ -26,6 +26,28 @@ const missingRevision: PreferenceUpdate = { changes: {} };
 snapshot.values.network.profiles[0].password;
 void privateField; void invalidTheme; void incompleteReplacement; void missingRevision;
 
+import { createPreferencesClient } from "../../../sdk/preferences/client.mjs";
+const preferences = createPreferencesClient(host);
+const observation = await preferences.observe({ revision: snapshot.revision });
+if (observation.changed) {
+  const revision: string = observation.snapshot.revision;
+  void revision;
+} else {
+  // @ts-expect-error Unchanged reads do not carry a snapshot.
+  observation.snapshot.values;
+}
+const owner = new AbortController();
+const subscription = preferences.subscribe(async value => { void value.values.appearance.theme; }, { signal: owner.signal });
+subscription.stop();
+const completed = await subscription.done;
+if (completed.reason === "failed") { const failure: unknown = completed.error; void failure; }
+// @ts-expect-error A subscription must be bound to its owner lifetime.
+preferences.subscribe(() => {});
+// @ts-expect-error Strict facade has no arbitrary method fallback.
+await preferences.call("settings.get", {});
+// @ts-expect-error Observation revision is a string.
+await preferences.observe({ revision: 1 });
+
 
 import type { FrontendPreferences, PreferenceUpdate as UiPreferenceUpdate } from "../../../sdk/tunnelde-ui.mjs";
 import type { FrontendPreferences as DomainPreferences } from "../../../sdk/ui/preferences/provider.mjs";

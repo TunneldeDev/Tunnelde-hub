@@ -2,6 +2,8 @@
 
 [简体中文](../../zh-cn/development/preferences-ui.md) · [Interface providers](ui-providers.md)
 
+For observation outside a page, see [Public preference observation](preferences-observation.md).
+
 A trusted component view may declare `provider: "preferences"`. It requires
 `ui.trusted` and `settings.read`; `settings.write` is optional. Users explicitly
 select the provider under interface providers. Installation never selects it.

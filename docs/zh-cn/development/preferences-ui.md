@@ -2,6 +2,8 @@
 
 [English](../../en-us/development/preferences-ui.md) · [界面提供者](ui-providers.md)
 
+无需页面的状态观察见[公开设置变更观察](preferences-observation.md)。
+
 受信任组件视图可声明 `provider: "preferences"`，需要 `ui.trusted` 与
 `settings.read`；写入额外需要 `settings.write`。用户在界面提供者中主动选择，
 安装插件不会自动替换设置表单。
