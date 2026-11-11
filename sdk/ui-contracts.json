@@ -88,6 +88,7 @@
       "ui/monitor/processes/provider.d.mts",
       "ui/monitor/provider.d.mts",
       "ui/preferences/provider.d.mts",
+      "ui/runtime/resources.d.mts",
       "ui/search/quickAccess/provider.d.mts",
       "ui/terminal/surface.d.mts",
       "ui/workbench/slots.d.mts"

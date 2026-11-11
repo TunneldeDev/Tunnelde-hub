@@ -5,6 +5,7 @@ import type { FrontendTerminal } from "../terminal/surface.mjs";
 import type { FrontendHistory } from "../history/provider.mjs";
 import type { FrontendForwarding } from "../forwarding/provider.mjs";
 import type { FrontendMonitor } from "../monitor/provider.mjs";
+import type { UiResourceScope } from "../runtime/resources.mjs";
 
 import type { FrontendBackgroundTasks } from "../backgroundTasks/provider.mjs";
 
@@ -16,6 +17,11 @@ export interface FrontendViewProps {
   pluginId: string;
   viewId: string;
   visible: boolean;
+  /** Experimental per-mounted-instance lifetime; absent on older hosts.
+   * Shares the module budget. Hidden retained views remain live; unmount retires it.
+   * Native handles and durable tasks retain their explicit ownership contracts.
+   */
+  resources?: UiResourceScope;
   /** Present only for a user-selected workbench provider. Mount Workspace synchronously
    * exactly once and keep it mounted. Omitting other surfaces is allowed.
    */
