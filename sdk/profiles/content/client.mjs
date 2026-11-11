@@ -4,16 +4,20 @@ import { profileValues } from "./values.mjs";
 /** Sequential bounded assembly; no half-body delivery or cross-version retries. */
 export function createContentClient(host) {
   let pending = 0;
+  const checkSignal = signal => {
+    if (signal.aborted) throw signal.reason ?? new DOMException("Profile read aborted", "AbortError");
+  };
   const read = async (input, options) => {
     if (!record(input) || Object.keys(input).some(key => key !== "id" && key !== "revision") ||
         !validId(input.id) || !contentRevision(input.revision) || !record(options) ||
         Object.keys(options).some(key => key !== "signal" && key !== "timeoutMs") ||
-        !(options.signal instanceof AbortSignal) ||
+        !options.signal || typeof options.signal.aborted !== "boolean" ||
+        typeof options.signal.addEventListener !== "function" || typeof options.signal.removeEventListener !== "function" ||
         options.timeoutMs !== undefined && (!Number.isInteger(options.timeoutMs) || options.timeoutMs < 1 || options.timeoutMs > 120_000))
       throw new TypeError("Invalid profile content request or owner");
     const { id, revision } = input;
     const owner = options.signal;
-    owner.throwIfAborted();
+    checkSignal(owner);
     if (pending >= 4) throw new Error("Too many profile content operations");
     pending++;
     const controller = new AbortController(), budget = options.timeoutMs ?? 30_000;
@@ -21,7 +25,7 @@ export function createContentClient(host) {
     const abort = () => controller.abort(owner.reason);
     owner.addEventListener("abort", abort, { once: true });
     const timer = setTimeout(() => controller.abort(new DOMException("Profile read timed out", "TimeoutError")), budget);
-    const check = () => { controller.signal.throwIfAborted(); if (performance.now() >= deadline) throw new DOMException("Profile read timed out", "TimeoutError"); };
+    const check = () => { checkSignal(controller.signal); if (performance.now() >= deadline) throw new DOMException("Profile read timed out", "TimeoutError"); };
     try {
       const parts = [];
       let offset = 0, total;

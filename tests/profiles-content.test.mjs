@@ -142,6 +142,21 @@ test("real stdio abort sends a cancellation control frame and rejects late respo
   } finally { runtime.close(); }
 });
 
+test("schema modules need no JSON import attributes and foreign-realm owners work without throwIfAborted", async () => {
+  for (const name of ["values", "validation", "client"]) {
+    const source = await readFile(new URL(`../sdk/profiles/content/${name}.mjs`, import.meta.url), "utf8");
+    assert.doesNotMatch(source, /with\s*\{\s*type:|throwIfAborted|instanceof AbortSignal/);
+  }
+  const controller = new AbortController();
+  const signal = { get aborted() { return controller.signal.aborted; },
+    get reason() { return controller.signal.reason; },
+    addEventListener: (...args) => controller.signal.addEventListener(...args),
+    removeEventListener: (...args) => controller.signal.removeEventListener(...args) };
+  const client = createProfilesClient({ call: async (_method, request) => response(JSON.stringify(values), request) });
+  assert.deepEqual(await client.read({ id, revision }, { signal }), values);
+  assert.equal(getEventListeners(controller.signal, "abort").length, 0);
+});
+
 test("actual large Rust profile producer satisfies catalogue, segmented SDK assembly and preference schema", { skip: !process.env.TUNNELDE_PROFILE_CONTENT_OUTPUT }, async () => {
   const fixture = JSON.parse(await readFile(process.env.TUNNELDE_PROFILE_CONTENT_OUTPUT, "utf8"));
   const calls = [], client = createProfilesClient({ call: async (method, request) => {

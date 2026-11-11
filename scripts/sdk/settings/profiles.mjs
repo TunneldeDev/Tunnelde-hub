@@ -27,5 +27,11 @@ export async function syncProfilesContracts(applicationDirectory, sdkDirectory, 
     const text = JSON.stringify(content, null, 2) + "\n";
     if (check) assert.equal((await readFile(target, "utf8")).replaceAll("\r\n", "\n"), text, "Profile content schema differs");
     else { await mkdir(dirname(target), { recursive: true }); await writeFile(target, text); }
+    const limitsPath = join(sdkDirectory, "profiles/content/limits.mjs");
+    const limits = "// Generated from the profile content schema; run sdk:sync to update.\n" +
+      `export const MAX_CONTENT_BYTES = ${content.definitions.chunk.properties.totalBytes.maximum};\n` +
+      `export const MAX_CHUNK_BYTES = ${content.definitions.readRequest.properties.limit.maximum};\n`;
+    if (check) assert.equal((await readFile(limitsPath, "utf8")).replaceAll("\r\n", "\n"), limits, "Profile content limits differ");
+    else await writeFile(limitsPath, limits);
   }
 }

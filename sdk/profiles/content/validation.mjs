@@ -1,8 +1,7 @@
-import schema from "./schema.json" with { type: "json" };
+import { MAX_CONTENT_BYTES, MAX_CHUNK_BYTES } from "./limits.mjs";
 import { observation } from "../observation.mjs";
 
-export const MAX_CONTENT_BYTES = schema.definitions.chunk.properties.totalBytes.maximum;
-export const MAX_CHUNK_BYTES = schema.definitions.readRequest.properties.limit.maximum;
+export { MAX_CONTENT_BYTES, MAX_CHUNK_BYTES } from "./limits.mjs";
 export const record = value => value !== null && typeof value === "object" && !Array.isArray(value);
 export const validId = value => typeof value === "string" && value.length > 0 &&
   new TextEncoder().encode(value).length <= 128 && !/[\p{Cc}\uD800-\uDFFF]/u.test(value);

@@ -53,7 +53,7 @@ if (item) {
 ```
 
 Use a transport that honors cancellation/deadlines; plain trusted-UI `api.call`
-alone does not guarantee this. Distribute the referenced preferences JSON schema,
+alone does not guarantee this. Distribute the referenced generated preferences schema module,
 profiles modules, runtime observation modules and declarations with the facade.
 No Node globals or user Node runtime are required. Results are detached and deeply
 frozen. Reads require an owner AbortSignal and a single total deadline (default

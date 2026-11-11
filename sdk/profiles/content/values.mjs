@@ -1,10 +1,10 @@
-import schema from "../../preferences/schema.json" with { type: "json" };
+import schema from "../../preferences/schema.mjs";
 import { record } from "./validation.mjs";
 
 // Only the fixed, mirrored public preference vocabulary is interpreted. This is
 // not a plugin-supplied schema engine or a projection of arbitrary native stores.
 function valid(rule, value, depth = 0) {
-  if (depth > 24) return false;
+  if (!record(rule) || depth > 24) return false;
   if (rule.anyOf) return rule.anyOf.some(choice => valid(choice, value, depth + 1));
   if (rule.enum && !rule.enum.includes(value)) return false;
   switch (rule.type) {
