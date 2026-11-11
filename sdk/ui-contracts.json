@@ -42,6 +42,9 @@
       "ui/search/field.d.mts",
       "ui/search/quickAccess/entry.d.mts",
       "ui/search/quickAccess/provider.d.mts",
+      "ui/storage/pluginData/json.d.mts",
+      "ui/storage/pluginData/observation.d.mts",
+      "ui/storage/pluginData/snapshot.d.mts",
       "ui/terminal/surface.d.mts",
       "ui/workbench/slots.d.mts"
     ],
@@ -211,6 +214,13 @@
     "ui/search/quickAccess/provider.d.mts": [
       "react",
       "ui/search/quickAccess/entry.d.mts"
+    ],
+    "ui/storage/pluginData/json.d.mts": [],
+    "ui/storage/pluginData/observation.d.mts": [
+      "ui/storage/pluginData/snapshot.d.mts"
+    ],
+    "ui/storage/pluginData/snapshot.d.mts": [
+      "ui/storage/pluginData/json.d.mts"
     ],
     "ui/terminal/surface.d.mts": [
       "react"

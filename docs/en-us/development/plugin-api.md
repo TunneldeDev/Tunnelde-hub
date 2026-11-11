@@ -221,3 +221,5 @@ complete semantics, and `examples/trusted-ui` for a composition example. This is
 trusted host-context code, not a sandbox or a new permission grant.
 
 [Runtime resource lifecycle](runtime-resources.md): strict facade, ownership, paging and disposal semantics.
+
+[Plugin-owned storage observation](storage-observation.md).

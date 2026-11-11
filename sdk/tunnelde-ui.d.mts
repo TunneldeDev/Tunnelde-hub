@@ -40,3 +40,6 @@ export type * from "./ui/editor/data/identity.mjs";
 export type * from "./ui/editor/data/observation.mjs";
 export type * from "./ui/editor/data/range.mjs";
 export type * from "./ui/editor/data/edits.mjs";
+export type * from "./ui/storage/pluginData/json.mjs";
+export type * from "./ui/storage/pluginData/snapshot.mjs";
+export type * from "./ui/storage/pluginData/observation.mjs";
