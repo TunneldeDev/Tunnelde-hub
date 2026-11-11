@@ -298,3 +298,5 @@ explicit confirmation, false means dismissal or UI expiry. Stop/revocation and t
 errors can reject. See the bilingual API guide for limits and busy-dialog behavior.
 
 Experimental host discovery: `host.sources.set(source)`, `host.sources.remove(id)` and `host.sources.snapshot({ offset?, revision? })`. Discovery is runtime-owned, nonsecret and separate from saved hosts. See the [English](../docs/en-us/development/plugin-api.md#dynamic-host-sources-experimental) / [中文](../docs/zh-cn/development/plugin-api.md#动态主机来源实验性) contract for limits, revisioned pagination and connection lifetime.
+
+Experimental profile metadata: [English](../docs/en-us/development/profiles-observation.md) · [简体中文](../docs/zh-cn/development/profiles-observation.md).

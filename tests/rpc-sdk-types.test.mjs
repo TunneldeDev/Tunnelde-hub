@@ -77,7 +77,7 @@ test("all legacy RPC SDK imports and domain types retain their historical contra
   }
   assert.deepEqual(widenedMethods.sort(), ["extensions.describe", "runners.poll", "runners.status"]);
   assert.deepEqual(newMap.getProperties().map(p => p.name).filter(name => !oldNames.has(name)).sort(),
-    ["configuration.backups", "configuration.deleteBackup", "configuration.migrate", "configuration.restore", "configuration.schema", "configuration.snapshot", "configuration.update", "editor.applyEdits", "editor.observe", "editor.readRange", "preferences.observe", "preferences.schema", "preferences.snapshot", "preferences.update", "resources.identify", "resources.release", "resources.snapshot", "runners.review", "runners.startInitialized"]);
+    ["configuration.backups", "configuration.deleteBackup", "configuration.migrate", "configuration.restore", "configuration.schema", "configuration.snapshot", "configuration.update", "editor.applyEdits", "editor.observe", "editor.readRange", "preferences.observe", "preferences.schema", "preferences.snapshot", "preferences.update", "profiles.observe", "resources.identify", "resources.release", "resources.snapshot", "runners.review", "runners.startInitialized"]);
   // Freeze normalized text so fixture changes cannot silently make compatibility pass.
   const hash = createHash("sha256").update(readFileSync(historical, "utf8").replaceAll("\r\n", "\n")).digest("hex");
   assert.equal(hash, "d50bf0fdcdbe2eb0dd6b538981ccd82a93d2eb0d2128b565c56c8b02a16fb309");

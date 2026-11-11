@@ -31,3 +31,5 @@
 - [Interface providers](ui-providers.md)
 
 - [Loaded editor buffer data](editor-buffers.md)
+
+- [Profile metadata subscriptions](profiles-observation.md)

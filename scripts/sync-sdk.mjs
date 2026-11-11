@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 import { checkUiContractFiles, loadUiContracts } from "./sdk/ui-contracts.mjs";
 import { loadRpcDeclarations } from "./sdk/rpc/declarations.mjs";
 import { syncPreferencesContracts } from "./sdk/settings/preferences.mjs";
+import { syncProfilesContracts } from "./sdk/settings/profiles.mjs";
 import { syncEditorContracts } from "./sdk/editor/contracts.mjs";
 import { syncConfigurationContracts } from "./sdk/configuration/contracts.mjs";
 import { checkConfigurationPoint } from "./sdk/configuration/discovery.mjs";
@@ -89,6 +90,8 @@ async function syncWorkspaceTypes(applicationDirectory, sdkSource, catalogue, ch
 export async function syncSdk(applicationDirectory, { check = false, sdkDirectory = join(root, "sdk") } = {}) {
   const source = resolve(applicationDirectory);
   const catalogue = await loadRustCatalogue(source);
+  if (catalogue.methods.some(({ name }) => name === "profiles.observe"))
+    await syncProfilesContracts(source, sdkDirectory, check);
   if (catalogue.methods.some(({ name }) => name === "editor.observe"))
     await syncEditorContracts(source, sdkDirectory, check);
   if (catalogue.methods.some(({ name }) => name === "resources.snapshot"))
