@@ -179,3 +179,5 @@ kind 为 info、success 或 error；省略或 null 使用 info。返回 null 仅
 组合示例见 `examples/trusted-ui`。这是宿主上下文的可信代码，不是沙箱，也不额外授予权限。
 
 [运行资源生命周期](runtime-resources.md)：严格客户端、所有权、分页与释放语义。
+
+[插件自有存储观察](storage-observation.md)。

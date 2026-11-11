@@ -77,3 +77,7 @@ export type * from "./rpc/runtime/resources/data/resource.mjs";
 export type * from "./rpc/runtime/resources/data/snapshot.mjs";
 export type * from "./rpc/runtime/resources/data/release.mjs";
 export type * from "./rpc/runtime/resources/discovery.mjs";
+export type * from "./rpc/storage/pluginData/json.mjs";
+export type * from "./rpc/storage/pluginData/snapshot.mjs";
+export type * from "./rpc/storage/pluginData/observation.mjs";
+export type * from "./rpc/storage/pluginData/client.mjs";

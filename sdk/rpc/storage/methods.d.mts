@@ -1,4 +1,6 @@
+import type { PluginStorageObservationRequest, PluginStorageObservation } from "./pluginData/observation.mjs";
 export interface StorageMethodMap {
+  "storage.observe": [PluginStorageObservationRequest, PluginStorageObservation];
   "secrets.get": [{ key: string }, string | null];
   "secrets.set": [{ key: string; value: string }, null];
   "secrets.delete": [{ key: string }, null];
