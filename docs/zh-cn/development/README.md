@@ -28,3 +28,5 @@
 - [标签栏扩展](tab-bar.md)
 - [终端提供者（实验性）](terminal-ui.md)
 - [界面提供者](ui-providers.md)
+
+- [已加载编辑器缓冲区数据](editor-buffers.md)

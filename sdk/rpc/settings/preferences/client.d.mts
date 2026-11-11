@@ -2,18 +2,10 @@ import type { PreferenceSnapshot } from "./snapshot.mjs";
 import type { PreferenceSchema } from "./schema.mjs";
 import type { PreferenceUpdate } from "./update.mjs";
 import type { PreferenceObservation, PreferenceObservationRequest } from "./observation.mjs";
+import type { DataObservationResult, DataObservationSubscription } from "../../runtime/observation/subscription.mjs";
 
-export type PreferenceObservationResult =
-  | { readonly reason: "stopped" | "aborted" }
-  | { readonly reason: "failed"; readonly error: unknown };
-
-export interface PreferenceSubscription {
-  /** Suppress future callbacks and abort a pending read. Idempotent. */
-  stop(): void;
-  readonly closed: boolean;
-  /** Resolves after pending transport/callback settlement; never rejects. */
-  readonly done: Promise<PreferenceObservationResult>;
-}
+export type PreferenceObservationResult = DataObservationResult;
+export interface PreferenceSubscription extends DataObservationSubscription {}
 
 export interface PreferencesClient {
   schema(): Promise<PreferenceSchema>;

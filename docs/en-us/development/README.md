@@ -29,3 +29,5 @@
 - [Tab bar contributions](tab-bar.md)
 - [Terminal provider (experimental)](terminal-ui.md)
 - [Interface providers](ui-providers.md)
+
+- [Loaded editor buffer data](editor-buffers.md)

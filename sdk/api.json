@@ -1801,6 +1801,39 @@
       }
     },
     {
+      "name": "editor.observe",
+      "permissions": [
+        "editor.read"
+      ],
+      "params": "{tabId?:string,revision?:string}",
+      "description": "Observe ready buffer metadata only, with a bounded opaque conditional revision. Omit tabId for the active tab. Latest-state observation may coalesce changes; no disk IO or content. Experimental schemaVersion 1.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "editor.readRange",
+      "permissions": [
+        "editor.read"
+      ],
+      "params": "{tabId:string,documentId:string,version:number,offset:number,limit?:number}",
+      "description": "Read a version-bound loaded buffer range. UTF-16 offsets, limit 2-16384 (default 16384), scalar boundaries only. Reject stale or unavailable buffers. No disk IO. Experimental schemaVersion 1.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "editor.applyEdits",
+      "permissions": [
+        "editor.write"
+      ],
+      "params": "{tabId:string,documentId:string,version:number,edits:array}",
+      "description": "Apply at most 128 ascending nonoverlapping original-buffer edits in one undo step. Distinct starts, scalar boundaries, well-formed replacement text totaling at most 64KiB UTF-8; resulting buffer at most 2MiB. Exact identity/version required. Never saves. Experimental schemaVersion 1.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
       "name": "editor.active",
       "permissions": [
         "editor.read"

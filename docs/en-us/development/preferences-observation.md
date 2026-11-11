@@ -22,7 +22,7 @@ const result = await subscription.done;
 if (result.reason === "failed") reportError(result.error);
 ```
 
-Distribute the `sdk/preferences/` runtime directory with its declarations and
+Distribute the `sdk/preferences/` + `sdk/runtime/observation/` runtime directory with its declarations and
 referenced `rpc/` types. The client has no runtime dependencies or Node globals;
 pass an authorized host transport implementing `call` cancellation and timeouts.
 It does not select or install a runtime. The facade also exposes `schema()`,
