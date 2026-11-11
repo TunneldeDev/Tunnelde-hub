@@ -14,6 +14,8 @@ import { loadRpcDeclarations } from "./sdk/rpc/declarations.mjs";
 import { syncPreferencesContracts } from "./sdk/settings/preferences.mjs";
 import { syncProfilesContracts } from "./sdk/settings/profiles.mjs";
 import { syncEditorContracts } from "./sdk/editor/contracts.mjs";
+import { syncFileBrowserContracts } from "./sdk/files/browser/contracts.mjs";
+import { checkPermissionCoverage } from "./sdk/permissions.mjs";
 import { syncConfigurationContracts } from "./sdk/configuration/contracts.mjs";
 import { checkConfigurationPoint } from "./sdk/configuration/discovery.mjs";
 
@@ -94,6 +96,8 @@ async function syncWorkspaceTypes(applicationDirectory, sdkSource, catalogue, ch
 export async function syncSdk(applicationDirectory, { check = false, sdkDirectory = join(root, "sdk") } = {}) {
   const source = resolve(applicationDirectory);
   const catalogue = await loadRustCatalogue(source);
+  if (catalogue.methods.some(({ name }) => name === "fileBrowser.observe"))
+    await syncFileBrowserContracts(source, sdkDirectory, check);
   if (catalogue.methods.some(({name})=>name === "logs.read"))
     await syncLoggingContracts(source,sdkDirectory,check);
   if (catalogue.methods.some(({ name }) => name === "storage.locations.observe"))
@@ -360,5 +364,9 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   const args = process.argv.slice(2);
   const check = args.includes("--check");
   const catalogue = await syncSdk(resolve(root, args.find((arg) => arg !== "--check") ?? "../Tunnelde"), { check });
+  // CLI targets are complete application checkouts. The programmatic parser also
+  // supports deliberately partial/historical fixtures without a runtime policy.
+  if (catalogue.methods.some(({ name }) => name === "extensions.describe"))
+    await checkPermissionCoverage(resolve(root, args.find((arg) => arg !== "--check") ?? "../Tunnelde"), catalogue);
   console.log(`${check ? "Checked" : "Synchronized"} ${catalogue.methods.length} host API methods.`);
 }
