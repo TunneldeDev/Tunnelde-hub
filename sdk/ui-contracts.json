@@ -34,6 +34,8 @@
       "ui/monitor/sample.d.mts",
       "ui/preferences/data/index.d.mts",
       "ui/preferences/provider.d.mts",
+      "ui/profiles/data/content/catalogue.d.mts",
+      "ui/profiles/data/content/read.d.mts",
       "ui/profiles/data/metadata.d.mts",
       "ui/profiles/data/observation.d.mts",
       "ui/profiles/data/snapshot.d.mts",
@@ -206,6 +208,10 @@
       "ui/preferences/data/snapshot.d.mts",
       "ui/preferences/data/update.d.mts"
     ],
+    "ui/profiles/data/content/catalogue.d.mts": [
+      "ui/profiles/data/metadata.d.mts"
+    ],
+    "ui/profiles/data/content/read.d.mts": [],
     "ui/profiles/data/metadata.d.mts": [],
     "ui/profiles/data/observation.d.mts": [
       "ui/profiles/data/snapshot.d.mts"

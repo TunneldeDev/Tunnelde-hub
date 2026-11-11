@@ -3076,6 +3076,28 @@
       "deprecated": null
     },
     {
+      "name": "profiles.catalogue",
+      "permissions": [
+        "settings.read"
+      ],
+      "params": "{}",
+      "description": "Read at most 32 profile metadata items, the opaque full-content collection revision and last explicitly selected activeId (null if none). Selection does not assert content equality and is not included in the content revision. Separate from profiles.observe metadata-only revision. No profile bodies or activation. Strict empty request; bounded background worker with live authorization and retained cancellation capacity. Experimental; detect support with api.describe.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "profiles.read",
+      "permissions": [
+        "settings.read"
+      ],
+      "params": "{id:string,revision:string,offset:number,limit:number}",
+      "description": "Read canonical public PreferenceValues JSON in revision-bound UTF-8 segments. Obtain the pc1 content revision from profiles.catalogue; offset is a byte boundary, limit is 4-65536 bytes; response includes totalBytes, text and nullable nextOffset. Escaping may shorten a segment to keep the JSON response below 128KiB. Collection changes fail with profiles.conflict; never combine versions. Private provider selections and runtime metadata are omitted. Invalid legacy bodies fail without modification. Current authorization on each page, four retained background workers; immutable projections cached for at most 30s/4 entries/32MiB, never used as revision or authorization authority. No writes or activation.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
       "name": "profiles.observe",
       "permissions": [
         "settings.read"

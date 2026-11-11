@@ -27,4 +27,10 @@ export async function syncPreferencesContracts(applicationDirectory, sdkDirector
   const path = join(sdkDirectory, "preferences/schema.json");
   if (check) assert.equal((await readFile(path, "utf8")).replaceAll("\r\n", "\n"), expected, "Preference schemas differ");
   else { await mkdir(dirname(path), { recursive: true }); await writeFile(path, expected); }
+  // Trusted UI must also run on older supported WebViews without JSON module
+  // import attributes. Generate executable data from the exact same schemas.
+  const runtimePath = join(sdkDirectory, "preferences/schema.mjs");
+  const runtime = "// Generated public preference schemas; run sdk:sync to update.\nexport default " + expected.trimEnd() + ";\n";
+  if (check) assert.equal((await readFile(runtimePath, "utf8")).replaceAll("\r\n", "\n"), runtime, "Preference runtime schemas differ");
+  else await writeFile(runtimePath, runtime);
 }

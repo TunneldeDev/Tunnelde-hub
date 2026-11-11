@@ -29,6 +29,8 @@ export type * from "./ui/preferences/data/index.mjs";
 export type * from "./ui/profiles/data/metadata.mjs";
 export type * from "./ui/profiles/data/snapshot.mjs";
 export type * from "./ui/profiles/data/observation.mjs";
+export type * from "./ui/profiles/data/content/catalogue.mjs";
+export type * from "./ui/profiles/data/content/read.mjs";
 export type * from "./ui/configuration/schema.mjs";
 export type * from "./ui/configuration/document.mjs";
 export type * from "./ui/configuration/migration.mjs";

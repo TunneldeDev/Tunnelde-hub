@@ -34,3 +34,5 @@
 
 - [Profile 元数据订阅](profiles-observation.md)
 - [持久化日志读取与订阅](logging.md)
+
+- [公共 Profile 正文](profiles-content.md)

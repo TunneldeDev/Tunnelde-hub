@@ -1,7 +1,8 @@
 import { observation, validRevision } from "./observation.mjs";
 import { createWatcher } from "../runtime/observation/watch.mjs";
+import { createContentClient } from "./content/client.mjs";
 
-/** Read-only profile list metadata. Authorization remains the host's responsibility. */
+/** Profile reads. Authorization remains the host's responsibility. */
 export function createProfilesClient(host) {
   if (typeof host?.call !== "function") throw new TypeError("A host call transport is required");
   const observe = async (request = {}, options) => {
@@ -12,5 +13,5 @@ export function createProfilesClient(host) {
     const revision = Object.hasOwn(request, "revision") ? request.revision : undefined;
     return observation(await host.call("profiles.observe", revision === undefined ? {} : { revision }, options), revision);
   };
-  return Object.freeze({ observe, subscribe: createWatcher(observe) });
+  return Object.freeze({ observe, subscribe: createWatcher(observe), ...createContentClient(host) });
 }
