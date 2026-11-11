@@ -12,6 +12,10 @@
       "ui/configuration/document.d.mts",
       "ui/configuration/migration.d.mts",
       "ui/configuration/schema.d.mts",
+      "ui/editor/data/edits.d.mts",
+      "ui/editor/data/identity.d.mts",
+      "ui/editor/data/observation.d.mts",
+      "ui/editor/data/range.d.mts",
       "ui/files/browser.d.mts",
       "ui/forwarding/entry.d.mts",
       "ui/forwarding/provider.d.mts",
@@ -64,6 +68,16 @@
     "ui/configuration/migration.d.mts": [],
     "ui/configuration/schema.d.mts": [
       "ui/configuration/migration.d.mts"
+    ],
+    "ui/editor/data/edits.d.mts": [
+      "ui/editor/data/identity.d.mts"
+    ],
+    "ui/editor/data/identity.d.mts": [],
+    "ui/editor/data/observation.d.mts": [
+      "ui/editor/data/identity.d.mts"
+    ],
+    "ui/editor/data/range.d.mts": [
+      "ui/editor/data/identity.d.mts"
     ],
     "ui/files/browser.d.mts": [
       "react"

@@ -21,7 +21,7 @@ const result = await subscription.done;
 if (result.reason === "failed") reportError(result.error);
 ```
 
-随插件分发 `sdk/preferences/` 运行代码及声明和引用的 `rpc/` 类型。
+随插件分发 `sdk/preferences/` + `sdk/runtime/observation/` 运行代码及声明和引用的 `rpc/` 类型。
 客户端没有运行依赖，不使用 Node 全局对象；传入支持 `call` 取消与超时的授权传输。
 它不会选择或安装运行环境。还提供 `schema()`、`read()`、`update(request)`、
 `observe(request?, options?)`；修改额外需要 `settings.write` 和最新持久版本，不自动重试。

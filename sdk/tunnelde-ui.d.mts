@@ -33,3 +33,7 @@ export type * from "./ui/runtime/lifecycle/resource.mjs";
 export type * from "./ui/runtime/lifecycle/snapshot.mjs";
 export type * from "./ui/runtime/lifecycle/release.mjs";
 export type * from "./ui/runtime/lifecycle/identify.mjs";
+export type * from "./ui/editor/data/identity.mjs";
+export type * from "./ui/editor/data/observation.mjs";
+export type * from "./ui/editor/data/range.mjs";
+export type * from "./ui/editor/data/edits.mjs";
