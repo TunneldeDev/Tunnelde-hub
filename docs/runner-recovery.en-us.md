@@ -32,7 +32,7 @@ handoff; do not automatically resend prior operations.
 Settings → Plugins → Remote task recovery lets users inspect and request stopping
 saved tasks without launching their plugin or selecting Node, including after
 uninstallation or in restricted mode. Saved records and SSH availability are not
-proof of a running process. Removing local records requires confirmed terminal
+proof of a running process. Removing task records requires confirmed terminal
 status and no pending stop; remote files remain. An uncertain launch reporting
 `notFound` does not prove exit. Existing `runners.list` fields are unchanged;
 destination and control metadata remain private to the host.
