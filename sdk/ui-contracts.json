@@ -42,6 +42,10 @@
       "ui/search/field.d.mts",
       "ui/search/quickAccess/entry.d.mts",
       "ui/search/quickAccess/provider.d.mts",
+      "ui/storage/locations/location.d.mts",
+      "ui/storage/locations/mutation.d.mts",
+      "ui/storage/locations/observation.d.mts",
+      "ui/storage/locations/snapshot.d.mts",
       "ui/storage/pluginData/json.d.mts",
       "ui/storage/pluginData/observation.d.mts",
       "ui/storage/pluginData/snapshot.d.mts",
@@ -214,6 +218,17 @@
     "ui/search/quickAccess/provider.d.mts": [
       "react",
       "ui/search/quickAccess/entry.d.mts"
+    ],
+    "ui/storage/locations/location.d.mts": [],
+    "ui/storage/locations/mutation.d.mts": [
+      "ui/storage/locations/location.d.mts",
+      "ui/storage/locations/snapshot.d.mts"
+    ],
+    "ui/storage/locations/observation.d.mts": [
+      "ui/storage/locations/snapshot.d.mts"
+    ],
+    "ui/storage/locations/snapshot.d.mts": [
+      "ui/storage/locations/location.d.mts"
     ],
     "ui/storage/pluginData/json.d.mts": [],
     "ui/storage/pluginData/observation.d.mts": [

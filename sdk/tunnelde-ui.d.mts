@@ -43,3 +43,7 @@ export type * from "./ui/editor/data/edits.mjs";
 export type * from "./ui/storage/pluginData/json.mjs";
 export type * from "./ui/storage/pluginData/snapshot.mjs";
 export type * from "./ui/storage/pluginData/observation.mjs";
+export type * from "./ui/storage/locations/location.mjs";
+export type * from "./ui/storage/locations/snapshot.mjs";
+export type * from "./ui/storage/locations/observation.mjs";
+export type * from "./ui/storage/locations/mutation.mjs";
