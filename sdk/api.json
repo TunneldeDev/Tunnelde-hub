@@ -1828,7 +1828,7 @@
         "editor.write"
       ],
       "params": "{tabId:string,documentId:string,version:number,edits:array}",
-      "description": "Apply at most 128 ascending nonoverlapping original-buffer edits in one undo step. Distinct starts, scalar boundaries, well-formed replacement text totaling at most 64KiB UTF-8; resulting buffer at most 2MiB. Exact identity/version required. Never saves. Experimental schemaVersion 1.",
+      "description": "Apply at most 128 ascending nonoverlapping original-buffer edits in one undo step. Distinct starts, scalar boundaries, well-formed replacement text totaling at most 64KiB UTF-8; original and resulting buffers at most 2MiB to retain undo. Exact identity/version required. Never saves. Experimental schemaVersion 1.",
       "stability": "experimental",
       "since": null,
       "deprecated": null
