@@ -1,4 +1,7 @@
 /** Compatibility entry point. Domain contracts live under rpc/<domain>/. */
+export type * from "./rpc/storage/recovery/snapshot.mjs";
+export type * from "./rpc/storage/recovery/observation.mjs";
+export type * from "./rpc/storage/recovery/request.mjs";
 export type * from "./rpc/runtime/activation/manifest.mjs";
 export type * from "./rpc/runtime/activation/discovery.mjs";
 export * from "./rpc/runtime/plugin.mjs";
