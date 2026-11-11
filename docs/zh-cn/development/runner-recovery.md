@@ -45,6 +45,25 @@ const { reviewed } = await host.call("runners.review", {
 （上限 64 MiB），拒绝与 helper 冲突的保留路径，并对上传文件采用排他创建。准备错误不会
 产生远端修改，也不会隐式选择用户安装的 Node。
 
+## 初始化配置
+
+新的远端对话在部署前，通过 `api.describe` 查询 `runners.startInitialized`。
+插件以 `remoteRunner.configuration: "initialize-v1"` 明确声明支持，声明绑定到
+已批准且实际部署的字节。宿主另行查询所选辅助程序是否支持
+`runner.initialize-config.v1`。宿主不支持或辅助程序查询失败时，不回退到配置文件；
+应更新宿主或辅助程序，并在需要时明确部署到全新目录。历史任务的状态、停止、日志和
+控制权交接规则保留。
+
+新 RPC 参数为 `{sessionId, directory, configuration, secrets?}`。配置是至多
+200 KiB 的对象，秘密是字符串映射，完整宿主请求上限为 256 KiB。辅助程序在完整
+接收 stdin 信封后才创建任务，以 `remote-entry.mjs --initialize-config` 启动
+子插件，通过 initialize 传递配置和秘密。子插件先校验包身份、配置协议策略和范围，
+拒绝递归 SSH 目标及此模式下的环境变量秘密映射。存储不以启动配置播种；插件主动
+保存和运行时行为仍可能落盘，不承诺任意代码永不保存，也不隐含清理。
+
+旧的 `--config` 子插件入口继续兼容历史辅助程序和任务。普通直接 SSH stdio 执行
+仍使用原有的独立适配器。
+
 ## 配置写入
 
 支持配置日志的宿主将尚未提交、创建待确认、写入未完成和已保存与启动状态分别记录。

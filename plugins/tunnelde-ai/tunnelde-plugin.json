@@ -1,7 +1,7 @@
 {
   "id": "tunnelde-ai",
   "name": "Tunnelde AI",
-  "version": "1.19.9",
+  "version": "1.19.10",
   "apiVersion": 1,
   "runtime": "node",
   "main": "index.mjs",
@@ -70,5 +70,8 @@
     "secrets",
     "sessions.read",
     "hosts.read"
-  ]
+  ],
+  "remoteRunner": {
+    "configuration": "initialize-v1"
+  }
 }

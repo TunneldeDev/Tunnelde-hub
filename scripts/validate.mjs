@@ -10,6 +10,7 @@ import { validateFilePreviews } from "./plugins/previews.mjs";
 import { validateHostFields } from "./plugins/host-fields.mjs";
 import { validateConfiguration } from "./plugins/configuration/manifest.mjs";
 import { validateDependencies } from "./plugins/activation/manifest.mjs";
+import { validateRemoteRunner } from "./plugins/execution/manifest.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const idPattern = /^[a-z0-9][a-z0-9_-]{0,63}$/;
@@ -39,6 +40,7 @@ export function validateManifest(manifest, id) {
   assert.ok(Array.isArray(manifest.permissions), `${id}: declare permissions explicitly`);
   validateHostFields(manifest.hostFields, manifest.permissions);
   validateConfiguration(manifest.configuration);
+  validateRemoteRunner(manifest);
   const knownPermissions = new Set([
     "ui.trusted",
     "log",

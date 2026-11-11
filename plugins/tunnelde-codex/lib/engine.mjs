@@ -1094,164 +1094,173 @@ export class AiPlugin {
     if (!roots.length)
       throw new Error("Select at least one remote workspace root");
     let saved = session.remote;
-    if (saved && saved.sessionId !== remote.sessionId) {
-      const status = await this.observeRunner("runners.status", {
-        sessionId: remote.sessionId,
-        runnerId: saved.runnerId,
-      }, signal).catch((error) => {
-        signal.throwIfAborted();
-        throw new RemoteRunnerInterrupted(error);
-      });
-      if (!status || status.status === "notFound")
-        throw new RemoteRunnerInterrupted(new Error(
-          "Saved remote runner is unavailable on the selected SSH host",
-        ));
-      // The host resolves runner ownership by stable host ID before executing this request.
-      saved.sessionId = remote.sessionId;
-      await this.persist();
-    }
-    if (saved && saved.revision !== this.configRevision)
-      throw new Error(
-        "Remote agent configuration changed. Create a new conversation to deploy the updated scope/providers; inspect or stop the existing runner separately",
-      );
-    if (saved && saved.profileId !== profile.id)
-      throw new Error(
-        "Create a new conversation when changing the remote deployment profile",
-      );
-    if (saved) assertIdentity(saved, { required: true });
-    if (!saved) {
-      await this.host.call("runners.deploy", {
-        ...remote,
-        runnerPath: profile.helperBinary || remote.runnerPath,
-      });
-      const selected = config.profiles
-        .filter((item) =>
-          [profile.id, config.approverProfileId].includes(item.id),
-        )
-        .map((item) => {
-          const copy = { ...item };
-          delete copy.remote;
-          delete copy.helperBinary;
-          delete copy.sessionId;
-          if (CLI_PROTOCOLS.has(copy.protocol)) {
-            copy.cwd = profile.cwd || roots[0];
-            copy.platform = remote.platform;
-          }
-          return copy;
+    signal.throwIfAborted();
+    try {
+      if (saved && saved.sessionId !== remote.sessionId) {
+        const status = await this.observeRunner("runners.status", {
+          sessionId: remote.sessionId,
+          runnerId: saved.runnerId,
+        }, signal).catch((error) => {
+          signal.throwIfAborted();
+          throw new RemoteRunnerInterrupted(error);
         });
-      const secrets = {};
-      for (const item of selected) {
-        const key = await this.host.call("secrets.get", { key: KEY(item.id) });
-        if (key) secrets[KEY(item.id)] = key;
+        if (!status || status.status === "notFound")
+          throw new RemoteRunnerInterrupted(new Error(
+            "Saved remote runner is unavailable on the selected SSH host",
+          ));
+        // The host resolves runner ownership by stable host ID before executing this request.
+        saved.sessionId = remote.sessionId;
+        await this.persist();
       }
-      const result = await this.host.call("runners.start", {
-        sessionId: remote.sessionId,
-        directory: remote.directory,
-        config: {
-          version: 1,
-          pluginId: PLUGIN_ID,
-          profilePolicy: structuredClone(PROFILE_POLICY),
-          config: {
-            ...config,
-            profiles: selected,
-            activeProfileId: profile.id,
-            scope: { localRoots: roots, sessionIds: [], remoteRoots: [] },
-          },
-        },
-        secrets,
-      });
-      const runnerId = typeof result === "string" ? result : result?.runnerId;
-      if (!runnerId) throw new Error("Host did not return a remote runner ID");
-      saved = session.remote = {
-        pluginId: PLUGIN_ID,
-        profilePolicy: structuredClone(PROFILE_POLICY),
-        sessionId: remote.sessionId,
-        runnerId,
-        profileId: profile.id,
-        revision: this.configRevision,
-        afterSeq: 0,
-        session: null,
-        runId: null,
-      };
-      await this.persist();
-    }
-    // Reserve the operation identity before sending. A lost SSH response must
-    // never cause recovery to submit the same request a second time.
-    let requestId = saved.requestId;
-    if (!recover) {
-      // The plugin's JSON-RPC transport accepts safe integer IDs only.
-      requestId = randomInt(1, 2 ** 48 - 1);
-      saved.requestId = requestId;
-      saved.runId = session.run.id;
-      saved.acknowledged = false;
-      await this.persist();
-    }
-    const waitStarted = Date.now();
-    const runnerTask = {
-      id: saved.runnerId,
-      runId: session.run.id,
-      title: `${profile.name} remote agent`,
-      status: "running",
-      recoverable: true,
-    };
-    const existingTask = session.tasks.findIndex(
-      (task) => task.id === saved.runnerId,
-    );
-    if (existingTask < 0) session.tasks.push(runnerTask);
-    else session.tasks[existingTask] = runnerTask;
-    let started = recover && (saved.acknowledged || !requestId);
-    if (!recover)
-      await this.host.call("runners.send", {
-        sessionId: saved.sessionId,
-        runnerId: saved.runnerId,
-        message: {
-          jsonrpc: "2.0",
-          id: requestId,
-          method: "command.run",
-          params: {
-            command: "ai.send",
-            input: {
-              message,
-              sessionId: saved.session || undefined,
-              modelId: profile.id,
-              mode: config.mode,
-              runId: session.run.id,
+      if (saved && saved.revision !== this.configRevision)
+        throw new Error(
+          "Remote agent configuration changed. Create a new conversation to deploy the updated scope/providers; inspect or stop the existing runner separately",
+        );
+      if (saved && saved.profileId !== profile.id)
+        throw new Error(
+          "Create a new conversation when changing the remote deployment profile",
+        );
+      if (saved) assertIdentity(saved, { required: true });
+      if (!saved) {
+        const catalogue = await this.host.call("api.describe", {});
+        signal.throwIfAborted();
+        if (!catalogue?.methods?.some(method => method.name === "runners.startInitialized"))
+          throw new Error("This Tunnelde version does not support initialized remote agents. Update Tunnelde before starting a new remote conversation; existing runners can still be inspected or stopped.");
+        await this.host.call("runners.deploy", {
+          ...remote,
+          runnerPath: profile.helperBinary || remote.runnerPath,
+        });
+        signal.throwIfAborted();
+        const selected = config.profiles
+          .filter((item) =>
+            [profile.id, config.approverProfileId].includes(item.id),
+          )
+          .map((item) => {
+            const copy = { ...item };
+            delete copy.remote;
+            delete copy.helperBinary;
+            delete copy.sessionId;
+            if (CLI_PROTOCOLS.has(copy.protocol)) {
+              copy.cwd = profile.cwd || roots[0];
+              copy.platform = remote.platform;
+            }
+            return copy;
+          });
+        const secrets = {};
+        for (const item of selected) {
+          const key = await this.host.call("secrets.get", { key: KEY(item.id) });
+          signal.throwIfAborted();
+          if (key) secrets[KEY(item.id)] = key;
+        }
+        const result = await this.host.call("runners.startInitialized", {
+          sessionId: remote.sessionId,
+          directory: remote.directory,
+          configuration: {
+            version: 1,
+            pluginId: PLUGIN_ID,
+            profilePolicy: structuredClone(PROFILE_POLICY),
+            config: {
+              ...config,
+              profiles: selected,
+              activeProfileId: profile.id,
+              scope: { localRoots: roots, sessionIds: [], remoteRoots: [] },
             },
           },
-        },
-      }).catch((error) => {
-        signal.throwIfAborted();
-        throw new RemoteRunnerInterrupted(error);
-      });
-    const approvals = new Set();
-    const handleApproval = async (item) => {
-      if (approvals.has(item.approvalId)) return;
-      approvals.add(item.approvalId);
-      const approved = await this.approveCli(
-        profile,
-        session,
-        {
-          tool: item.method,
-          title: "Remote action approval",
-          detail: safeResult(item.params),
-        },
-        signal,
-        true,
+          secrets,
+        });
+        const runnerId = typeof result === "string" ? result : result?.runnerId;
+        if (!runnerId) throw new Error("Host did not return a remote runner ID");
+        saved = session.remote = {
+          pluginId: PLUGIN_ID,
+          profilePolicy: structuredClone(PROFILE_POLICY),
+          sessionId: remote.sessionId,
+          runnerId,
+          profileId: profile.id,
+          revision: this.configRevision,
+          afterSeq: 0,
+          session: null,
+          runId: null,
+        };
+        await this.persist();
+      }
+      signal.throwIfAborted();
+      // Reserve the operation identity before sending. A lost SSH response must
+      // never cause recovery to submit the same request a second time.
+      let requestId = saved.requestId;
+      if (!recover) {
+        // The plugin's JSON-RPC transport accepts safe integer IDs only.
+        requestId = randomInt(1, 2 ** 48 - 1);
+        saved.requestId = requestId;
+        saved.runId = session.run.id;
+        saved.acknowledged = false;
+        await this.persist();
+      }
+      signal.throwIfAborted();
+      const waitStarted = Date.now();
+      const runnerTask = {
+        id: saved.runnerId,
+        runId: session.run.id,
+        title: `${profile.name} remote agent`,
+        status: "running",
+        recoverable: true,
+      };
+      const existingTask = session.tasks.findIndex(
+        (task) => task.id === saved.runnerId,
       );
-      await this.host.call("runners.send", {
-        sessionId: saved.sessionId,
-        runnerId: saved.runnerId,
-        message: { type: "approval", approvalId: item.approvalId, approved },
-      });
-    };
-    const applyBlock = (block) => {
-      if (!block) return;
-      saved.session = block.activeSessionId ?? saved.session;
-      saved.runId = block.run?.id ?? saved.runId;
-      session.history = block.messages.map((item) => ({ ...item }));
-      session.tasks = block.tasks ?? session.tasks;
-    };
-    try {
+      if (existingTask < 0) session.tasks.push(runnerTask);
+      else session.tasks[existingTask] = runnerTask;
+      let started = recover && (saved.acknowledged || !requestId);
+      if (!recover)
+        await this.host.call("runners.send", {
+          sessionId: saved.sessionId,
+          runnerId: saved.runnerId,
+          message: {
+            jsonrpc: "2.0",
+            id: requestId,
+            method: "command.run",
+            params: {
+              command: "ai.send",
+              input: {
+                message,
+                sessionId: saved.session || undefined,
+                modelId: profile.id,
+                mode: config.mode,
+                runId: session.run.id,
+              },
+            },
+          },
+        }).catch((error) => {
+          signal.throwIfAborted();
+          throw new RemoteRunnerInterrupted(error);
+        });
+      const approvals = new Set();
+      const handleApproval = async (item) => {
+        if (approvals.has(item.approvalId)) return;
+        approvals.add(item.approvalId);
+        const approved = await this.approveCli(
+          profile,
+          session,
+          {
+            tool: item.method,
+            title: "Remote action approval",
+            detail: safeResult(item.params),
+          },
+          signal,
+          true,
+        );
+        await this.host.call("runners.send", {
+          sessionId: saved.sessionId,
+          runnerId: saved.runnerId,
+          message: { type: "approval", approvalId: item.approvalId, approved },
+        });
+      };
+      const applyBlock = (block) => {
+        if (!block) return;
+        saved.session = block.activeSessionId ?? saved.session;
+        saved.runId = block.run?.id ?? saved.runId;
+        session.history = block.messages.map((item) => ({ ...item }));
+        session.tasks = block.tasks ?? session.tasks;
+      };
       while (true) {
         signal.throwIfAborted();
         const batch = await this.observeRunner("runners.poll", {
@@ -1368,7 +1377,7 @@ export class AiPlugin {
         await delay(350, signal);
       }
     } finally {
-      if (signal.aborted && !this.closed)
+      if (saved?.runnerId && signal.aborted && !this.closed)
         await this.host
           .call("runners.stop", {
             sessionId: saved.sessionId,
