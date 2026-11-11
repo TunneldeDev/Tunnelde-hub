@@ -122,7 +122,9 @@ test("real stdio cancellation and deadlines stop profile subscriptions", async t
     const result = await sub.done;
     assert.equal(result.reason, action === "abort" ? "aborted" : "failed");
     input.write(JSON.stringify({ jsonrpc: "2.0", id: requests[0].id, result: changed("late") }) + "\n");
-    await flush(); t.mock.timers.tick(60000); await flush(); assert.equal(requests.length, 1);
+    await flush(); t.mock.timers.tick(60000); await flush();
+    assert.equal(requests.filter(item => item.method === "profiles.observe").length, 1);
+    assert.deepEqual(requests.filter(item => item.method === "$/cancelRequest"), [{ jsonrpc: "2.0", method: "$/cancelRequest", params: { id: requests[0].id } }]);
     runtime.close();
   }
 });

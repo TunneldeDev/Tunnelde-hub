@@ -24,6 +24,7 @@
 - [Quick-access result providers](quick-access-ui.md)
 - [Durable runner recovery](runner-recovery.md)
 - [Runtime resource lifecycle](runtime-resources.md)
+- [Plugin request cancellation](request-cancellation.md)
 - [SSHFS plugins and native API](sshfs.md)
 - [Plugin status bar API](status-bar.md)
 - [Tab bar contributions](tab-bar.md)
