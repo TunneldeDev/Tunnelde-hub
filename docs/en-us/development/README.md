@@ -39,3 +39,5 @@
 - [Public profile contents](profiles-content.md)
 
 - [Public profile writes and activation](profiles-mutations.md)
+
+- [Live file-browser data and actions](file-browser-data.md)
