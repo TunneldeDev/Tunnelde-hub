@@ -15,6 +15,7 @@ import { syncPreferencesContracts } from "./sdk/settings/preferences.mjs";
 import { syncProfilesContracts } from "./sdk/settings/profiles.mjs";
 import { syncEditorContracts } from "./sdk/editor/contracts.mjs";
 import { syncFileBrowserContracts } from "./sdk/files/browser/contracts.mjs";
+import { syncFileContentContracts } from "./sdk/files/content/contracts.mjs";
 import { checkPermissionCoverage } from "./sdk/permissions.mjs";
 import { syncConfigurationContracts } from "./sdk/configuration/contracts.mjs";
 import { checkConfigurationPoint } from "./sdk/configuration/discovery.mjs";
@@ -96,6 +97,8 @@ async function syncWorkspaceTypes(applicationDirectory, sdkSource, catalogue, ch
 export async function syncSdk(applicationDirectory, { check = false, sdkDirectory = join(root, "sdk") } = {}) {
   const source = resolve(applicationDirectory);
   const catalogue = await loadRustCatalogue(source);
+  if (catalogue.methods.some(({ name }) => name === "files.content.prepare"))
+    await syncFileContentContracts(source, sdkDirectory, check);
   if (catalogue.methods.some(({ name }) => name === "fileBrowser.observe"))
     await syncFileBrowserContracts(source, sdkDirectory, check);
   if (catalogue.methods.some(({name})=>name === "logs.read"))

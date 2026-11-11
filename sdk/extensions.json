@@ -263,7 +263,8 @@
         "forward",
         "mount",
         "task",
-        "transfer"
+        "transfer",
+        "fileContent"
       ],
       "states": [
         "owned",

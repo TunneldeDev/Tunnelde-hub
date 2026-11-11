@@ -14,7 +14,7 @@
       "name": "resources.snapshot",
       "permissions": [],
       "params": "{offset?:number,revision?:string}",
-      "description": "Observe committed live domain resources (connections must also have accepted ownership) owned by this plugin's current runtime. Returns bounded revision-checked pages of opaque handles, kinds and lifecycle states, without paths, commands or credentials. Covers connections, forwards, mounts, process tasks and active transfers; not a global atomic transaction or durable runner catalogue.",
+      "description": "Observe committed live domain resources (connections must also have accepted ownership) owned by this plugin's current runtime. Returns bounded revision-checked pages of opaque handles, kinds and lifecycle states, without paths, commands or credentials. Covers connections, forwards, mounts, process tasks and active transfers and file content descriptors; not a global atomic transaction or durable runner catalogue.",
       "stability": "experimental",
       "since": null,
       "deprecated": null
@@ -3655,6 +3655,51 @@
       ],
       "params": "{paneId:string,revision:string,action:refresh|navigate|select|open,path?:string,paths?:string[],mode?:open|preview}",
       "description": "Dispatch existing host browser behavior on an exact live revision. Selection at most 256 visible entries; open must target a visible entry. Suspended, busy and stale browsers reject actions. Returns {accepted:true}, not IO completion; observe subsequent state. Never replay actions automatically. No file contents, writes or private preview handles. Experimental schemaVersion 1.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "files.content.prepare",
+      "permissions": [],
+      "params": "{source:{kind:'local'}|{kind:'remote',sessionId:string},path:string}",
+      "description": "Reserve a 20-second read-only descriptor without IO; returns a unique contentId before opening. Requires fs.read for local or sftp.read for remote, not both. At most 8 descriptors per plugin and 64 globally; ordinary plugins only, not scoped tools.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "files.content.open",
+      "permissions": [],
+      "params": "{contentId:string}",
+      "description": "Open a prepared descriptor exactly once under its endpoint read permission. Pins a regular-file handle; returns size, chunkBytes and idle lease. Close known contentId on cancellation. Expiry and runtime retirement also reclaim ownership. Not an immutable file snapshot.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "files.content.read",
+      "permissions": [],
+      "params": "{contentId:string,offset:number,length:number}",
+      "description": "Read up to 48KiB of binary bytes as base64 under the source read permission, with explicit safe-integer offset. Clamp at opened size; EOF and source mutations may fail. Successful admission renews a 60-second idle lease. Cancelled actual IO keeps its shared worker budget until settlement.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "files.content.close",
+      "permissions": [],
+      "params": "{contentId:string}",
+      "description": "Idempotently retire an exact current-runtime descriptor before or after open. Cancels late installation and closes only its dedicated SFTP channel. Logical close does not forcibly stop running local or remote server IO; actual worker budgets remain charged.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "files.content.observe",
+      "permissions": [],
+      "params": "{contentId:string}",
+      "description": "Observe this runtime's descriptor lifecycle without renewing its idle lease. Missing, foreign and expired IDs all appear closed; no paths, contents or credentials are returned. This observes handle lifetime, not filesystem change events.",
       "stability": "experimental",
       "since": null,
       "deprecated": null

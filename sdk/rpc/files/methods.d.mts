@@ -2,8 +2,14 @@ import type { Listing } from "./contract.mjs";
 import type { TransferEvent } from "./transfers.mjs";
 import type { FileBrowserObservationRequest, FileBrowserObservation, FileBrowserReadRequest, FileBrowserPage } from "./browser/data.mjs";
 import type { FileBrowserAction, FileBrowserActionResult } from "./browser/actions.mjs";
+import type { FileContentPrepare, FileContentReference, FileContentPrepared, FileContentRead, FileContentObservation, FileContentChunk, FileContentClosed } from "./content.mjs";
 
 export interface FilesMethodMap {
+  "files.content.prepare": [FileContentPrepare, FileContentPrepared];
+  "files.content.open": [FileContentReference, FileContentObservation];
+  "files.content.read": [FileContentRead, FileContentChunk];
+  "files.content.close": [FileContentReference, FileContentClosed];
+  "files.content.observe": [FileContentReference, FileContentObservation];
   "fileBrowser.observe": [FileBrowserObservationRequest, FileBrowserObservation];
   "fileBrowser.read": [FileBrowserReadRequest, FileBrowserPage];
   "fileBrowser.action": [FileBrowserAction, FileBrowserActionResult];
