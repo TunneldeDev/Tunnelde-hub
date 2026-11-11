@@ -212,8 +212,9 @@ test("remote send deploys only the selected runtime and relays pending approvals
         return null;
       }
       if (method === "secrets.get") return "api-secret";
+      if (method === "api.describe") return { methods: [{ name: "runners.startInitialized" }] };
       if (method === "runners.deploy") return { deployed: true };
-      if (method === "runners.start") return { runnerId: "runner" };
+      if (method === "runners.startInitialized") return { runnerId: "runner" };
       if (method === "runners.send") {
         if (params.message.method === "command.run") request = params.message;
         return true;
@@ -306,11 +307,11 @@ test("remote send deploys only the selected runtime and relays pending approvals
     calls.find((item) => item.method === "runners.deploy").params.executable,
     "/opt/node/bin/node",
   );
-  const started = calls.find((item) => item.method === "runners.start");
-  assert.equal(started.params.config.pluginId, PLUGIN_ID);
-  assert.deepEqual(started.params.config.profilePolicy, PROFILE_POLICY);
-  assert.deepEqual(started.params.config.config.scope.localRoots, ["/work"]);
-  assert.equal(started.params.config.config.profiles[0].remote, undefined);
+  const started = calls.find((item) => item.method === "runners.startInitialized");
+  assert.equal(started.params.configuration.pluginId, PLUGIN_ID);
+  assert.deepEqual(started.params.configuration.profilePolicy, PROFILE_POLICY);
+  assert.deepEqual(started.params.configuration.config.scope.localRoots, ["/work"]);
+  assert.equal(started.params.configuration.config.profiles[0].remote, undefined);
   assert.equal(started.params.secrets["provider.main"], "api-secret");
   assert.ok(!JSON.stringify([...data]).includes("api-secret"));
   assert.ok(
@@ -434,8 +435,9 @@ for (const failurePoint of ["send", "poll", "busy", "notFound", "transient-busy"
       if (method === "storage.set") { data.set(params.key, structuredClone(params.value)); return null; }
       if (method === "events.publish") return true;
       if (method === "secrets.get") return "fixture";
+      if (method === "api.describe") return { methods: [{ name: "runners.startInitialized" }] };
       if (method === "runners.deploy") return true;
-      if (method === "runners.start") return { runnerId: "runner" };
+      if (method === "runners.startInitialized") return { runnerId: "runner" };
       if (method === "runners.send") {
         sends++;
         request = structuredClone(params.message);
@@ -519,7 +521,7 @@ test("starting another message clears the preceding remote run before persisting
   await engine.runs.get(session.id)?.done;
 });
 
-test("native runner and real plugin protocol recover a lost enqueue acknowledgement", {
+for (const transport of ["file", "initialize-v1"]) test(`native runner ${transport} and real plugin protocol recover a lost enqueue acknowledgement`, {
   skip: !process.env.TUNNELDE_TEST_RUNNER,
   timeout: 30000,
 }, async () => {
@@ -555,8 +557,12 @@ test("native runner and real plugin protocol recover a lost enqueue acknowledgem
     const profile = { id: "main", name: "Main", protocol: "openai-chat", model: "test", baseUrl: `http://127.0.0.1:${server.address().port}/v1` };
     const config = { profiles: [profile], activeProfileId: "main", mode: "ask", scope: { localRoots: [directory], sessionIds: [], remoteRoots: [] } };
     const configPath = path.join(directory, "config.json");
-    await writeFile(configPath, JSON.stringify({ version: 1, pluginId: PLUGIN_ID, profilePolicy: PROFILE_POLICY, config }));
-    await callRunner("start", ["--config", configPath, "--executable", process.execPath, "--entry", path.resolve("plugins/tunnelde-ai/remote-entry.mjs")], { secrets: { "provider.main": "fixture" } });
+    const document = { version: 1, pluginId: PLUGIN_ID, profilePolicy: PROFILE_POLICY, config };
+    if (transport === "file") await writeFile(configPath, JSON.stringify(document));
+    const argumentsForTransport = transport === "file" ? ["--config", configPath] : ["--bootstrap", "initialize-v1"];
+    const initial = transport === "file" ? { secrets: { "provider.main": "fixture" } }
+      : { schemaVersion: 1, configuration: document, secrets: { "provider.main": "fixture" } };
+    await callRunner("start", [...argumentsForTransport, "--executable", process.execPath, "--entry", path.resolve("plugins/tunnelde-ai/remote-entry.mjs")], initial);
     started = true;
     const data = new Map();
     let sends = 0, polls = 0;

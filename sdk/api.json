@@ -2196,6 +2196,17 @@
       "deprecated": null
     },
     {
+      "name": "runners.startInitialized",
+      "permissions": [
+        "ssh.exec"
+      ],
+      "params": "{sessionId:string,directory:string,configuration:object,secrets?:Record<string,string>}",
+      "description": "Start an explicitly opted-in approved deployment using helper feature runner.initialize-config.v1. Configuration (at most 200 KiB) and secrets use stdin/initialize, never host config files or argv; the combined RPC remains subject to the 256 KiB request limit. Does not seed helper storage and never falls back to file transport. Plugins may explicitly persist data. Existing runners.start/recovery remain available.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
       "name": "runners.list",
       "permissions": [
         "ssh.exec"

@@ -61,7 +61,30 @@ limit), validates the explicitly selected helper (64 MiB limit), refuses helper
 path collisions, and creates uploaded files exclusively. A preparation error leaves
 no remote mutation. No system Node runtime is selected implicitly.
 
-## Configuration writes
+## Initialized configuration
+
+New remote conversations discover `runners.startInitialized` through `api.describe`
+before deploying. Packages opt in with `remoteRunner.configuration: "initialize-v1"`.
+The declaration is bound to the approved deployed bytes, and the host separately
+queries the selected helper for `runner.initialize-config.v1`. Neither missing
+host support nor failed helper discovery selects a configuration-file fallback.
+Update the host/helper and explicitly deploy to a fresh directory when required.
+Existing tasks retain their original status, stop, journal and control-handoff rules.
+
+The new RPC accepts `{sessionId, directory, configuration, secrets?}`. Configuration
+is an object up to 200 KiB, secrets are a string map, and the complete host request
+is limited to 256 KiB. The helper requires a complete stdin packet before creating
+a task, then starts `remote-entry.mjs --initialize-config` and delivers configuration
+and secrets in initialize parameters. The child validates package identity, profile
+policy and scope before configuration-dependent operations. It refuses recursive
+SSH targets and environment secret mappings in this mode. Storage is not seeded
+with launch configuration. Explicit plugin storage writes and runtime behavior may
+still persist data; no arbitrary-code no-persistence guarantee or cleanup is implied.
+
+The legacy `--config` child entry remains supported for historical helpers and
+tasks. Ordinary direct SSH stdio execution uses its existing separate adapter.
+
+## File configuration writes
 
 Hosts with configuration journaling save unsubmitted, creation-unconfirmed,
 write-incomplete and saved phases separately from launch state. Configuration files

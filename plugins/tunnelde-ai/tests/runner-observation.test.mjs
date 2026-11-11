@@ -47,7 +47,7 @@ for (const method of ["runners.status", "runners.poll"]) {
 
 test("runner mutations cannot enter the retry helper", async () => {
   const f = fixture(() => assert.fail("No mutation may be submitted"));
-  for (const method of ["runners.start", "runners.send", "runners.stop", "runners.deploy"])
+  for (const method of ["runners.start", "runners.startInitialized", "runners.send", "runners.stop", "runners.deploy"])
     await assert.rejects(f.observe(method, target), /Only runner observations/);
   assert.deepEqual(f.calls, []);
 });

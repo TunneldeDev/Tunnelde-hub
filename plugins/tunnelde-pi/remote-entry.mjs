@@ -2,23 +2,27 @@ import { readFile } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
 import path from "node:path";
 import { start } from "./index.mjs";
-import { validateConfig, assertIdentity } from "./lib/config.mjs";
+import { assertIdentity } from "./lib/config.mjs";
+import { remoteConfiguration, remoteConfig, initializedConfiguration } from "./lib/remote-bootstrap.mjs";
 import { PLUGIN_TITLE } from "./lib/identity.mjs";
 
 export async function startRemote(argv = process.argv.slice(2), options = {}) {
-  const position = argv.indexOf("--config");
-  if (position < 0 || !argv[position + 1] || !path.isAbsolute(argv[position + 1]))
-    throw new Error("remote-entry requires --config with an absolute path");
-  const text = await readFile(argv[position + 1], "utf8");
-  if (Buffer.byteLength(text) > 200 * 1024) throw new Error("Remote configuration exceeds 200 KiB");
-  const document = JSON.parse(text);
-  if (document.version !== 1) throw new Error("Unsupported remote configuration version");
-  assertIdentity(document, { required: true });
-  const config = validateConfig(document.config);
-  if (config.profiles.some((profile) => profile.remote || profile.sessionId))
-    throw new Error("Remote agents cannot recursively deploy or launch SSH CLI sessions");
+  const initialized = argv.includes("--initialize-config");
+  let config, document;
+  if (initialized) {
+    if (argv.length !== 1)
+      throw new Error("Initialized remote entry does not accept file configuration arguments");
+  } else {
+    const position = argv.indexOf("--config");
+    if (position < 0 || !argv[position + 1] || !path.isAbsolute(argv[position + 1]))
+      throw new Error("remote-entry requires --config with an absolute path");
+    const text = await readFile(argv[position + 1], "utf8");
+    if (Buffer.byteLength(text) > 200 * 1024) throw new Error("Remote configuration exceeds 200 KiB");
+    document = JSON.parse(text);
+    config = remoteConfiguration(document);
+  }
   const ephemeral = new Map();
-  for (const [profile, variable] of Object.entries(document.secretEnv ?? {})) {
+  for (const [profile, variable] of Object.entries(document?.secretEnv ?? {})) {
     if (typeof variable !== "string" || !/^[A-Za-z_][A-Za-z0-9_]*$/.test(variable))
       throw new Error("Invalid secret environment mapping");
     if (process.env[variable]) ephemeral.set(`provider.${profile}`, process.env[variable]);
@@ -30,16 +34,23 @@ export async function startRemote(argv = process.argv.slice(2), options = {}) {
       ...host,
       remote: true,
       initialize: async (params) => {
+        if (initialized) {
+          if (config) throw new Error("Remote configuration was already initialized");
+          const accepted = initializedConfiguration(params);
+          config = accepted.config;
+          for (const [key, value] of Object.entries(accepted.secrets)) ephemeral.set(key, value);
+          return;
+        }
         for (const [key, value] of Object.entries(params.secrets ?? {}))
           if (typeof value === "string") ephemeral.set(key, value);
       },
       call: async (method, params, callOptions) => {
+        if (!config) throw new Error("Remote configuration has not been initialized");
         if (method === "secrets.get" && ephemeral.has(params.key)) return ephemeral.get(params.key);
         if (method === "storage.get" && params.key === "ai.config") {
           const saved = await host.call(method, params, callOptions);
           if (saved) assertIdentity(saved);
-          const current = saved?.config ?? saved ?? config;
-          validateConfig(current);
+          const current = remoteConfig(saved?.config ?? saved ?? config);
           return {
             config: current,
             keyIds: current.profiles
