@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 export function checkRuntimeResources(directory, catalogue) {
   const resources=directory.runtime?.resources;
   assert.ok(resources,"Missing runtime resource discovery");
-  for (const action of ["snapshot","release"]) {
+  for (const action of ["snapshot","identify","release"]) {
     assert.equal(resources[action],"resources."+action);
     const method=catalogue.methods.find(({name})=>name===resources[action]);
     assert.ok(method,"Missing resource method");assert.equal(method.stability,"experimental");assert.deepEqual(method.permissions,[]);

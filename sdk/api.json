@@ -2,6 +2,15 @@
   "version": 1,
   "methods": [
     {
+      "name": "resources.identify",
+      "permissions": [],
+      "params": "{kind:connection|forward|mount|task|transfer,id:string}",
+      "description": "Observe the current committed resource owned by this runtime using its public domain ID (sessionId, ruleId, mountId, taskId or transferId). Returns the exact instance handle, kind and state without exposing other resources. Does not claim that a prior creation request produced this instance, transfer ownership, register a resource, stop a durable runner or authorize future release. Unavailable, foreign, pending and handed-off resources return the same unavailable error.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
       "name": "resources.snapshot",
       "permissions": [],
       "params": "{offset?:number,revision?:string}",
