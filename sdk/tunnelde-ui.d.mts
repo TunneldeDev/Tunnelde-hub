@@ -8,6 +8,7 @@ export type * from "./ui/frontend/views.mjs";
 export type * from "./ui/history/provider.mjs";
 export type * from "./ui/terminal/surface.mjs";
 export type * from "./ui/files/browser.mjs";
+export type * from "./ui/files/content.mjs";
 export type * from "./ui/workbench/slots.mjs";
 export type * from "./ui/frontend/providers.mjs";
 export type * from "./ui/frontend/lifecycle.mjs";

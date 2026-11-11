@@ -17,6 +17,7 @@
       "ui/editor/data/observation.d.mts",
       "ui/editor/data/range.d.mts",
       "ui/files/browser.d.mts",
+      "ui/files/content.d.mts",
       "ui/forwarding/entry.d.mts",
       "ui/forwarding/provider.d.mts",
       "ui/frontend/lifecycle.d.mts",
@@ -106,6 +107,7 @@
     ],
     "ui/files/browser/actions.d.mts": [],
     "ui/files/browser/data.d.mts": [],
+    "ui/files/content.d.mts": [],
     "ui/forwarding/entry.d.mts": [],
     "ui/forwarding/provider.d.mts": [
       "react",

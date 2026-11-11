@@ -181,3 +181,32 @@ kind 为 info、success 或 error；省略或 null 使用 info。返回 null 仅
 [运行资源生命周期](runtime-resources.md)：严格客户端、所有权、分页与释放语义。
 
 [插件自有存储观察](storage-observation.md)。
+
+
+## 只读文件内容（实验性）
+
+从 `sdk/files/content/client.mjs` 导入 `createFileContentClient`。客户端先预留短期
+描述符再打开普通文件，因此在打开取消后仍知道需要关闭的 ID。来源需要明确授权：
+本地为 `fs.read`，所选 SSH 会话为 `sftp.read`。
+
+```js
+const owner = new AbortController();
+const client = createFileContentClient(host);
+const file = await client.open(
+  { source: { kind: "remote", sessionId }, path: "/var/log/application.log" },
+  { signal: owner.signal },
+);
+try {
+  const bytes = await file.read({ offset: 0, length: file.chunkBytes });
+  // bytes 为 Uint8Array，请按预览内容选择解码方式。
+} finally {
+  await file.close();
+  owner.abort();
+}
+```
+
+单次最多读取 49152 字节，不保证不可变文件快照。读取续期 60 秒空闲租约，生命周期
+观察和订阅不会续期；取消所属方会关闭句柄。每个客户端/运行实例最多八个句柄，宿主
+总计 64 个。取消后实际 I/O 仍持有受限原生任务配额至结束。
+`resources.identify` 支持 `kind:"fileContent"` 与返回的 `contentId`；通用释放仍会检查
+准确的运行实例所有权。这些是普通插件接口，不会扩展受限 AI 网关权限。

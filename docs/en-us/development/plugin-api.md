@@ -223,3 +223,35 @@ trusted host-context code, not a sandbox or a new permission grant.
 [Runtime resource lifecycle](runtime-resources.md): strict facade, ownership, paging and disposal semantics.
 
 [Plugin-owned storage observation](storage-observation.md).
+
+
+## Read-only file content (experimental)
+
+Import `createFileContentClient` from `sdk/files/content/client.mjs`. The client
+prepares an expiring descriptor before opening a regular file, so it knows which
+ID to close if opening is cancelled. Each source needs its own explicit read
+permission (`fs.read` locally, `sftp.read` over the selected SSH session).
+
+```js
+const owner = new AbortController();
+const client = createFileContentClient(host);
+const file = await client.open(
+  { source: { kind: "remote", sessionId }, path: "/var/log/application.log" },
+  { signal: owner.signal },
+);
+try {
+  const bytes = await file.read({ offset: 0, length: file.chunkBytes });
+  // bytes is Uint8Array. Select decoding appropriate to your preview.
+} finally {
+  await file.close();
+  owner.abort();
+}
+```
+
+Read at most 49152 bytes per call and do not assume immutable file contents. A read
+renews the 60-second idle lease; lifecycle observation and subscriptions do not.
+Aborting the owner closes its handle. Eight handles per client/runtime and 64 host
+resources are supported; actual IO shares bounded native worker capacity even
+when cancelled. `resources.identify` accepts `kind:"fileContent"` and the returned
+`contentId`; generic release still revalidates exact runtime ownership. These
+methods are ordinary-plugin APIs, not new scoped AI gateway permissions.

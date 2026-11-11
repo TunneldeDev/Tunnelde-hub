@@ -9,6 +9,8 @@ export function checkRuntimeResources(directory, catalogue) {
   }
   assert.equal(resources.ownership,"current-runtime");assert.equal(resources.pageSize,128);assert.equal(resources.pageBytes,65536);assert.equal(resources.observationLimit,4096);
   assert.equal(resources.operationLimitPerPlugin,4);assert.equal(resources.operationLimitTotal,16);assert.equal(resources.observationTimeoutMs,5000);
-  assert.deepEqual(resources.kinds,["connection","forward","mount","task","transfer"]);assert.deepEqual(resources.states,["owned","releaseRequested","cleanupRequired"]);
+  const kinds=["connection","forward","mount","task","transfer"];
+  if(catalogue.methods.some(({name})=>name==="files.content.prepare"))kinds.push("fileContent");
+  assert.deepEqual(resources.kinds,kinds);assert.deepEqual(resources.states,["owned","releaseRequested","cleanupRequired"]);
   assert.equal(resources.paging,"revision-bound");assert.equal(resources.cancellation,"cooperative-settlement");assert.equal(resources.persistence,false);
 }
