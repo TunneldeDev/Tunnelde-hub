@@ -2476,6 +2476,29 @@
       }
     },
     {
+      "name": "storage.recovery.observe",
+      "permissions": [
+        "storage.recovery.read"
+      ],
+      "params": "{revision?:string}",
+      "description": "Observe bounded persisted storage recovery metadata: version, opaque revision, eight current/default locations, pending {action:apply|cancel,restartRequested,changes} or null, recordedCopies [{category,kind:previous|archive,path}], and hasError. No filesystem scan, raw errors, private IDs, contents or secrets. Recorded paths do not prove existence, integrity, ownership, completeness or deletion authority. Strict request/revision and path limits follow the independent v1 schema; snapshot <=127KiB, response <=128KiB. Runtime authorization before/after read; conditional latest-state polling may coalesce changes. Experimental; discover support before use.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "storage.recovery.request",
+      "permissions": [
+        "storage.recovery.read",
+        "storage.recovery.write"
+      ],
+      "params": "{revision:string,action:retry|cancel}",
+      "description": "Ask native plugin-identified confirmation for an exact pending recovery plan. Persist a restart request only under live runtime permissions, cancellation fence and final metadata CAS; no immediate migration, restart or artifact deletion. retry preserves persisted apply/cancel direction; cancel irreversibly sets cancel. Returns {version:1,outcome:restartScheduled|dismissed,snapshot}. Retains errors/copies; startup consumes restartRequested before recovery I/O. Repeating an unchanged exact request is idempotent metadata. Confirmation expires at55s; SDK default70s. A lost reply after commit is uncertain: observe, never blindly retry. storage.locations.cancel remains limited to unstarted plans.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
       "name": "storage.locations.observe",
       "permissions": [
         "storage.locations.read"

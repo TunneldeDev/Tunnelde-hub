@@ -56,6 +56,9 @@
       "ui/storage/pluginData/json.d.mts",
       "ui/storage/pluginData/observation.d.mts",
       "ui/storage/pluginData/snapshot.d.mts",
+      "ui/storage/recovery/observation.d.mts",
+      "ui/storage/recovery/request.d.mts",
+      "ui/storage/recovery/snapshot.d.mts",
       "ui/terminal/surface.d.mts",
       "ui/workbench/slots.d.mts"
     ],
@@ -257,6 +260,15 @@
     ],
     "ui/storage/pluginData/snapshot.d.mts": [
       "ui/storage/pluginData/json.d.mts"
+    ],
+    "ui/storage/recovery/observation.d.mts": [
+      "ui/storage/recovery/snapshot.d.mts"
+    ],
+    "ui/storage/recovery/request.d.mts": [
+      "ui/storage/recovery/snapshot.d.mts"
+    ],
+    "ui/storage/recovery/snapshot.d.mts": [
+      "ui/storage/locations/location.d.mts"
     ],
     "ui/terminal/surface.d.mts": [
       "react"
