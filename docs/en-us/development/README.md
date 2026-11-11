@@ -37,3 +37,5 @@
 - [Persisted log reading and subscriptions](logging.md)
 
 - [Public profile contents](profiles-content.md)
+
+- [Public profile writes and activation](profiles-mutations.md)

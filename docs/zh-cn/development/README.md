@@ -36,3 +36,5 @@
 - [持久化日志读取与订阅](logging.md)
 
 - [公共 Profile 正文](profiles-content.md)
+
+- [公共 Profile 写入与启用](profiles-mutations.md)

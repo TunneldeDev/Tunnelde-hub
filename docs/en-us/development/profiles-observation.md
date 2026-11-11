@@ -38,5 +38,6 @@ Stop/abort suppresses late delivery; cancelled unsettled work retains quota.
 `closed` means delivery stopped; `done` waits for settlement and resolves
 stopped/aborted/failed. Errors stop without retries. Callbacks own any additional
 work they start. Revision-bound [public content reads](profiles-content.md) have
-a separate content token and SDK read method. Writes, activation and import/export
-remain independent future contracts; existing native controls are unchanged.
+a separate content token and SDK read method. [Staged writes and confirmed activation](profiles-mutations.md)
+require separate write permission. Import/export remains a separate contract;
+existing native controls retain their contracts.
