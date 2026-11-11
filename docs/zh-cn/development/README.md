@@ -30,3 +30,5 @@
 - [界面提供者](ui-providers.md)
 
 - [已加载编辑器缓冲区数据](editor-buffers.md)
+
+- [Profile 元数据订阅](profiles-observation.md)

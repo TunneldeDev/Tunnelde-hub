@@ -369,6 +369,7 @@
       "namespaces": [
         "settings",
         "preferences",
+        "profiles",
         "storage"
       ]
     },

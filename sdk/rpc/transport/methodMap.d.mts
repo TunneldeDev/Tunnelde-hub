@@ -15,10 +15,11 @@ import type { MonitorMethodMap } from "../monitor/methods.mjs";
 import type { MountsMethodMap } from "../mounts/methods.mjs";
 import type { SettingsMethodMap } from "../settings/methods.mjs";
 import type { PreferencesMethodMap } from "../settings/preferences/methods.mjs";
+import type { ProfilesMethodMap } from "../settings/profiles/methods.mjs";
 import type { ConfigurationMethodMap } from "../configuration/methods.mjs";
 import type { StorageMethodMap } from "../storage/methods.mjs";
 import type { TerminalMethodMap } from "../terminal/methods.mjs";
 import type { ToolsMethodMap } from "../tools/methods.mjs";
 import type { WorkbenchMethodMap } from "../workbench/methods.mjs";
 
-export interface HostMethodMap extends RuntimeResourcesMethodMap, HostsMethodMap, DiscoveryMethodMap, WorkbenchMethodMap, ForwardingMethodMap, MountsMethodMap, EditorMethodMap, EventsMethodMap, StorageMethodMap, ExecutionMethodMap, ToolsMethodMap, FilesMethodMap, MonitorMethodMap, HistoryMethodMap, ApplicationMethodMap, SettingsMethodMap, PreferencesMethodMap, ConfigurationMethodMap, ConnectionsMethodMap, TerminalMethodMap, ClipboardMethodMap, LoggingMethodMap {}
+export interface HostMethodMap extends RuntimeResourcesMethodMap, HostsMethodMap, DiscoveryMethodMap, WorkbenchMethodMap, ForwardingMethodMap, MountsMethodMap, EditorMethodMap, EventsMethodMap, StorageMethodMap, ExecutionMethodMap, ToolsMethodMap, FilesMethodMap, MonitorMethodMap, HistoryMethodMap, ApplicationMethodMap, SettingsMethodMap, PreferencesMethodMap, ProfilesMethodMap, ConfigurationMethodMap, ConnectionsMethodMap, TerminalMethodMap, ClipboardMethodMap, LoggingMethodMap {}
