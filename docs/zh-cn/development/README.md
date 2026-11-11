@@ -24,6 +24,7 @@
 - [快捷搜索结果提供者](quick-access-ui.md)
 - [持久运行器恢复](runner-recovery.md)
 - [运行资源生命周期](runtime-resources.md)
+- [取消插件调用](request-cancellation.md)
 - [插件底栏 API](status-bar.md)
 - [标签栏扩展](tab-bar.md)
 - [终端提供者（实验性）](terminal-ui.md)

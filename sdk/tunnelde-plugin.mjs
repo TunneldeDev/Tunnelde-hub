@@ -22,6 +22,9 @@ export function createPlugin(
   function call(method, params = {}, { signal, timeoutMs = timeout } = {}) {
     if (disposed)
       return Promise.reject(new Error("Plugin transport is closed"));
+    if (signal !== undefined && (!signal || typeof signal.aborted !== "boolean" ||
+        typeof signal.addEventListener !== "function" || typeof signal.removeEventListener !== "function"))
+      return Promise.reject(new TypeError("Invalid AbortSignal"));
     if (signal?.aborted)
       return Promise.reject(signal.reason ?? new Error("Aborted"));
     if (pending.size >= 32)
@@ -42,20 +45,31 @@ export function createPlugin(
     }
     return new Promise((resolve, reject) => {
       const id = ++sequence;
+      let sent = false;
       const finish = (error, value) => {
         if (!pending.delete(id)) return;
         clearTimeout(timer);
-        signal?.removeEventListener("abort", abort);
+        try { signal?.removeEventListener("abort", abort); } catch { /* Always settle. */ }
         error ? reject(error) : resolve(value);
       };
-      const abort = () => finish(signal.reason ?? new Error("Aborted"));
+      const cancel = (error) => {
+        if (!pending.has(id)) return;
+        finish(error);
+        if (sent && !disposed) {
+          try { send({ jsonrpc: "2.0", method: "$/cancelRequest", params: { id } }); }
+          catch { close(); }
+        }
+      };
+      const abort = () => cancel(signal.reason ?? new Error("Aborted"));
       const timer = setTimeout(
-        () => finish(new Error(`Host call timed out: ${method}`)),
+        () => cancel(new Error(`Host call timed out: ${method}`)),
         timeoutMs,
       );
-      pending.set(id, { finish });
-      signal?.addEventListener("abort", abort, { once: true });
+      pending.set(id, { finish, cancel: () => cancel(new Error("Plugin transport closed")) });
       try {
+        signal?.addEventListener("abort", abort, { once: true });
+        if (signal?.aborted) return abort();
+        sent = true;
         send({ jsonrpc: "2.0", id, method, params });
       } catch (error) {
         finish(error);
@@ -204,5 +218,8 @@ export function createPlugin(
   input.on("close", close);
   input.on("error", close);
   output.on("error", close);
-  return Object.freeze({ host, close });
+  return Object.freeze({ host, close: () => {
+    for (const request of [...pending.values()]) request.cancel();
+    close();
+  } });
 }

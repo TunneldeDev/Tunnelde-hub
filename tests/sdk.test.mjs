@@ -216,6 +216,61 @@ test("SDK validates API bounds without sending frames and recovers slots", async
   }
 });
 
+test("SDK sends owned cancellation exactly once on abort and deadline, without a request id", async t => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  const wire = transport(), owner = new AbortController();
+  try {
+    const pending = wire.plugin.host.call("ui.confirm", {}, { signal: owner.signal });
+    const request = await wire.next();
+    owner.abort(new Error("cancelled"));
+    await assert.rejects(pending, /cancelled/);
+    assert.deepEqual(await wire.next(), {jsonrpc: "2.0", method: "$/cancelRequest", params: {id: request.id}});
+    wire.send({jsonrpc: "2.0", id: request.id, result: true});
+    const expired = wire.plugin.host.call("ui.confirm", {}, {timeoutMs: 10});
+    const second = await wire.next();
+    t.mock.timers.tick(10);
+    await assert.rejects(expired, /timed out/);
+    assert.deepEqual(await wire.next(), {jsonrpc: "2.0", method: "$/cancelRequest", params: {id: second.id}});
+    const completed = wire.plugin.host.call("api.describe");
+    const third = await wire.next();
+    wire.send({jsonrpc: "2.0", id: third.id, result: {ok: true}});
+    assert.deepEqual(await completed, {ok: true});
+    t.mock.timers.tick(120000);
+    const last = wire.plugin.host.call("api.describe");
+    const lastFrame = await wire.next();
+    assert.equal(lastFrame.method, "api.describe");
+    wire.send({jsonrpc: "2.0", id: lastFrame.id, result: null});
+    await last;
+  } finally { wire.close(); }
+});
+
+test("SDK malformed and pre-aborted signals allocate no requests", async () => {
+  const wire = transport(), owner = new AbortController();
+  try {
+    owner.abort(new Error("before"));
+    await assert.rejects(wire.plugin.host.call("api.describe", {}, {signal: owner.signal}), /before/);
+    for (const signal of [null, {}, {aborted: false}, {aborted: false, addEventListener(){throw new Error("listener");}, removeEventListener(){throw new Error("cleanup");}}])
+      await assert.rejects(wire.plugin.host.call("api.describe", {}, {signal}));
+    const pending = wire.plugin.host.call("api.describe");
+    const only = await wire.next();
+    assert.equal(only.method, "api.describe");
+    wire.send({jsonrpc: "2.0", id: only.id, result: null});
+    await pending;
+  } finally { wire.close(); }
+});
+
+test("SDK explicit disposal cancels each outstanding host request once", async () => {
+  const wire = transport();
+  try {
+    const a=wire.plugin.host.call("ui.confirm"), b=wire.plugin.host.call("storage.observe");
+    const settled=Promise.all([assert.rejects(a,/closed/),assert.rejects(b,/closed/)]);
+    const first=await wire.next(), second=await wire.next();
+    wire.plugin.close(); wire.plugin.close();
+    await settled;
+    for (const id of [first.id,second.id]) assert.deepEqual(await wire.next(),{jsonrpc:"2.0",method:"$/cancelRequest",params:{id}});
+  } finally { wire.close(); }
+});
+
 test("SDK supports per-call deadlines and output failure cancels pending RPC", async () => {
   const t = transport({}, { timeout: 1 });
   try {

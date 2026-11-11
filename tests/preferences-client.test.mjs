@@ -174,6 +174,7 @@ test("real stdio host close settles a pending subscription and suppresses later 
   let calls = 0;
   output.on("data", data => {
     const request = JSON.parse(data.toString());
+    if (request.method === "$/cancelRequest") return;
     calls++;
     if (calls === 1) input.write(JSON.stringify({ jsonrpc: "2.0", id: request.id, result: changed("a") }) + "\n");
   });
@@ -190,7 +191,7 @@ test("real stdio abort removes an outstanding read before a late response", asyn
   const input = new PassThrough(), output = new PassThrough();
   const runtime = createPlugin({}, { input, output });
   let request;
-  output.on("data", data => { request = JSON.parse(data.toString()); });
+  output.on("data", data => { const value=JSON.parse(data.toString()); if (value.id !== undefined) request=value; });
   const owner = new AbortController(), client = createPreferencesClient(runtime.host);
   const sub = client.subscribe(() => assert.fail(), { signal: owner.signal });
   await flush(); owner.abort(); assert.deepEqual(await sub.done, { reason: "aborted" });
@@ -202,8 +203,8 @@ test("real stdio read deadline stops a silent subscription after ten seconds", a
   clock(t);
   const input = new PassThrough(), output = new PassThrough();
   const runtime = createPlugin({}, { input, output });
-  let calls = 0;
-  output.on("data", () => { calls++; });
+  const calls = [];
+  output.on("data", data => { calls.push(JSON.parse(data.toString())); });
   const client = createPreferencesClient(runtime.host);
   const sub = client.subscribe(() => assert.fail(), { signal: new AbortController().signal });
   await flush(); t.mock.timers.tick(9999); await flush();
@@ -211,6 +212,9 @@ test("real stdio read deadline stops a silent subscription after ten seconds", a
   t.mock.timers.tick(1);
   const result = await sub.done;
   assert.equal(result.reason, "failed"); assert.match(result.error.message, /timed out: preferences.observe/);
-  t.mock.timers.tick(60000); await flush(); assert.equal(calls, 1);
+  t.mock.timers.tick(60000); await flush();
+  assert.equal(calls.filter(item => item.method === "preferences.observe").length, 1);
+  assert.deepEqual(calls[1], {jsonrpc: "2.0", method: "$/cancelRequest", params: {id: calls[0].id}});
+  assert.equal(calls.length, 2);
   runtime.close();
 });
