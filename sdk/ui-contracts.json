@@ -134,10 +134,14 @@
       "ui/preferences/data/groups/transfers.d.mts",
       "ui/preferences/data/groups/updates.d.mts",
       "ui/preferences/data/groups/workspace.d.mts",
+      "ui/preferences/data/observation.d.mts",
       "ui/preferences/data/schema.d.mts",
       "ui/preferences/data/snapshot.d.mts",
       "ui/preferences/data/update.d.mts",
       "ui/preferences/data/values.d.mts"
+    ],
+    "ui/preferences/data/observation.d.mts": [
+      "ui/preferences/data/snapshot.d.mts"
     ],
     "ui/preferences/data/schema.d.mts": [
       "ui/preferences/data/values.d.mts"

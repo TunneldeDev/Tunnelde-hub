@@ -19,6 +19,7 @@
 - [核心 API 兼容性](plugin-api.md)
 - [插件事件契约](plugin-events.md)
 - [设置表单提供者](preferences-ui.md)
+- [公开设置变更观察](preferences-observation.md)
 - [进程管理提供者](processes-ui.md)
 - [快捷搜索结果提供者](quick-access-ui.md)
 - [持久运行器恢复](runner-recovery.md)

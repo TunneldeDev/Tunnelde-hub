@@ -1,5 +1,8 @@
 # Tunnelde plugin SDK
 
+Public preference conditional reads and abortable observation:
+[English](../docs/en-us/development/preferences-observation.md) · [简体中文](../docs/zh-cn/development/preferences-observation.md).
+
 Required installed dependencies, manifest admission v2 and independent approval:
 [English](../docs/en-us/development/plugin-activation.md) · [简体中文](../docs/zh-cn/development/plugin-activation.md).
 

@@ -14,3 +14,4 @@ export type * from "./values.mjs";
 export type * from "./snapshot.mjs";
 export type * from "./update.mjs";
 export type * from "./schema.mjs";
+export type * from "./observation.mjs";

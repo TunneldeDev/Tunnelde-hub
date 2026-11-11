@@ -19,6 +19,7 @@
 - [Core API compatibility](plugin-api.md)
 - [Plugin event contract](plugin-events.md)
 - [Preference form providers](preferences-ui.md)
+- [Public preference observation](preferences-observation.md)
 - [Process manager providers](processes-ui.md)
 - [Quick-access result providers](quick-access-ui.md)
 - [Durable runner recovery](runner-recovery.md)
