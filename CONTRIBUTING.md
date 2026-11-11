@@ -54,3 +54,9 @@ independent of application releases and do not publish desktop installers.
 Forks can expose the same registry format from a public HTTPS URL and be added as custom
 sources in Tunnelde. The app binds updates to their original source; changing a source does
 not grant it permission to replace a package installed from another publisher.
+
+## Documentation structure / 文档结构
+
+Follow the [documentation directory guide](docs/README.md): language first, then purpose. Keep translated paths aligned and update links when moving pages.
+
+遵循[文档目录说明](docs/README.md)：先按语言、再按用途归档；保持翻译路径对应，移动文档时同步更新链接。

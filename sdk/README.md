@@ -1,19 +1,19 @@
 # Tunnelde plugin SDK
 
 Required installed dependencies, manifest admission v2 and independent approval:
-[English](../docs/plugin-activation.en-us.md) · [简体中文](../docs/plugin-activation.zh-cn.md).
+[English](../docs/en-us/development/plugin-activation.md) · [简体中文](../docs/zh-cn/development/plugin-activation.md).
 
 The compatibility entry `tunnelde-plugin.d.mts` re-exports public declarations
 from `rpc/<domain>/`. DTOs, method maps, transport and lifecycle own separate
 files. Copy the declaration tree with the SDK for TypeScript development. Runtime
 imports of `createPlugin` still use `tunnelde-plugin.mjs`; the `rpc/` tree contains
-types only. See [English](../docs/plugin-api.en-us.md#sdk-source-organization) /
-[简体中文](../docs/plugin-api.zh-cn.md#sdk-源码分类) for domain imports and checks.
+types only. See [English](../docs/en-us/development/plugin-api.md#sdk-source-organization) /
+[简体中文](../docs/zh-cn/development/plugin-api.md#sdk-源码分类) for domain imports and checks.
 
-File context-menu contributions are under development: [English](../docs/file-menu.en-us.md) · [简体中文](../docs/file-menu.zh-cn.md).
+File context-menu contributions are under development: [English](../docs/en-us/development/file-menu.md) · [简体中文](../docs/zh-cn/development/file-menu.md).
 
 Editor commands, formatting and contributed keybindings:
-[English](../docs/editor-plugins.en-us.md) · [简体中文](../docs/editor-plugins.zh-cn.md).
+[English](../docs/en-us/development/editor-plugins.md) · [简体中文](../docs/zh-cn/development/editor-plugins.md).
 
 Copy `tunnelde-plugin.mjs` into an executable Node plugin and import `createPlugin`.
 There are no npm dependencies or implicit runtime downloads. The SDK starts only when
@@ -51,8 +51,8 @@ copies these definitions from the selected application's embedded contract file;
 not infer schemas from the descriptive parameter string. Older hosts can omit `contract`.
 
 The first stable core covers discovery, authenticated session listing and plugin-scoped
-JSON storage. See [Core API compatibility](../docs/plugin-api.en-us.md)
-([简体中文](../docs/plugin-api.zh-cn.md)) for permissions, quotas and error handling.
+JSON storage. See [Core API compatibility](../docs/en-us/development/plugin-api.md)
+([简体中文](../docs/zh-cn/development/plugin-api.md)) for permissions, quotas and error handling.
 Stable contracts also cover status bar contributions and the versioned editor buffer
 API. `EditorDocument` and `EditorWriteResult` are independent DTOs; buffer replacement
 requires a matching document identity/revision, supports undo and never saves to disk.
@@ -143,7 +143,7 @@ The transport consumes stdin and writes protocol frames to stdout. Write diagnos
 stderr or use `host.log` with the `log` permission. Requests from the host are handled while
 plugin-to-host calls are waiting, so a command can safely await API results.
 
-Use the main application's [API guide](https://github.com/TunneldeDev/Tunnelde/blob/main/docs/plugins.md)
+Use the main application's [API guide](https://github.com/TunneldeDev/Tunnelde/blob/dev/docs/en-us/development/plugins/README.md)
 for the complete permission table, method parameters, limits, restricted-mode behavior and
 CLI recovery options. Plugin authors should handle denied permissions and interrupted calls
 without retrying writes automatically.
@@ -160,7 +160,7 @@ secrets. A `null` result acknowledges transport acceptance, not subscriber proce
 or durable delivery. There is no replay or cross-request completion-order guarantee;
 use a query/snapshot for recoverable state. `eventSchema` in discovery describes the
 host envelope, not every plugin-defined payload. See the bilingual event guides:
-[English](../docs/plugin-events.en-us.md) · [简体中文](../docs/plugin-events.zh-cn.md).
+[English](../docs/en-us/development/plugin-events.md) · [简体中文](../docs/zh-cn/development/plugin-events.md).
 
 The SDK reads LF-delimited frames with a bounded 1 MiB buffer, preserving Unicode
 line/paragraph separators and split UTF-8. Outgoing separators are escaped for old
@@ -224,7 +224,7 @@ requests stopping but cannot prove a disconnected remote process has ended.
 
 New deployments also bind the observed server key. Legacy destination review and
 per-task package handoff require native consent through experimental `runners.review`.
-See [durable runner recovery](../docs/runner-recovery.en-us.md) for the contract and
+See [durable runner recovery](../docs/en-us/development/runner-recovery.md) for the contract and
 the host-owned recovery interface available without starting a plugin.
 
 ## Controlled workspace and chat views
@@ -252,7 +252,7 @@ and retire recovery actions when that cursor is replaced.
 
 Tunnelde 0.26.0 adds optional chat preparation/install commands and per-target
 `readiness`. See the [chat schema](../plugins/README.md#sidebar-and-chat-views) and
-[assistant initialization guide](../docs/assistant-plugins-1.4.md). A declared preparation
+[assistant initialization guide](../docs/en-us/releases/assistant-plugins-1.4.md). A declared preparation
 command replaces Send until the selected profile and target are ready. Initialization
 must acknowledge promptly and support cancellation; the host refreshes checking views
 as a fallback when a completion event is lost.
@@ -269,9 +269,9 @@ reflect that existing wire behavior; TypeScript code that explicitly annotated
 such a result as `void` should use `null` or ignore the result instead. This
 correction does not change the runtime protocol.
 
-Stable status bar contributions: [English](../docs/status-bar.en-us.md) · [简体中文](../docs/status-bar.zh-cn.md).
+Stable status bar contributions: [English](../docs/en-us/development/status-bar.md) · [简体中文](../docs/zh-cn/development/status-bar.md).
 
-Stable tab bar controls: [English](../docs/tab-bar.en-us.md) · [简体中文](../docs/tab-bar.zh-cn.md).
+Stable tab bar controls: [English](../docs/en-us/development/tab-bar.md) · [简体中文](../docs/zh-cn/development/tab-bar.md).
 
 ### Structured local logging
 
@@ -294,4 +294,4 @@ plain text. For a confirmation that can wait for the host's 55-second UI deadlin
 explicit confirmation, false means dismissal or UI expiry. Stop/revocation and transport
 errors can reject. See the bilingual API guide for limits and busy-dialog behavior.
 
-Experimental host discovery: `host.sources.set(source)`, `host.sources.remove(id)` and `host.sources.snapshot({ offset?, revision? })`. Discovery is runtime-owned, nonsecret and separate from saved hosts. See the [English](../docs/plugin-api.en-us.md#dynamic-host-sources-experimental) / [中文](../docs/plugin-api.zh-cn.md#动态主机来源实验性) contract for limits, revisioned pagination and connection lifetime.
+Experimental host discovery: `host.sources.set(source)`, `host.sources.remove(id)` and `host.sources.snapshot({ offset?, revision? })`. Discovery is runtime-owned, nonsecret and separate from saved hosts. See the [English](../docs/en-us/development/plugin-api.md#dynamic-host-sources-experimental) / [中文](../docs/zh-cn/development/plugin-api.md#动态主机来源实验性) contract for limits, revisioned pagination and connection lifetime.
