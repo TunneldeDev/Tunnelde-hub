@@ -57,3 +57,18 @@ Deployment captures the approved package bytes before mutation (32 MiB snapshot
 limit), validates the explicitly selected helper (64 MiB limit), refuses helper
 path collisions, and creates uploaded files exclusively. A preparation error leaves
 no remote mutation. No system Node runtime is selected implicitly.
+
+## Configuration writes
+
+Hosts with configuration journaling save unsubmitted, creation-unconfirmed,
+write-incomplete and saved phases separately from launch state. Configuration files
+are created exclusively with mode 0600 at OPEN and written in bounded chunks with
+authorization and exact-record checks. A newer stop or revoked runtime prevents a
+late write acknowledgement from dispatching a helper start. The selected helper
+protocol and existing `runners.list` fields remain unchanged.
+
+Native recovery displays the phase without exposing configuration values or secrets.
+Stopped or `notFound` task status does not settle an unknown configuration OPEN,
+WRITE or CLOSE. Those records cannot be forgotten. Saved does not mean artifacts
+were cleaned up; explicit removal of eligible terminal records preserves remote
+files. Historical records remain readable without guessing their config state.
