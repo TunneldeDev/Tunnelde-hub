@@ -23,6 +23,9 @@
       "ui/frontend/providers.d.mts",
       "ui/frontend/views.d.mts",
       "ui/history/provider.d.mts",
+      "ui/logging/entry.d.mts",
+      "ui/logging/page.d.mts",
+      "ui/logging/query.d.mts",
       "ui/monitor/processes/entry.d.mts",
       "ui/monitor/processes/provider.d.mts",
       "ui/monitor/processes/query.d.mts",
@@ -120,6 +123,14 @@
     ],
     "ui/history/provider.d.mts": [
       "react"
+    ],
+    "ui/logging/entry.d.mts": [],
+    "ui/logging/page.d.mts": [
+      "ui/logging/entry.d.mts",
+      "ui/logging/query.d.mts"
+    ],
+    "ui/logging/query.d.mts": [
+      "ui/logging/entry.d.mts"
     ],
     "ui/monitor/processes/entry.d.mts": [],
     "ui/monitor/processes/provider.d.mts": [
