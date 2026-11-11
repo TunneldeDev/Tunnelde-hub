@@ -2476,6 +2476,41 @@
       }
     },
     {
+      "name": "storage.locations.observe",
+      "permissions": [
+        "storage.locations.read"
+      ],
+      "params": "{revision?:string}",
+      "description": "Read conditional global storage location metadata without inventory scanning. Initial snapshot has version, opaque revision, eight locations with category/path/defaultPath/overridden, pending normalized changes or null, and recoveryRequired. No raw config, plan ID, errors, contents or keyring. Strict revision 1-128 UTF-8 bytes without controls; null/extra fields fail. Paths are absolute valid UTF-8, at most 4096 bytes without controls. Response <=128KiB. Shared native writer lock and post-read authorization; no writes or per-commit events. Latest-state identity includes native pending UUID; detect experimental support with api.describe.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "storage.locations.schedule",
+      "permissions": [
+        "storage.locations.read",
+        "storage.locations.write"
+      ],
+      "params": "{revision:string,changes:[{category,target,migrate}]}",
+      "description": "Normalize and validate 1-8 distinct category changes, then ask the user through a native plugin-identified confirmation. Revalidate exact destinations and compare revision under the native writer lock after approval; persist only while runtime permissions remain valid. Returns {version:1,outcome:scheduled|dismissed,snapshot}; no automatic restart or immediate migration. Existing native path/space/overlap and pending-plan checks apply. Confirmation expires after 55s; use a transport timeout above 60s. Cancellation before commit must settle; a committed plan is not undone by a late lost reply.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "storage.locations.cancel",
+      "permissions": [
+        "storage.locations.read",
+        "storage.locations.write"
+      ],
+      "params": "{revision:string}",
+      "description": "Confirm cancellation of an exact unstarted pending storage migration. Recheck revision and runtime at bounded metadata commit. Returns {version:1,outcome:cancelled|dismissed,snapshot}. A failed migration or existing staging/published/recovery artifacts returns storage.locations.recoveryRequired and preserves the native recovery plan; this method never deletes artifacts. No immediate restart. Confirmation uses the same 55s owner/cancellation lifetime as scheduling.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
       "name": "storage.observe",
       "permissions": [],
       "params": "{revision?:string}",

@@ -1,4 +1,5 @@
 import { syncStorageContracts } from "./sdk/storage/contracts.mjs";
+import { syncLocationContracts } from "./sdk/storage/locations.mjs";
 import { checkRuntimeResources } from "./sdk/runtime/resources/discovery.mjs";
 import { checkActivation } from "./sdk/runtime/activation/discovery.mjs";
 import { syncRuntimeResourceContracts } from "./sdk/runtime/resources/contracts.mjs";
@@ -91,6 +92,8 @@ async function syncWorkspaceTypes(applicationDirectory, sdkSource, catalogue, ch
 export async function syncSdk(applicationDirectory, { check = false, sdkDirectory = join(root, "sdk") } = {}) {
   const source = resolve(applicationDirectory);
   const catalogue = await loadRustCatalogue(source);
+  if (catalogue.methods.some(({ name }) => name === "storage.locations.observe"))
+    await syncLocationContracts(source, sdkDirectory, check);
   if (catalogue.methods.some(({ name }) => name === "storage.observe"))
     await syncStorageContracts(source, sdkDirectory, check);
   if (catalogue.methods.some(({ name }) => name === "profiles.observe"))

@@ -73,6 +73,8 @@ export function validateManifest(manifest, id) {
     "mounts.write",
     "forwards.read",
     "forwards.write",
+    "storage.locations.read",
+    "storage.locations.write",
     "backgroundTasks.read",
     "backgroundTasks.write",
   ]);
