@@ -1,4 +1,4 @@
-import type { FrontendContext, UiResourceScope } from "../../../sdk/tunnelde-ui.mjs";
+import type { FrontendContext, FrontendViewProps, UiResourceScope } from "../../../sdk/tunnelde-ui.mjs";
 import type { UiChildResourceOptions } from "../../../sdk/ui/runtime/resources.mjs";
 
 declare const context: FrontendContext;
@@ -25,3 +25,11 @@ void older;
 // @ts-expect-error Limits have a numeric contract, not an auto or string sentinel.
 const invalid: UiChildResourceOptions = { limit: "8" };
 void invalid;
+
+declare const view: FrontendViewProps;
+view.resources?.use(() => {});
+const historicalView: FrontendViewProps = { pluginId: "example", viewId: "main", visible: true };
+void historicalView;
+// @ts-expect-error View lifetimes use the scoped contract, not arbitrary host state.
+const invalidView: FrontendViewProps = { pluginId: "x", viewId: "x", visible: true, resources: {} };
+void invalidView;
