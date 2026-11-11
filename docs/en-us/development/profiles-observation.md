@@ -37,5 +37,6 @@ Subscriptions require an owner signal; eight per client, serial reads/callbacks,
 Stop/abort suppresses late delivery; cancelled unsettled work retains quota.
 `closed` means delivery stopped; `done` waits for settlement and resolves
 stopped/aborted/failed. Errors stop without retries. Callbacks own any additional
-work they start. Profile content, activation and import/export remain independent
-future contracts; existing native profile controls are unchanged.
+work they start. Revision-bound [public content reads](profiles-content.md) have
+a separate content token and SDK read method. Writes, activation and import/export
+remain independent future contracts; existing native controls are unchanged.

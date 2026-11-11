@@ -35,3 +35,5 @@
 
 - [Profile metadata subscriptions](profiles-observation.md)
 - [Persisted log reading and subscriptions](logging.md)
+
+- [Public profile contents](profiles-content.md)

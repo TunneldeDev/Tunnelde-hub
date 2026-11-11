@@ -32,4 +32,5 @@ const outcome = await subscription.done;
 1000–60000 ms（默认 2000），读取期限 10000 ms。停止/取消阻止迟到投递；未结算
 工作仍占额度。`closed` 表示停止投递；`done` 等待结算，解析为
 stopped/aborted/failed。错误不自动重试；回调自行启动的工作需自管生命周期。
-配置正文、激活及导入导出仍需独立后续契约；现有原生 Profile 控件保持兼容。
+[公共正文读取](profiles-content.md) 使用独立正文修订号及 SDK read 方法。正文写入、
+激活及导入导出仍需独立后续契约；现有原生 Profile 控件保持兼容。

@@ -59,6 +59,8 @@ export type * from "./rpc/settings/methods.mjs";
 export type * from "./rpc/settings/profiles/metadata.mjs";
 export type * from "./rpc/settings/profiles/snapshot.mjs";
 export type * from "./rpc/settings/profiles/observation.mjs";
+export type * from "./rpc/settings/profiles/content/catalogue.mjs";
+export type * from "./rpc/settings/profiles/content/read.mjs";
 export type * from "./rpc/settings/profiles/methods.mjs";
 export type * from "./rpc/settings/profiles/client.mjs";
 export type * from "./rpc/settings/preferences/index.mjs";
