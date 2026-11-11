@@ -3,7 +3,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
 export async function syncRuntimeResourceContracts(application, sdk, check) {
-  for (const name of ["resource", "snapshot", "release"]) {
+  for (const name of ["resource", "snapshot", "release", "identify"]) {
     const source = (await readFile(join(application, "src/lib/extensions/contracts/runtime/lifecycle", name + ".ts"), "utf8")).replaceAll("\r\n", "\n");
     assert.ok(!/@\/|\bnamespace\b/.test(source));
     for (const match of source.matchAll(/from "([^"]+)"/g)) assert.match(match[1], /^\.\/[a-z]+\.js$/);

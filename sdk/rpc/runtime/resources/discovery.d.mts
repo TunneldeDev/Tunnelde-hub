@@ -1,4 +1,5 @@
 export interface RuntimeResourcesDiscovery {
+  identify?: "resources.identify";
   snapshot: "resources.snapshot";
   release: "resources.release";
   stability: "experimental";

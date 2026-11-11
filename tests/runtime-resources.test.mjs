@@ -7,8 +7,10 @@ import { createRuntimeResourcesClient } from "../sdk/runtime/resources/client.mj
 test("resource facade preserves pagination revisions and exact handles through the owner transport", async () => {
   const calls = [], host = {call:async (method, params) => {calls.push([method,params]);return params;}};
   const client=createRuntimeResourcesClient(host), page={offset:128,revision:"a".repeat(64)}, request={handle:"b".repeat(64)};
+  const reference={kind:"connection",id:"session-id"};
   await client.snapshot(); assert.equal(await client.snapshot(page),page);assert.equal(await client.release(request),request);
-  assert.deepEqual(calls,[["resources.snapshot",{}],["resources.snapshot",page],["resources.release",request]]);assert(Object.isFrozen(client));
+  assert.equal(await client.identify(reference),reference);
+  assert.deepEqual(calls,[["resources.snapshot",{}],["resources.snapshot",page],["resources.release",request],["resources.identify",reference]]);assert(Object.isFrozen(client));
 });
 test("strict runtime resources types exclude foreign targets and invalid methods without a fallback overload", () => {
   const program=ts.createProgram([resolve("tests/fixtures/runtime-resources/consumer.mts")],{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.NodeNext,moduleResolution:ts.ModuleResolutionKind.NodeNext,strict:true,noEmit:true,skipLibCheck:false,types:["node"]});

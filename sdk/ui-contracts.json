@@ -27,6 +27,7 @@
       "ui/monitor/sample.d.mts",
       "ui/preferences/data/index.d.mts",
       "ui/preferences/provider.d.mts",
+      "ui/runtime/lifecycle/identify.d.mts",
       "ui/runtime/lifecycle/release.d.mts",
       "ui/runtime/lifecycle/resource.d.mts",
       "ui/runtime/lifecycle/snapshot.d.mts",
@@ -165,6 +166,9 @@
       "ui/preferences/data/schema.d.mts",
       "ui/preferences/data/snapshot.d.mts",
       "ui/preferences/data/update.d.mts"
+    ],
+    "ui/runtime/lifecycle/identify.d.mts": [
+      "ui/runtime/lifecycle/resource.d.mts"
     ],
     "ui/runtime/lifecycle/release.d.mts": [],
     "ui/runtime/lifecycle/resource.d.mts": [],
