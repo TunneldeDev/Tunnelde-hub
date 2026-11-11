@@ -32,7 +32,28 @@ handoff; do not automatically resend prior operations.
 Settings → Plugins → Remote task recovery lets users inspect and request stopping
 saved tasks without launching their plugin or selecting Node, including after
 uninstallation or in restricted mode. Saved records and SSH availability are not
-proof of a running process. Removing local records requires confirmed terminal
+proof of a running process. Removing task records requires confirmed terminal
 status and no pending stop; remote files remain. An uncertain launch reporting
 `notFound` does not prove exit. Existing `runners.list` fields are unchanged;
 destination and control metadata remain private to the host.
+
+## Interrupted deployment
+
+Hosts with deployment journaling save intent before remote mutation, distinguish
+unconfirmed directory creation from incomplete upload, and publish a deployment
+only after acknowledged completion. The native recovery screen shows these phases
+even when the plugin is stopped. Incomplete deployments are omitted from
+`runners.list`, cannot satisfy `runners.start`, and cause `runners.deploy` to return
+`plugin.runners.deploymentIncomplete` for that destination. Existing ready records
+and listing fields remain compatible.
+
+Use a fresh directory and preserve the incomplete recovery record; do not infer
+ownership or completion from a remote path existing. Only an unsubmitted reservation
+can be removed after native confirmation. Directory creation and upload uncertainty
+cannot be forgotten automatically. The journal does not imply remote artifact
+cleanup: no partial directory is recursively deleted or start/message replayed.
+
+Deployment captures the approved package bytes before mutation (32 MiB snapshot
+limit), validates the explicitly selected helper (64 MiB limit), refuses helper
+path collisions, and creates uploaded files exclusively. A preparation error leaves
+no remote mutation. No system Node runtime is selected implicitly.
