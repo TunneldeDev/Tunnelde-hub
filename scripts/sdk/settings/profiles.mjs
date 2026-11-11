@@ -34,4 +34,16 @@ export async function syncProfilesContracts(applicationDirectory, sdkDirectory, 
     if (check) assert.equal((await readFile(limitsPath, "utf8")).replaceAll("\r\n", "\n"), limits, "Profile content limits differ");
     else await writeFile(limitsPath, limits);
   }
+  if (files.some(name => name.replaceAll("\\", "/").startsWith("mutations/"))) {
+    const schema = JSON.parse(await readFile(join(applicationDirectory, "src-tauri/src/settings_profiles/mutations/schema.json"), "utf8"));
+    const target = join(sdkDirectory, "profiles/mutations/schema.json");
+    const text = JSON.stringify(schema, null, 2) + "\n";
+    if (check) assert.equal((await readFile(target, "utf8")).replaceAll("\r\n", "\n"), text, "Profile mutation schema differs");
+    else { await mkdir(dirname(target), {recursive:true}); await writeFile(target,text); }
+    const path = join(sdkDirectory, "profiles/mutations/limits.mjs");
+    const limits = "// Generated from the profile mutation schema; run sdk:sync to update.\n" +
+      `export const MAX_APPEND_BYTES = ${schema.definitions.append.properties.text["x-maxBytes"]};\n`;
+    if (check) assert.equal((await readFile(path,"utf8")).replaceAll("\r\n","\n"), limits, "Profile mutation limits differ");
+    else await writeFile(path,limits);
+  }
 }

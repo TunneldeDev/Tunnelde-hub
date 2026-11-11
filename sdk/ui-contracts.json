@@ -37,6 +37,8 @@
       "ui/profiles/data/content/catalogue.d.mts",
       "ui/profiles/data/content/read.d.mts",
       "ui/profiles/data/metadata.d.mts",
+      "ui/profiles/data/mutations/drafts.d.mts",
+      "ui/profiles/data/mutations/writes.d.mts",
       "ui/profiles/data/observation.d.mts",
       "ui/profiles/data/snapshot.d.mts",
       "ui/runtime/lifecycle/identify.d.mts",
@@ -213,6 +215,8 @@
     ],
     "ui/profiles/data/content/read.d.mts": [],
     "ui/profiles/data/metadata.d.mts": [],
+    "ui/profiles/data/mutations/drafts.d.mts": [],
+    "ui/profiles/data/mutations/writes.d.mts": [],
     "ui/profiles/data/observation.d.mts": [
       "ui/profiles/data/snapshot.d.mts"
     ],

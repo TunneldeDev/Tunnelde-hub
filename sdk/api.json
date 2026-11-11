@@ -3076,6 +3076,90 @@
       "deprecated": null
     },
     {
+      "name": "profiles.drafts.prepare",
+      "permissions": [
+        "settings.read",
+        "settings.write"
+      ],
+      "params": "{revision:string,totalBytes:number}",
+      "description": "Reserve an in-memory full public PreferenceValues upload against a catalogue pc1 revision. Four global/two per runtime drafts, 32MiB reserved total; body <=16515072 UTF-8 bytes. Runtime/fingerprint/generation owned, idle expiry 120s and absolute expiry 600s, reclaimed lazily or on retirement. No disk staging. No delegated tool access. Experimental; discover before use.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "profiles.drafts.append",
+      "permissions": [
+        "settings.read",
+        "settings.write"
+      ],
+      "params": "{draftId:string,offset:number,text:string}",
+      "description": "Append a nonempty UTF-8 segment <=32768 bytes at exactly the acknowledged byte offset. No duplicate/out-of-order retry. Owner and live permissions rechecked. Returns version, draftId, totalBytes and next acknowledged offset. Invalid append leaves the draft unchanged; expiry never releases an in-flight worker reservation.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "profiles.drafts.discard",
+      "permissions": [
+        "settings.read",
+        "settings.write"
+      ],
+      "params": "{draftId:string}",
+      "description": "Discard an owned upload; absent/foreign/expired IDs succeed without disclosure. A claimed worker returns profiles.draft.busy and retains quota until settlement. Returns {version:1}. Runtime retirement clears only older unclaimed uploads.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "profiles.save",
+      "permissions": [
+        "settings.read",
+        "settings.write"
+      ],
+      "params": "{revision:string,draftId:string,name:string,id?:string}",
+      "description": "Create (without id) or replace an existing saved profile from a complete owned draft. Both draft and repository pc1 revisions must match. Strict eleven public groups, native import policy, normalized unique name, maximum 32 profiles and historical collection byte limit. Replacement preserves saved private selections; creation uses native defaults. Does not activate or change current preferences. Claims are one-shot even on validation failure. Final raw-body/nonce CAS, current grant and cancellation fence precede one atomic commit. Lost replies require catalogue reconciliation; never blindly retry. Returns version/id/new content revision and publishes native change events.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "profiles.rename",
+      "permissions": [
+        "settings.read",
+        "settings.write"
+      ],
+      "params": "{id:string,name:string,revision:string}",
+      "description": "Atomically rename an existing profile with content CAS, bounded normalized unique name, final authorization and cancellation fences. Retains saved body and current selection. Returns version/id/new revision. No automatic uncertain-write retries.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "profiles.delete",
+      "permissions": [
+        "settings.read",
+        "settings.write"
+      ],
+      "params": "{id:string,revision:string}",
+      "description": "Atomically delete an existing profile with content CAS and final authorization/cancellation fences. If selected, clear selection in the same transaction; applied preferences remain unchanged. Returns version/id/new revision. No automatic uncertain-write retries.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "profiles.activate",
+      "permissions": [
+        "settings.read",
+        "settings.write"
+      ],
+      "params": "{id:string,revision:string,preferencesRevision:string}",
+      "description": "Ask native user consent to apply saved public values. Host-owned review names the plugin/profile and changed groups; no policy/DB/writer locks while awaiting confirmation. Recheck full content and current preference revisions at commit, preserve current private provider selections/runtime metadata, atomically persist preferences/revision/selection and always publish committed effects. Denial, stale versions, cancellation and revocation are distinct. activeId means last explicit selection, not content equality. Returns version/id/content revision/new preferencesRevision. No implicit retries or delegated tools.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
       "name": "profiles.catalogue",
       "permissions": [
         "settings.read"
