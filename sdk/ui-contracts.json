@@ -18,6 +18,9 @@
       "ui/editor/data/range.d.mts",
       "ui/files/browser.d.mts",
       "ui/files/content.d.mts",
+      "ui/files/preview/actions.d.mts",
+      "ui/files/preview/data.d.mts",
+      "ui/files/preview/provider.d.mts",
       "ui/forwarding/entry.d.mts",
       "ui/forwarding/provider.d.mts",
       "ui/frontend/lifecycle.d.mts",
@@ -108,6 +111,14 @@
     "ui/files/browser/actions.d.mts": [],
     "ui/files/browser/data.d.mts": [],
     "ui/files/content.d.mts": [],
+    "ui/files/preview/actions.d.mts": [
+      "ui/files/preview/data.d.mts"
+    ],
+    "ui/files/preview/data.d.mts": [],
+    "ui/files/preview/provider.d.mts": [
+      "react",
+      "ui/files/preview/data.d.mts"
+    ],
     "ui/forwarding/entry.d.mts": [],
     "ui/forwarding/provider.d.mts": [
       "react",
@@ -124,6 +135,7 @@
     "ui/frontend/views.d.mts": [
       "ui/backgroundTasks/provider.d.mts",
       "ui/files/browser.d.mts",
+      "ui/files/preview/provider.d.mts",
       "ui/forwarding/provider.d.mts",
       "ui/history/provider.d.mts",
       "ui/monitor/processes/provider.d.mts",

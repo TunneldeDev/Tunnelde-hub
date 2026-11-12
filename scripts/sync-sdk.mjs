@@ -14,6 +14,7 @@ import { loadRpcDeclarations } from "./sdk/rpc/declarations.mjs";
 import { syncPreferencesContracts } from "./sdk/settings/preferences.mjs";
 import { syncProfilesContracts } from "./sdk/settings/profiles.mjs";
 import { syncEditorContracts } from "./sdk/editor/contracts.mjs";
+import { syncFilePreviewContracts } from "./sdk/files/preview/contracts.mjs";
 import { syncFileBrowserContracts } from "./sdk/files/browser/contracts.mjs";
 import { syncFileContentContracts } from "./sdk/files/content/contracts.mjs";
 import { checkPermissionCoverage } from "./sdk/permissions.mjs";
@@ -99,6 +100,8 @@ export async function syncSdk(applicationDirectory, { check = false, sdkDirector
   const catalogue = await loadRustCatalogue(source);
   if (catalogue.methods.some(({ name }) => name === "files.content.prepare"))
     await syncFileContentContracts(source, sdkDirectory, check);
+  if (catalogue.methods.some(({ name }) => name === "filePreview.observe"))
+    await syncFilePreviewContracts(source, sdkDirectory, check);
   if (catalogue.methods.some(({ name }) => name === "fileBrowser.observe"))
     await syncFileBrowserContracts(source, sdkDirectory, check);
   if (catalogue.methods.some(({name})=>name === "logs.read"))
@@ -149,7 +152,7 @@ export async function syncSdk(applicationDirectory, { check = false, sdkDirector
       if (directory.frontend.providers) {
         const providers = directory.frontend.providers;
         assert.equal(providers.manifest, "views[].provider");
-        assert.deepEqual(providers.targets, ["hostList", "workbench", "fileBrowser", "terminal", "history", "forwarding", "monitor", "backgroundTasks", "processes", "quickAccess", "preferences"]);
+        assert.deepEqual(providers.targets, ["hostList", "workbench", "fileBrowser", "filePreview", "terminal", "history", "forwarding", "monitor", "backgroundTasks", "processes", "quickAccess", "preferences"]);
         assert.deepEqual(providers.fileBrowserPermissions, ["fs.read", "sftp.read", "workspace.write"]);
         assert.deepEqual(providers.terminalPermissions, ["sessions.read", "ssh.exec"]);
         assert.deepEqual(providers.forwardingPermissions, ["hosts.read", "forwards.read"]);
@@ -201,6 +204,18 @@ export async function syncSdk(applicationDirectory, { check = false, sdkDirector
         assert.equal(providers.terminal.stream, "coalesced-dirty");
         assert.equal(providers.fileBrowser.pageSize, 256);
         assert.equal(providers.fileBrowser.paging, "revision-bound");
+        if (catalogue.methods.some(method => method.name === "filePreview.observe")) {
+          assert.deepEqual(providers.filePreviewPermissions, ["filePreview.read"]);
+          assert.deepEqual(providers.filePreviewEndpointPermissions, ["fs.read", "sftp.read"]);
+          assert.equal(providers.filePreview.optionalSlot, "Body");
+          assert.equal(providers.filePreview.pageSize, 32);
+          assert.equal(providers.filePreview.pageTextLimit, 65536);
+          assert.equal(providers.filePreview.observationTextLimit, 262144);
+          assert.equal(providers.filePreview.writePermission, "filePreview.write");
+          assert.equal(providers.filePreview.openReadPermission, "source-specific");
+          assert.equal(providers.filePreview.presentation, "quickLook");
+          assert.equal(providers.filePreview.readiness, "renderer-decoded");
+        }
         for (const type of ["FrontendFileBrowser", "FrontendFileBrowserSnapshot", "FrontendFileEntry", "FrontendTerminal", "FrontendTerminalSnapshot", "FrontendTerminalChange", "FrontendHistory", "FrontendHistorySnapshot", "FrontendHistoryEntry", "FrontendForwarding", "FrontendForwardingSnapshot", "FrontendForwardingEntry", "FrontendMonitor", "FrontendMonitorSnapshot", "FrontendMonitorReading", "FrontendMonitorSample", "FrontendBackgroundTaskEntry", "FrontendTaskProgress", "FrontendBackgroundTasks", "FrontendBackgroundTasksSnapshot", "FrontendBackgroundTaskRunner", "FrontendBackgroundTaskOptions", "FrontendBackgroundTaskContext", "FrontendProcessEntry", "FrontendProcessSort", "FrontendProcesses", "FrontendProcessesSnapshot"])
           assert.match(uiTypes, new RegExp(`export interface ${type}\\b`));
         checkProviderTypes(types, providers.targets);

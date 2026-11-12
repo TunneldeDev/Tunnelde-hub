@@ -3705,6 +3705,50 @@
       "deprecated": null
     },
     {
+      "name": "filePreview.observe",
+      "permissions": [
+        "filePreview.read"
+      ],
+      "params": "{revision?:string}",
+      "description": "Conditional observation of the committed host quick-look preview. Returns schemaVersion 1, an opaque revision, changed and an explicit public snapshot or null. No contents, native tickets, renderer URLs or raw failures. Experimental.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "filePreview.providers",
+      "permissions": [
+        "filePreview.read"
+      ],
+      "params": "{id:string,revision:string,offset?:number,limit?:number}",
+      "description": "Read matching renderer choices from an exact committed preview revision. Limit 1-32, default 16; bounded pages. Does not load a renderer or read a file. Experimental schemaVersion 1.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "filePreview.action",
+      "permissions": [
+        "filePreview.write"
+      ],
+      "params": "{id:string,revision:string,action:close|retry|selectProvider,providerId?:string}",
+      "description": "Accept a host preview action on the exact current committed revision. One action consumes its revision; stale retained targets reject. Returns schemaVersion 1 and accepted:true, not rendering completion. Never replay mutations automatically. Experimental.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "filePreview.open",
+      "permissions": [
+        "filePreview.write"
+      ],
+      "params": "{source:local|remote,path:string,line?:number,column?:number}",
+      "description": "Open an explicit absolute target in host quick-look. Additionally requires fs.read for local or sftp.read for remote, retained through the final frontend authorization and reply. Source includes kind and remote sessionId; no implicit current target. Returns accepted:true, not file/decode success; observe subsequent state. Experimental schemaVersion 1.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
       "name": "monitor.system",
       "permissions": [
         "monitor.read"

@@ -1,6 +1,7 @@
 /** Public experimental UI SDK 0.1.0 contract. */
 import type { FrontendWorkbenchSlots } from "../workbench/slots.mjs";
 import type { FrontendFileBrowser } from "../files/browser.mjs";
+import type { FrontendFilePreview } from "../files/preview/provider.mjs";
 import type { FrontendTerminal } from "../terminal/surface.mjs";
 import type { FrontendHistory } from "../history/provider.mjs";
 import type { FrontendForwarding } from "../forwarding/provider.mjs";
@@ -28,6 +29,8 @@ export interface FrontendViewProps {
   workbench?: FrontendWorkbenchSlots;
   /** Present only inside an explicitly selected file-browser provider. */
   fileBrowser?: FrontendFileBrowser;
+  /** Present only inside an explicitly selected preview provider with endpoint read access. */
+  filePreview?: FrontendFilePreview;
   /** Present only for a user-selected terminal provider. */
   terminal?: FrontendTerminal;
   /** Present only for a user-selected command-history provider. */
