@@ -4,7 +4,14 @@ import type { FileBrowserObservationRequest, FileBrowserObservation, FileBrowser
 import type { FileBrowserAction, FileBrowserActionResult } from "./browser/actions.mjs";
 import type { FileContentPrepare, FileContentReference, FileContentPrepared, FileContentRead, FileContentObservation, FileContentChunk, FileContentClosed } from "./content.mjs";
 
+import type { FilePreviewObservationRequest, FilePreviewObservation, FilePreviewProvidersRequest, FilePreviewProviderPage } from "./preview/data.mjs";
+import type { FilePreviewAction, FilePreviewActionResult, FilePreviewOpenRequest } from "./preview/actions.mjs";
+
 export interface FilesMethodMap {
+  "filePreview.observe": [FilePreviewObservationRequest, FilePreviewObservation];
+  "filePreview.providers": [FilePreviewProvidersRequest, FilePreviewProviderPage];
+  "filePreview.action": [FilePreviewAction, FilePreviewActionResult];
+  "filePreview.open": [FilePreviewOpenRequest, FilePreviewActionResult];
   "files.content.prepare": [FileContentPrepare, FileContentPrepared];
   "files.content.open": [FileContentReference, FileContentObservation];
   "files.content.read": [FileContentRead, FileContentChunk];

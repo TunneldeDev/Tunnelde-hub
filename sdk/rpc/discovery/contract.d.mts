@@ -17,7 +17,7 @@ export interface ExtensionDirectory {
     };
     providers?: {
       manifest: "views[].provider";
-      targets: ("hostList" | "workbench" | "fileBrowser" | "terminal" | "history" | "forwarding" | "monitor" | "backgroundTasks" | "processes" | "quickAccess" | "preferences")[];
+      targets: ("hostList" | "workbench" | "fileBrowser" | "filePreview" | "terminal" | "history" | "forwarding" | "monitor" | "backgroundTasks" | "processes" | "quickAccess" | "preferences")[];
       selection: "explicit-user";
       hostListPermission: "hosts.read";
       fileBrowserPermissions: string[];

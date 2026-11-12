@@ -163,11 +163,12 @@ export function validateManifest(manifest, id) {
     `${id}: too many interface providers`);
   for (const view of manifest.views ?? []) {
     if (view.provider !== undefined) {
-      assert.ok(["hostList", "workbench", "fileBrowser", "terminal", "history", "forwarding", "monitor", "backgroundTasks", "processes", "quickAccess", "preferences"].includes(view.provider) &&
+      assert.ok(["hostList", "workbench", "fileBrowser", "filePreview", "terminal", "history", "forwarding", "monitor", "backgroundTasks", "processes", "quickAccess", "preferences"].includes(view.provider) &&
         view.kind === "component" && manifest.frontend && view.location === undefined &&
         typeof view.title === "string" && Array.from(view.title).length <= 120 &&
         !/\p{Cc}/u.test(view.title) &&
         (view.provider !== "hostList" || manifest.permissions.includes("hosts.read")) &&
+        (view.provider !== "filePreview" || manifest.permissions.includes("filePreview.read") && ["fs.read", "sftp.read"].some(p => manifest.permissions.includes(p))) &&
         (view.provider !== "fileBrowser" || ["fs.read", "sftp.read", "workspace.write"].every(p => manifest.permissions.includes(p))) &&
         (view.provider !== "terminal" || ["sessions.read", "ssh.exec"].every(p => manifest.permissions.includes(p))) &&
         (view.provider !== "backgroundTasks" || manifest.permissions.includes("backgroundTasks.read")) &&

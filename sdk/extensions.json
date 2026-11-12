@@ -33,6 +33,7 @@
         "hostList",
         "workbench",
         "fileBrowser",
+        "filePreview",
         "terminal",
         "history",
         "forwarding",
@@ -200,6 +201,26 @@
         "writePermission": "settings.write",
         "concurrency": "persistent-revision",
         "recovery": "native-search-navigation-and-trust"
+      },
+      "filePreviewPermissions": [
+        "filePreview.read"
+      ],
+      "filePreviewEndpointPermissions": [
+        "fs.read",
+        "sftp.read"
+      ],
+      "filePreview": {
+        "context": "filePreview",
+        "optionalSlot": "Body",
+        "presentation": "quickLook",
+        "pageSize": 32,
+        "pageTextLimit": 65536,
+        "observationTextLimit": 262144,
+        "writePermission": "filePreview.write",
+        "openReadPermission": "source-specific",
+        "readiness": "renderer-decoded",
+        "ownership": "host-view",
+        "paging": "revision-bound"
       }
     },
     "components": [
@@ -325,6 +346,7 @@
       "namespaces": [
         "files",
         "fileBrowser",
+        "filePreview",
         "editor",
         "clipboard"
       ]

@@ -40,3 +40,5 @@
 - [公共 Profile 写入与启用](profiles-mutations.md)
 
 - [文件浏览器实时数据与操作](file-browser-data.md)
+
+- [宿主快速预览 API](file-preview.md)

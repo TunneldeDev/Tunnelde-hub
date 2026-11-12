@@ -41,3 +41,5 @@
 - [Public profile writes and activation](profiles-mutations.md)
 
 - [Live file-browser data and actions](file-browser-data.md)
+
+- [Host quick-look preview API](file-preview.md)
