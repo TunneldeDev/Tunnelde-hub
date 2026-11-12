@@ -14,6 +14,20 @@ const accepted = { schemaVersion: 1, accepted: true };
 const deferred = () => { let resolve; const promise = new Promise(yes => { resolve = yes; }); return { promise, resolve }; };
 const flush = async () => { for (let i = 0; i < 25; i++) await Promise.resolve(); };
 
+test("docked preview metadata and explicit layout actions retain the same typed resource identity", async () => {
+  const raw = changed(); raw.snapshot.presentation = "docked";
+  const calls = [];
+  const client = createFilePreviewClient({ call: async (method, params) => {
+    calls.push([method, params]); return method === "filePreview.observe" ? raw : accepted;
+  } });
+  assert.deepEqual((await client.observe()).snapshot, raw.snapshot);
+  for (const action of ["dock", "undock"]) {
+    assert.deepEqual(await client.action({ ...id, action }), accepted);
+    assert.deepEqual(calls.at(-1), ["filePreview.action", { ...id, action }]);
+    await assert.rejects(client.action({ ...id, action, providerId: "extra" }), /Invalid file preview request/);
+  }
+});
+
 test("preview types resolve classified contracts and require explicit endpoints and revisions", () => {
   const program = ts.createProgram([resolve("tests/fixtures/file-preview/consumer.mts")], {
     target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.NodeNext, moduleResolution: ts.ModuleResolutionKind.NodeNext,

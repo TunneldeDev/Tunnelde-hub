@@ -3710,7 +3710,7 @@
         "filePreview.read"
       ],
       "params": "{revision?:string}",
-      "description": "Conditional observation of the committed host quick-look preview. Returns schemaVersion 1, an opaque revision, changed and an explicit public snapshot or null. No contents, native tickets, renderer URLs or raw failures. Experimental.",
+      "description": "Conditional observation of the committed host preview (quickLook or docked presentation). Returns schemaVersion 1, an opaque revision, changed and an explicit public snapshot or null. No contents, native tickets, renderer URLs or raw failures. Experimental.",
       "stability": "experimental",
       "since": null,
       "deprecated": null
@@ -3731,8 +3731,8 @@
       "permissions": [
         "filePreview.write"
       ],
-      "params": "{id:string,revision:string,action:close|retry|selectProvider,providerId?:string}",
-      "description": "Accept a host preview action on the exact current committed revision. One action consumes its revision; stale retained targets reject. Returns schemaVersion 1 and accepted:true, not rendering completion. Never replay mutations automatically. Experimental.",
+      "params": "{id:string,revision:string,action:close|retry|dock|undock|selectProvider,providerId?:string}",
+      "description": "Accept a host preview action on the exact current committed revision. Dock/undock move the existing renderer. State-changing actions consume their revision; redundant dock/undock are no-ops; stale retained targets reject. Returns schemaVersion 1 and accepted:true, not rendering completion. Never replay mutations automatically. Experimental.",
       "stability": "experimental",
       "since": null,
       "deprecated": null

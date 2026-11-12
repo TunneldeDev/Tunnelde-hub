@@ -16,7 +16,7 @@ export function providersRequest(value) {
 export function actionRequest(value) {
   if (!identity(value)) invalid();
   const names = value.action === "selectProvider" ? ["providerId"]
-    : ["close", "retry"].includes(value.action) ? [] : null;
+    : ["close", "retry", "dock", "undock"].includes(value.action) ? [] : null;
   if (!names || !fields(value, ["id", "revision", "action", ...names]) ||
       value.action === "selectProvider" && !token(value.providerId, 129)) invalid();
   return Object.freeze({ id: value.id, revision: value.revision, action: value.action,
