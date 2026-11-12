@@ -3,7 +3,7 @@ import { absolute, budget, bytes, endpointCopy, identity, integer, list, record,
 const invalid = () => { throw new Error("Invalid file preview response"); };
 function metadata(value) {
   if (!identity(value) || !token(value.attemptId) || !source(value.source) || !absolute(value.path, value.source) ||
-      !integer(value.line) || !integer(value.column) || value.presentation !== "quickLook" ||
+      !integer(value.line) || !integer(value.column) || !["quickLook", "docked"].includes(value.presentation) ||
       !renderer(value.renderer) || !(value.providerId === null || token(value.providerId, 129)) ||
       !integer(value.providerCount) || (value.providerId !== null && value.providerCount === 0)) invalid();
   if (["loading", "ready"].includes(value.state)) { if (value.errorCode !== null) invalid(); }

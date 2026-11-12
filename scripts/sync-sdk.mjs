@@ -214,6 +214,8 @@ export async function syncSdk(applicationDirectory, { check = false, sdkDirector
           assert.equal(providers.filePreview.writePermission, "filePreview.write");
           assert.equal(providers.filePreview.openReadPermission, "source-specific");
           assert.equal(providers.filePreview.presentation, "quickLook");
+          if (providers.filePreview.presentations)
+            assert.deepEqual(providers.filePreview.presentations, ["quickLook", "docked"]);
           assert.equal(providers.filePreview.readiness, "renderer-decoded");
         }
         for (const type of ["FrontendFileBrowser", "FrontendFileBrowserSnapshot", "FrontendFileEntry", "FrontendTerminal", "FrontendTerminalSnapshot", "FrontendTerminalChange", "FrontendHistory", "FrontendHistorySnapshot", "FrontendHistoryEntry", "FrontendForwarding", "FrontendForwardingSnapshot", "FrontendForwardingEntry", "FrontendMonitor", "FrontendMonitorSnapshot", "FrontendMonitorReading", "FrontendMonitorSample", "FrontendBackgroundTaskEntry", "FrontendTaskProgress", "FrontendBackgroundTasks", "FrontendBackgroundTasksSnapshot", "FrontendBackgroundTaskRunner", "FrontendBackgroundTaskOptions", "FrontendBackgroundTaskContext", "FrontendProcessEntry", "FrontendProcessSort", "FrontendProcesses", "FrontendProcessesSnapshot"])

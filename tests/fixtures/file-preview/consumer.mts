@@ -10,6 +10,11 @@ const target: FilePreviewOpenRequest = { source: { kind: "remote", sessionId: "p
 void client.open(target);
 void host.call("filePreview.open", target);
 void client.action({ id: "preview", revision: "frame", action: "selectProvider", providerId: "render:pdf" });
+void client.action({ id: "preview", revision: "frame", action: "dock" });
+void host.call("filePreview.action", { id: "preview", revision: "frame", action: "undock" });
+declare const preview: FilePreviewMetadata;
+const presentation: "quickLook" | "docked" = preview.presentation;
+void presentation;
 // @ts-expect-error Explicit source required; no guessed current endpoint.
 void client.open({ path: "/a" });
 // @ts-expect-error Remote source requires a session identity.
