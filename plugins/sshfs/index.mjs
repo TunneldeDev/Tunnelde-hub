@@ -2,7 +2,7 @@ import readline from "node:readline";
 import { pathToFileURL } from "node:url";
 export const renderView = () => ({
   title: "SSHFS",
-  blocks: [{ type: "mounts" }],
+  blocks: [{ type: "sharedMounts" }],
 });
 if (
   process.argv[1] &&

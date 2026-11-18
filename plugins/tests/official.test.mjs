@@ -287,9 +287,11 @@ test("official packages are deterministic independent ZIPs with verifiable hashe
         assert.equal(files.size, 3);
       } else if (manifest.runtime === "declarative") {
         assert.equal(manifest.engines.node, undefined);
-        assert.equal(manifest.engines.tunnelde, ">=0.29.0-beta.6");
+        assert.equal(manifest.engines.tunnelde, ">=1.5.0-beta.5");
         assert.ok(files.has(manifest.main));
-        assert.ok(JSON.parse(files.get(manifest.main).toString("utf8")).views.main);
+        assert.equal(manifest.views[0].kind, "sharedMounts");
+        assert.deepEqual(JSON.parse(files.get(manifest.main).toString("utf8")).views.main.blocks,
+          [{ type: "sharedMounts" }]);
       } else {
         assert.equal(manifest.engines.node, ">=22");
         assert.ok(files.has(manifest.main));

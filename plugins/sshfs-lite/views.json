@@ -1,5 +1,5 @@
 {
   "views": {
-    "main": { "title": "SSHFS Lite", "blocks": [{ "type": "mounts" }] }
+    "main": { "title": "SSHFS Lite", "blocks": [{ "type": "sharedMounts" }] }
   }
 }
