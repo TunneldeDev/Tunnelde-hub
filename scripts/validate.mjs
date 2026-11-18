@@ -9,6 +9,7 @@ import { validateFileIconThemes, validateTags } from "./plugins/file-icons.mjs";
 
 import { validateFilePreviews } from "./plugins/previews.mjs";
 import { validateHostFields } from "./plugins/host-fields.mjs";
+import { validateHostDetails } from "./plugins/host-details.mjs";
 import { validateConfiguration } from "./plugins/configuration/manifest.mjs";
 import { validateDependencies } from "./plugins/activation/manifest.mjs";
 import { validateRemoteRunner } from "./plugins/execution/manifest.mjs";
@@ -194,7 +195,7 @@ export function validateManifest(manifest, id) {
       `${id}: invalid view location`,
     );
     assert.ok(
-      view.kind === undefined || ["chat", "blocks"].includes(view.kind) ||
+      view.kind === undefined || ["chat", "blocks", "sharedMounts"].includes(view.kind) ||
         (view.kind === "component" && manifest.frontend),
       `${id}: invalid view kind`,
     );
@@ -217,6 +218,7 @@ export function validateManifest(manifest, id) {
       `${id}: invalid view icon`,
     );
   }
+  validateHostDetails(manifest);
   if (manifest.runtime === "theme") {
     assert.ok(
       !manifest.main &&

@@ -76,7 +76,31 @@ test("all legacy RPC SDK imports and domain types retain their historical contra
     assert.ok(checker.isTypeAssignableTo(nextInput, oldInput), `${property.name}: historical input widened`);
   }
   assert.deepEqual(widenedMethods.sort(), ["extensions.describe", "runners.poll", "runners.status"]);
-  assert.deepEqual(newMap.getProperties().map(p => p.name).filter(name => !oldNames.has(name)).sort(),
+  const newNames = newMap.getProperties().map(p => p.name).filter(name => !oldNames.has(name)).sort();
+  const sharedMountAndBus = [
+    "bus.advertise", "bus.close", "bus.create", "bus.discover", "bus.invitations", "bus.invite",
+    "bus.join", "bus.leave", "bus.publish", "bus.receive", "bus.subscribe", "bus.unsubscribe",
+    "fileList.removeHighlights", "fileList.setHighlights", "forwards.automation.list",
+    "forwards.automation.save", "forwards.startMany", "hosts.routes.get", "hosts.routes.observe",
+    "hosts.routes.save", "hosts.sshConfig.import", "hosts.sshConfig.preview",
+    "mounts.connections.get", "mounts.connections.list", "mounts.connections.observe",
+    "mounts.dependencies.documentation", "mounts.dependencies.get", "mounts.dependencies.refresh",
+    "mounts.groups.connect", "mounts.groups.disconnect", "mounts.groups.get", "mounts.groups.list",
+    "mounts.groups.observe", "mounts.groups.reconnect", "mounts.groups.remove", "mounts.groups.save",
+    "mounts.groups.validate", "mounts.legacy.convert", "mounts.legacy.dismiss", "mounts.legacy.list",
+    "mounts.operations.cancel", "mounts.operations.get", "mounts.operations.list", "mounts.operations.observe",
+    "mounts.paths.conflicts", "mounts.paths.local.pick", "mounts.paths.local.validate",
+    "mounts.paths.remote.browse", "mounts.paths.remote.resolve", "mounts.rules.copyHost",
+    "mounts.rules.export", "mounts.rules.get", "mounts.rules.importApply", "mounts.rules.importPreview",
+    "mounts.rules.list", "mounts.rules.move", "mounts.rules.remove", "mounts.rules.save",
+    "mounts.rules.snapshot", "mounts.rules.validate", "mounts.runtime.connectAndStartAuto",
+    "mounts.runtime.open", "mounts.runtime.requestForceUnmount", "mounts.runtime.restart",
+    "mounts.runtime.retry", "mounts.runtime.reveal", "mounts.runtime.start", "mounts.runtime.startAll",
+    "mounts.runtime.startAuto", "mounts.runtime.startMany", "mounts.runtime.stop",
+    "mounts.runtime.stopAll", "mounts.runtime.stopMany",
+  ];
+  assert.deepEqual(newNames.filter(name => sharedMountAndBus.includes(name)), sharedMountAndBus);
+  assert.deepEqual(newNames.filter(name => !sharedMountAndBus.includes(name)),
     ["configuration.backups", "configuration.deleteBackup", "configuration.migrate", "configuration.restore", "configuration.schema", "configuration.snapshot", "configuration.update", "editor.applyEdits", "editor.observe", "editor.readRange", "fileBrowser.action", "fileBrowser.observe", "fileBrowser.read", "filePreview.action", "filePreview.observe", "filePreview.open", "filePreview.providers", "files.content.close", "files.content.observe", "files.content.open", "files.content.prepare", "files.content.read", "logs.read", "preferences.observe", "preferences.schema", "preferences.snapshot", "preferences.update", "profiles.activate", "profiles.catalogue", "profiles.delete", "profiles.drafts.append", "profiles.drafts.discard", "profiles.drafts.prepare", "profiles.observe", "profiles.read", "profiles.rename", "profiles.save", "resources.identify", "resources.release", "resources.snapshot", "runners.review", "runners.startInitialized", "storage.locations.cancel", "storage.locations.observe", "storage.locations.schedule", "storage.observe", "storage.recovery.observe", "storage.recovery.request"]);
   // Freeze normalized text so fixture changes cannot silently make compatibility pass.
   const hash = createHash("sha256").update(readFileSync(historical, "utf8").replaceAll("\r\n", "\n")).digest("hex");

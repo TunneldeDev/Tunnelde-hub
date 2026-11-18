@@ -3,8 +3,18 @@ import type { Group, HostInput, SavedHost } from "./contract.mjs";
 import type { HostDecorationCollection } from "./decorations.mjs";
 import type { HostFieldsSnapshot, HostFieldsUpdate } from "./fields.mjs";
 import type { HostSource, HostSourcesPage } from "./sources.mjs";
+import type { SshConfigPreviewPage } from "./sshConfig.mjs";
+
+export interface HostRoute { proxy: string; jumpHosts: string[] }
+export interface HostRouteSnapshot { hostId: string; revision: string; route: HostRoute }
 
 export interface HostsMethodMap {
+  "hosts.routes.get": [{ hostId: string }, HostRouteSnapshot];
+  "hosts.routes.observe": [{ hostId: string; revision?: string },
+    { revision: string; changed: boolean; snapshot: HostRouteSnapshot | null }];
+  "hosts.routes.save": [{ hostId: string; expectedRevision: string; route: HostRoute }, HostRouteSnapshot];
+  "hosts.sshConfig.preview": [{ offset?: number; revision?: string }, SshConfigPreviewPage];
+  "hosts.sshConfig.import": [{ aliases: string[]; revision: string }, { importedIds: string[]; skipped: number }];
   "hosts.setSource": [HostSource, null];
   "hosts.removeSource": [{ id: string }, boolean];
   "hosts.sourcesSnapshot": [{ offset?: number; revision?: number }, HostSourcesPage];

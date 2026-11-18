@@ -16,7 +16,10 @@ export type * from "./ui/workbench/slots.mjs";
 export type * from "./ui/frontend/providers.mjs";
 export type * from "./ui/frontend/lifecycle.mjs";
 export type * from "./ui/forwarding/entry.mjs";
+export type * from "./ui/forwarding/batch.mjs";
 export type * from "./ui/forwarding/provider.mjs";
+export type * from "./ui/hosts/routes.mjs";
+export type * from "./ui/hosts/sshConfig.mjs";
 export type { FrontendMonitorSample } from "./ui/monitor/sample.mjs";
 export type { FrontendMonitorReading } from "./ui/monitor/reading.mjs";
 export type { FrontendMonitor, FrontendMonitorSnapshot } from "./ui/monitor/provider.mjs";
@@ -61,3 +64,6 @@ export type * from "./ui/storage/recovery/request.mjs";
 export type * from "./ui/logging/entry.mjs";
 export type * from "./ui/logging/query.mjs";
 export type * from "./ui/logging/page.mjs";
+
+export type * from "./ui/mounts/configuration.mjs";
+export type * from "./ui/mounts/runtime.mjs";

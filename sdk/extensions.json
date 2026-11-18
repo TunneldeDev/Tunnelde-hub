@@ -1,6 +1,29 @@
 {
   "version": 1,
   "stability": "experimental",
+  "hostDetails": {
+    "manifest": "hostDetails",
+    "viewKind": "component",
+    "permissions": [
+      "ui.trusted",
+      "hosts.read"
+    ],
+    "context": "view.hostDetails",
+    "composition": "append",
+    "limitPerPlugin": 8,
+    "mounts": {
+      "permission": "mounts.hostDetails",
+      "readPermission": "mounts.read",
+      "nativeViewKind": "sharedMounts",
+      "nativeViewPermissions": [
+        "hosts.read",
+        "mounts.read",
+        "mounts.hostDetails"
+      ],
+      "selection": "mountHostDetailsSelection",
+      "composition": "single-selected-contributor"
+    }
+  },
   "frontend": {
     "sdkVersion": "0.1.0",
     "stability": "experimental",
@@ -350,6 +373,7 @@
       "namespaces": [
         "files",
         "fileBrowser",
+        "fileList",
         "filePreview",
         "editor",
         "clipboard"
@@ -404,6 +428,7 @@
     {
       "id": "governance",
       "namespaces": [
+        "bus",
         "events",
         "log",
         "logs",
@@ -563,6 +588,27 @@
       }
     },
     {
+      "id": "fileList.highlights",
+      "domain": "files",
+      "layer": "presentation",
+      "stability": "experimental",
+      "composition": "merge",
+      "registration": {
+        "set": "fileList.setHighlights",
+        "remove": "fileList.removeHighlights"
+      },
+      "ownership": "runtime",
+      "permissions": [
+        "fileBrowser.read",
+        "workspace.write"
+      ],
+      "limits": {
+        "perPlugin": 8,
+        "total": 128,
+        "rulesPerCollection": 256
+      }
+    },
+    {
       "id": "statusBar.items",
       "domain": "workbench",
       "layer": "presentation",
@@ -596,5 +642,68 @@
         "total": 128
       }
     }
-  ]
+  ],
+  "bus": {
+    "stability": "experimental",
+    "permission": "bus.communicate",
+    "publicBus": "public",
+    "privateAdmission": "invitation-and-runtime-generation",
+    "events": [
+      "bus.discovery",
+      "bus.invitation",
+      "bus.closed"
+    ],
+    "payloadBytes": 16384,
+    "queueSize": 128
+  },
+  "mounts": {
+    "ownership": "host",
+    "configuration": "persistent-shared",
+    "nativeView": {
+      "kind": "sharedMounts",
+      "block": "sharedMounts",
+      "runtimes": [
+        "node",
+        "declarative"
+      ],
+      "permissions": [
+        "hosts.read",
+        "mounts.read"
+      ]
+    },
+    "connection": "dedicated-per-group",
+    "groupLifecycle": {
+      "save": "mounts.groups.save",
+      "connect": "mounts.groups.connect",
+      "disconnect": "mounts.groups.disconnect",
+      "reconnect": "mounts.groups.reconnect",
+      "connectAndStartAuto": "mounts.runtime.connectAndStartAuto",
+      "autoReconnectField": "autoReconnect"
+    },
+    "rules": "mounts.rules.snapshot",
+    "runtime": "mounts.runtime.start",
+    "operations": "mounts.operations.observe",
+    "events": [
+      "mounts://changed",
+      "mounts://operation-changed"
+    ],
+    "observation": {
+      "groups": "mounts.groups.observe",
+      "connections": "mounts.connections.observe"
+    },
+    "permissions": {
+      "read": "mounts.read",
+      "write": "mounts.write",
+      "hostDetails": "mounts.hostDetails"
+    },
+    "limits": {
+      "groupsPerHost": 32,
+      "rulesPerHost": 128,
+      "groupsTotal": 512,
+      "rulesTotal": 2048,
+      "pageSize": 32,
+      "activeOperations": 8,
+      "retainedOperations": 128
+    }
+  }
 }
