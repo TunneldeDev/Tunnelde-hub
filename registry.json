@@ -2,6 +2,46 @@
   "version": 1,
   "plugins": [
     {
+      "id": "byte-units",
+      "name": "Byte Units",
+      "version": "1.0.1",
+      "description": "Convert an integer or decimal quantity to bytes and common decimal and binary units, without floating-point rounding.",
+      "author": "TunneldeDev",
+      "runtime": "node",
+      "apiVersion": 1,
+      "engines": {
+        "node": ">=22"
+      },
+      "tags": [
+        "storage",
+        "conversion",
+        "developer-tools"
+      ],
+      "readme": "# Byte Units · 容量换算\n\nConvert an integer or decimal quantity to bytes and common decimal and binary units, without floating-point rounding.\n\nOpen **Byte Units**, enter a value (for example `1.5`), then choose **Convert size**. Requires Node.js 22 or later. No network, files, saved input or host permissions. Copying is always explicit.\n\n在字节、十进制和二进制单位间精确换算，支持小数输入。打开插件页面，输入内容后点击「换算容量」。需要 Node.js 22 或更高版本；不读取文件、不联网，也不保存输入。\n",
+      "url": "https://github.com/TunneldeDev/tunnelde-hub/releases/download/plugins-v1.0.1/byte-units-1.0.1.zip",
+      "sha256": "3c518fc92737fbf10e66cb0d8500ff217d0bcf97f26ecf90b103a04f0b15c2be"
+    },
+    {
+      "id": "csv-to-json",
+      "name": "CSV to JSON",
+      "version": "1.0.1",
+      "description": "Preview delimited records as JSON arrays. All cells stay strings, including headers, leading zeros and duplicate names.",
+      "author": "TunneldeDev",
+      "runtime": "node",
+      "apiVersion": 1,
+      "engines": {
+        "node": ">=22"
+      },
+      "tags": [
+        "csv",
+        "json",
+        "conversion"
+      ],
+      "readme": "# CSV to JSON · CSV 转 JSON\n\nPreview delimited records as JSON arrays. All cells stay strings, including headers, leading zeros and duplicate names.\n\nOpen **CSV to JSON**, enter a value (for example `name,size\\narchive,001`), then choose **Convert records**. Requires Node.js 22 or later. No network, files, saved input or host permissions. Copying is always explicit.\n\n将分隔文本预览为 JSON 数组；保留表头、重复列名和前导零，所有单元格均为字符串。打开插件页面，输入内容后点击「转换记录」。需要 Node.js 22 或更高版本；不读取文件、不联网，也不保存输入。\n",
+      "url": "https://github.com/TunneldeDev/tunnelde-hub/releases/download/plugins-v1.0.1/csv-to-json-1.0.1.zip",
+      "sha256": "c959afa8fc676932af07a2daea47f9f4789cd0dc174189cd0c756a5e3fb62029"
+    },
+    {
       "id": "file-icons",
       "name": "Common File Icons",
       "version": "1.6.0",
@@ -146,6 +186,26 @@
       "sha256": "a40b7c4e4c71cbf83e7b922f6264196bd10a8c1e68e2dcfc20de2485ed6a730e"
     },
     {
+      "id": "text-checksum",
+      "name": "Text Checksum",
+      "version": "1.0.1",
+      "description": "Calculate SHA-256 or SHA-512 of exactly the UTF-8 text entered, including line endings.",
+      "author": "TunneldeDev",
+      "runtime": "node",
+      "apiVersion": 1,
+      "engines": {
+        "node": ">=22"
+      },
+      "tags": [
+        "checksum",
+        "text",
+        "developer-tools"
+      ],
+      "readme": "# Text Checksum · 文本校验和\n\nCalculate SHA-256 or SHA-512 of exactly the UTF-8 text entered, including line endings.\n\nOpen **Text Checksum**, enter a value (for example `Hello`), then choose **Calculate digest**. Requires Node.js 22 or later. No network, files, saved input or host permissions. Copying is always explicit.\n\n按原样计算所输入 UTF-8 文本的 SHA-256 或 SHA-512，包括换行。打开插件页面，输入内容后点击「计算摘要」。需要 Node.js 22 或更高版本；不读取文件、不联网，也不保存输入。\n",
+      "url": "https://github.com/TunneldeDev/tunnelde-hub/releases/download/plugins-v1.0.1/text-checksum-1.0.1.zip",
+      "sha256": "4ab5ecda90a6afe5d4f8a83ec8468cd861317f951d601cba31cff8e8debf5402"
+    },
+    {
       "id": "timestamp",
       "name": "Timestamp Converter",
       "version": "1.0.0",
@@ -269,6 +329,46 @@
       "readme": "# Pi\n\nAn independent Tunnelde assistant maintained by TunneldeDev. This community integration is not published by Pi's vendor.\nRequires Tunnelde 0.26.0+ and an explicitly approved local Node 22+ plugin runtime.\nInstall from Marketplace, this folder or its ZIP and open its own sidebar.\nEach assistant has independent settings, secrets, conversations and lifecycle.\n\n## Conversation history\n\nClick the conversation title in the chat toolbar to search history. Rename or delete any\nconversation directly from its row without opening it first. Running conversations cannot\nbe deleted. New conversation placeholders follow the application language; custom names\nare preserved. Multiple terminal connections to the same saved host and address appear as\none execution target, and host renames update the displayed target immediately.\n\n## Configure and run\n\nThis package uses the actual installed `pi --mode rpc` binary with its bundled permission extension.\n\nPi manages authentication on the selected machine. Optional model and provider overrides are separate from execution location.\n\nChoose **Local** or a connected SSH host in the composer's **Execution location** menu.\nThe selected account's home is the default workspace. Optional workspace settings accept\n`~`, relative paths and a coding agent executable override. No session ID or manual\nhost scope list is needed. Coding plugins default to the corresponding remote command\ninstead of reusing a local Windows executable path.\n\nOpening the view or selecting a target does not start an agent or discover user Node.\nBefore the first message on a machine, **Initialize** replaces Send. Initialization asks\nfor consent, checks the selected runtime and the agent's native structured protocol,\nand sends no model prompt. Errors appear beside the composer and keep your draft.\nYou can cancel initialization. Changing the provider, executable, workspace, machine\nor permission mode requires another check; readiness is not persisted across plugin\nrestarts. Initialization validates the selected permission mode without a model prompt.\nA successful check for one mode never enables sending in another mode.\n\nOn supported SSH hosts, **Install and initialize** offers an explicit approved private\ninstallation. Local agents must be installed with their official installer, authenticated,\nand selected in Execution settings. Nothing installs or starts a CLI implicitly.\nSee [initialization and installation](https://github.com/TunneldeDev/tunnelde-hub/blob/main/docs/assistant-plugins-1.4.md).\n\n## Remote execution\n\nRemote Pi asks before uploading its bundled permission extension into a new `.TunneldeAI/Chats/pi-permissions-*` directory. It forwards permission decisions through Pi RPC over SSH. No generic ACP server, public agent port or Tunnelde native supervisor helper is needed. Pi must have its own runtime dependencies installed on that machine.\n\nSuccessful source/extension uploads are retained for reuse while their fingerprint and\nhost match. Only newly created plugin-owned directories are written. Failed deployments\nonly attempt cleanup of entries created by that attempt. Ownership checkpoints are saved\nduring upload and initialization. If a connection drops before cleanup finishes, reconnect\nthe host and retry initialization or delete the conversation; unknown or modified files\nstop cleanup and remain intact.\n\nTargets are saved per conversation. Switching a populated conversation's machine or\nworkspace creates another conversation and preserves the previous one. Disconnected\ntargets fail visibly and never fall back to local execution. Ordinary runs require the\nSSH connection. Advanced persistent profiles remain in collapsed configuration with\nseparate recovery rules; disabling a local plugin alone does not stop a durable remote\nsupervisor. See [setup and migration](https://github.com/TunneldeDev/tunnelde-hub/blob/main/docs/assistant-plugins-1.3.md).\n\n## Permissions\n\n**Ask for approval** prompts before mutations or commands. **Approve for me** uses a\nseparate API reviewer, falling back to a human on missing, malformed, failed or negative\nreview. **Full Access** intentionally permits supported unrestricted actions.\n\nReadOnly execution is refused: a filtered Pi tool list is not the required verified OS read sandbox. Use Tunnelde AI's scoped read-only API tools instead.\n\nScope checks and permission prompts do not replace OS isolation. Executable plugins\nrun with the user's permissions. API reviewer profiles cannot act as the primary\ncoding assistant. Credentials and conversations are not imported from other plugins.\n\n## Compatibility and maintenance\n\nSee the [1.2 migration guide](https://github.com/TunneldeDev/tunnelde-hub/blob/main/docs/assistant-plugins-1.2.md) for users moving from\nold aggregated CLI profiles. Existing interrupted conversations remain inspectable.\n\nShared source lives in `plugins/tunnelde-ai`. After changing common entry points or\n`lib/`, run `npm run agents:sync`, `npm run registry`, `npm run verify` and\n`npm run package`. Checked-in copies keep folders and ZIPs independently installable.\nTests use isolated API servers and simulated CLI/SSH transports; they do not authenticate\nthe user's coding agents or contact paid providers.\n\nPrivate remote runtimes live under `~/.TunneldeAI/Runtimes/`; deployments live under\n`~/.TunneldeAI/Chats/`. Deleting a remote conversation first verifies and cleans its\nrecorded source files, so reconnect that host before deleting it. Modified or unknown\nfiles are preserved and cleanup reports the reason. Known legacy deployment directories\nmove into `Chats` on the next approved initialization. Existing runtime paths remain\nusable; untracked legacy directories are never deleted by a name-only sweep.\n\nRemote deployment reuse and cleanup bind both host ID and captured address. Older records\nrequire explicit identity review before cleanup. See the\n[English guide](https://github.com/TunneldeDev/Tunnelde-hub/blob/main/docs/assistant-deployments.en-us.md) /\n[中文说明](https://github.com/TunneldeDev/Tunnelde-hub/blob/main/docs/assistant-deployments.zh-cn.md)\nfor recovery and limitations.\n",
       "url": "https://github.com/TunneldeDev/tunnelde-hub/releases/download/plugins-v1.19.10/tunnelde-pi-1.19.10.zip",
       "sha256": "c40fb6b84745da6cf4e11eb4380c98c335f0ed7a695cc34ec8979d99dcb1e639"
+    },
+    {
+      "id": "unicode-inspector",
+      "name": "Unicode Inspector",
+      "version": "1.0.1",
+      "description": "Inspect grapheme, code point and UTF-8 byte counts, with visible labels for whitespace and controls.",
+      "author": "TunneldeDev",
+      "runtime": "node",
+      "apiVersion": 1,
+      "engines": {
+        "node": ">=22"
+      },
+      "tags": [
+        "unicode",
+        "text",
+        "developer-tools"
+      ],
+      "readme": "# Unicode Inspector · Unicode 字符检查\n\nInspect grapheme, code point and UTF-8 byte counts, with visible labels for whitespace and controls.\n\nOpen **Unicode Inspector**, enter a value (for example `A中🙂`), then choose **Inspect text**. Requires Node.js 22 or later. No network, files, saved input or host permissions. Copying is always explicit.\n\n查看字素、码点和 UTF-8 字节数，标出空白与控制字符。打开插件页面，输入内容后点击「检查文本」。需要 Node.js 22 或更高版本；不读取文件、不联网，也不保存输入。\n",
+      "url": "https://github.com/TunneldeDev/tunnelde-hub/releases/download/plugins-v1.0.1/unicode-inspector-1.0.1.zip",
+      "sha256": "f8e3207ff3dbdcc4e836b87e21a114b81377a6ee4da8108dfe3e4f796fb585bd"
+    },
+    {
+      "id": "unix-permissions",
+      "name": "Unix Permissions",
+      "version": "1.0.1",
+      "description": "Translate Unix permission bits between octal and symbolic notation, including special bits. No files are changed.",
+      "author": "TunneldeDev",
+      "runtime": "node",
+      "apiVersion": 1,
+      "engines": {
+        "node": ">=22"
+      },
+      "tags": [
+        "unix",
+        "permissions",
+        "files"
+      ],
+      "readme": "# Unix Permissions · Unix 权限解读\n\nTranslate Unix permission bits between octal and symbolic notation, including special bits. No files are changed.\n\nOpen **Unix Permissions**, enter a value (for example `0755`), then choose **Inspect permissions**. Requires Node.js 22 or later. No network, files, saved input or host permissions. Copying is always explicit.\n\n在八进制和符号表示之间转换 Unix 权限位，支持特殊位，不修改文件。打开插件页面，输入内容后点击「解读权限」。需要 Node.js 22 或更高版本；不读取文件、不联网，也不保存输入。\n",
+      "url": "https://github.com/TunneldeDev/tunnelde-hub/releases/download/plugins-v1.0.1/unix-permissions-1.0.1.zip",
+      "sha256": "d9850cbfcefcb9bfe07aaed4a3b690d35f801d65ba5ecfad924e2fb51ccb7d9d"
     },
     {
       "id": "uuid",

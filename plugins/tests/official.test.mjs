@@ -152,9 +152,10 @@ test("UUIDs are valid independent v4 values, with batch boundaries enforced", ()
     assert.equal(uuid("generate", { count }).error, true);
 });
 
-test("each independent plugin responds using the real JSON-RPC stdin/stdout protocol", () => {
+test("each independent plugin responds using the real JSON-RPC stdin/stdout protocol", async () => {
   for (const id of permissionFreeNodePluginIds) {
-    const command = id === "json-formatter" ? "pretty" : id === "timestamp" ? "decode" : "generate";
+    const manifest = JSON.parse(await readFile(join(root, "plugins", id, "tunnelde-plugin.json"), "utf8"));
+    const command = manifest.commands[0].id;
     const messages = [
       { jsonrpc: "2.0", id: 1, method: "initialize", params: { apiVersion: 1 } },
       { jsonrpc: "2.0", id: 2, method: "view.render", params: { view: "main", locale: "zh-CN" } },
