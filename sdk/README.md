@@ -9,6 +9,8 @@ Public preference conditional reads and abortable observation:
 Required installed dependencies, manifest admission v2 and independent approval:
 [English](../docs/en-us/development/plugin-activation.md) · [简体中文](../docs/zh-cn/development/plugin-activation.md).
 
+Experimental [shared mount management and plugin messaging](../docs/en-us/development/mounts-and-bus.md).
+
 The compatibility entry `tunnelde-plugin.d.mts` re-exports public declarations
 from `rpc/<domain>/`. DTOs, method maps, transport and lifecycle own separate
 files. Copy the declaration tree with the SDK for TypeScript development. Runtime

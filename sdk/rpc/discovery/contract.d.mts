@@ -3,6 +3,51 @@ import type { ActivationDiscovery } from "../runtime/activation/discovery.mjs";
 /** Experimental directory; discovery does not authorize calls or promise complete coverage. */
 export interface ExtensionDirectory {
   runtime?: { resources?: RuntimeResourcesDiscovery; activation?: ActivationDiscovery };
+  bus?: {
+    stability: "experimental";
+    permission: "bus.communicate";
+    publicBus: "public";
+    privateAdmission: "invitation-and-runtime-generation";
+    events: ("bus.discovery" | "bus.invitation" | "bus.closed")[];
+    payloadBytes: number;
+    queueSize: number;
+  };
+  hostDetails?: {
+    manifest: "hostDetails";
+    viewKind: "component";
+    permissions: string[];
+    context: "view.hostDetails";
+    composition: "append";
+    limitPerPlugin: number;
+    mounts?: {
+      permission: "mounts.hostDetails";
+      readPermission: "mounts.read";
+      nativeViewKind?: "sharedMounts";
+      nativeViewPermissions?: string[];
+      selection: "mountHostDetailsSelection";
+      composition: "single-selected-contributor";
+    };
+  };
+  mounts?: {
+    ownership: "host";
+    configuration: "persistent-shared";
+    connection: "dedicated-per-group";
+    rules: "mounts.rules.snapshot";
+    runtime: "mounts.runtime.start";
+    operations: "mounts.operations.observe";
+    events: ("mounts://changed" | "mounts://operation-changed")[];
+    observation: { groups: "mounts.groups.observe"; connections: "mounts.connections.observe" };
+    permissions: { read: "mounts.read"; write: "mounts.write"; hostDetails: "mounts.hostDetails" };
+    limits: Record<string, number>;
+    groupLifecycle?: {
+      save: "mounts.groups.save";
+      connect: "mounts.groups.connect";
+      disconnect: "mounts.groups.disconnect";
+      reconnect: "mounts.groups.reconnect";
+      connectAndStartAuto: "mounts.runtime.connectAndStartAuto";
+      autoReconnectField: "autoReconnect";
+    };
+  };
   frontend?: {
     sdkVersion: string;
     stability: "experimental";

@@ -1,4 +1,5 @@
 import type { Listing } from "./contract.mjs";
+import type { FileHighlightCollection } from "./highlights.mjs";
 import type { TransferEvent } from "./transfers.mjs";
 import type { FileBrowserObservationRequest, FileBrowserObservation, FileBrowserReadRequest, FileBrowserPage } from "./browser/data.mjs";
 import type { FileBrowserAction, FileBrowserActionResult } from "./browser/actions.mjs";
@@ -8,6 +9,8 @@ import type { FilePreviewObservationRequest, FilePreviewObservation, FilePreview
 import type { FilePreviewAction, FilePreviewActionResult, FilePreviewOpenRequest } from "./preview/actions.mjs";
 
 export interface FilesMethodMap {
+  "fileList.setHighlights": [FileHighlightCollection, null];
+  "fileList.removeHighlights": [{ id: string }, boolean];
   "filePreview.observe": [FilePreviewObservationRequest, FilePreviewObservation];
   "filePreview.providers": [FilePreviewProvidersRequest, FilePreviewProviderPage];
   "filePreview.action": [FilePreviewAction, FilePreviewActionResult];

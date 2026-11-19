@@ -255,6 +255,63 @@
       "deprecated": null
     },
     {
+      "name": "hosts.sshConfig.preview",
+      "permissions": [
+        "hosts.sshConfig.read"
+      ],
+      "params": "{offset?:number,revision?:string}",
+      "description": "Preview the local OpenSSH config and supported Include files with the native importer. Returns {found,revision,entries,total,nextOffset,issues}; pass the same source revision with nextOffset. Includes metadata and configured identity paths, never raw files, private-key contents or executed directives.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "hosts.sshConfig.import",
+      "permissions": [
+        "hosts.sshConfig.read",
+        "hosts.write"
+      ],
+      "params": "{aliases:string[],revision:string}",
+      "description": "Atomically import selected aliases from an exact preview source revision, including supported ProxyJump dependencies. Reuse matching hosts without overwriting them, or reject conflicts. Returns {importedIds,skipped}; does not connect.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "hosts.routes.get",
+      "permissions": [
+        "hosts.read"
+      ],
+      "params": "{hostId:string}",
+      "description": "Read one saved host's {hostId,revision,route:{proxy,jumpHosts}}. Proxy is a selection ID, not a URI or credential. An empty selection inherits app settings.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "hosts.routes.observe",
+      "permissions": [
+        "hosts.read"
+      ],
+      "params": "{hostId:string,revision?:string}",
+      "description": "Query the current saved host route. Returns {revision,changed,snapshot}; snapshot is null if the revision is unchanged. Includes changes made in the native editor; does not wait for future changes.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "hosts.routes.save",
+      "permissions": [
+        "hosts.read",
+        "hosts.write"
+      ],
+      "params": "{hostId:string,expectedRevision:string,route:{proxy:string,jumpHosts:string[]}}",
+      "description": "Replace one saved host's route using native validation. Stale revisions are rejected; returns the saved snapshot. Accepts an existing proxy ID, direct, system, or empty for inherited. Does not alter credentials or reconnect current sessions.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
       "name": "hostList.setColumn",
       "permissions": [
         "hosts.read",
@@ -2073,6 +2130,567 @@
       }
     },
     {
+      "name": "mounts.legacy.list",
+      "permissions": [
+        "mounts.read"
+      ],
+      "params": "{hostId?:string,offset?:number}",
+      "description": "List up to 32 non-dismissed one-off mounts across implementations for explicit migration.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "mounts.legacy.convert",
+      "permissions": [
+        "mounts.write"
+      ],
+      "params": "{id:string,ruleId:string,groupId:string,expectedGroupRevision:string,name:string}",
+      "description": "Atomically adopt a live one-off mount as a new shared rule without interrupting it. Its original SSH session stays independent; restart uses the group dedicated connection.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "mounts.legacy.dismiss",
+      "permissions": [
+        "mounts.write"
+      ],
+      "params": "{id:string}",
+      "description": "Dismiss a one-off mount migration prompt without stopping it.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "mounts.rules.snapshot",
+      "permissions": [
+        "mounts.read"
+      ],
+      "params": "{hostId:string}",
+      "description": "Read one saved host’s shared revisioned groups, rules, connections and runtime states.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "mounts.rules.list",
+      "permissions": [
+        "mounts.read"
+      ],
+      "params": "{hostId?:string,cursor?:string,revision?:string,limit?:number}",
+      "description": "Page shared mount rules by ID; limit 1..32. Continuation requires the collection revision.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "mounts.rules.get",
+      "permissions": [
+        "mounts.read"
+      ],
+      "params": "{id:string}",
+      "description": "Read a shared revisioned mount rule, or null when absent.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "mounts.rules.validate",
+      "permissions": [
+        "mounts.read"
+      ],
+      "params": "{rule:MountRule,expectedRevision?:string}",
+      "description": "Validate rule paths, saved host and group membership without filesystem or network side effects.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "mounts.rules.save",
+      "permissions": [
+        "mounts.write"
+      ],
+      "params": "{rule:MountRule,expectedRevision?:string}",
+      "description": "Atomically create or update a shared rule. Updates require exact revision; active rules must be stopped. Omit revision only for a new ID.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "mounts.rules.remove",
+      "permissions": [
+        "mounts.write"
+      ],
+      "params": "{id:string,expectedRevision:string}",
+      "description": "Submit stop-and-delete for an exact rule revision; cleanup failure retains the saved rule.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "mounts.rules.move",
+      "permissions": [
+        "mounts.write"
+      ],
+      "params": "{id:string,expectedRevision:string,groupId:string}",
+      "description": "Move a stopped rule to another group of the same host with revision protection.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "mounts.rules.copyHost",
+      "permissions": [
+        "mounts.write"
+      ],
+      "params": "{sourceHostId:string,targetHostId:string,expectedRevision:string}",
+      "description": "Atomically copy groups and rules using a collection revision. New IDs are allocated; copied automatic mounts are disabled to avoid local mount-point collisions.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "mounts.rules.export",
+      "permissions": [
+        "mounts.read"
+      ],
+      "params": "{hostId:string,cursor?:string,revision?:string,limit?:number}",
+      "description": "Export a version-1 document containing host groups and up to 32 rules per page, with continuation and revision.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "mounts.rules.importPreview",
+      "permissions": [
+        "mounts.read"
+      ],
+      "params": "{document:MountDocument,mode?:reject|replace|skip}",
+      "description": "Validate up to 32 imported rules and groups and return collection revision, document digest and per-item conflicts. No mutation.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "mounts.rules.importApply",
+      "permissions": [
+        "mounts.write"
+      ],
+      "params": "{document:MountDocument,expectedRevision:string,digest:string,mode?:reject|replace|skip}",
+      "description": "Atomically apply an unchanged preview document against its exact collection revision. Active affected configurations cannot be overwritten.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "mounts.groups.list",
+      "permissions": [
+        "mounts.read"
+      ],
+      "params": "{hostId?:string,cursor?:string,revision?:string,limit?:number}",
+      "description": "Page shared revisioned mount groups by ID, at most 32 per response.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "mounts.groups.get",
+      "permissions": [
+        "mounts.read"
+      ],
+      "params": "{id:string}",
+      "description": "Read a revisioned mount group or null.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "mounts.groups.validate",
+      "permissions": [
+        "mounts.read"
+      ],
+      "params": "{group:MountGroup,expectedRevision?:string}",
+      "description": "Validate a mount group and its saved host without connecting.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "mounts.groups.save",
+      "permissions": [
+        "mounts.write"
+      ],
+      "params": "{group:MountGroup,expectedRevision?:string}",
+      "description": "Create or update a disconnected group using create-only or exact-revision semantics.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "mounts.groups.remove",
+      "permissions": [
+        "mounts.write"
+      ],
+      "params": "{id:string,expectedRevision:string,removeRules?:boolean}",
+      "description": "Submit disconnect-and-delete for a group. Nonempty groups require explicit removeRules:true; failed cleanup preserves configuration.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "mounts.groups.observe",
+      "permissions": [
+        "mounts.read"
+      ],
+      "params": "{hostId:string,revision?:string,runtimeRevision?:string}",
+      "description": "Observe current host configuration and runtime state, waiting at most five seconds for invalidation.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "mounts.groups.connect",
+      "permissions": [
+        "mounts.write"
+      ],
+      "params": "{id:string,expectedRevision?:string}",
+      "description": "Submit a dedicated host-owned SSH connection for a mount group. Uses saved credentials and existing host-key verification; returns an operation receipt.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "mounts.groups.disconnect",
+      "permissions": [
+        "mounts.write"
+      ],
+      "params": "{id:string,expectedRevision?:string}",
+      "description": "Submit unmount of group rules followed by dedicated connection disposal. Stops automatic recovery for this group; other SSH sessions remain independent.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "mounts.groups.reconnect",
+      "permissions": [
+        "mounts.write"
+      ],
+      "params": "{id:string,expectedRevision?:string}",
+      "description": "Submit disconnect, dedicated reconnect and restoration of rules that were desired or running at submission.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "mounts.connections.list",
+      "permissions": [
+        "mounts.read"
+      ],
+      "params": "{hostId?:string}",
+      "description": "Read host-owned mount connection states shared across plugins; no credentials.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "mounts.connections.get",
+      "permissions": [
+        "mounts.read"
+      ],
+      "params": "{groupId:string}",
+      "description": "Read one group’s dedicated connection state or null.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "mounts.connections.observe",
+      "permissions": [
+        "mounts.read"
+      ],
+      "params": "{revision?:string}",
+      "description": "Observe connection states, waiting at most five seconds for invalidation.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "mounts.runtime.start",
+      "permissions": [
+        "mounts.write"
+      ],
+      "params": "{id:string,expectedRevision?:string}",
+      "description": "Submit startup of one saved rule using its group’s dedicated connection.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "mounts.runtime.startMany",
+      "permissions": [
+        "mounts.write"
+      ],
+      "params": "{ids:string[]}",
+      "description": "Submit up to 128 distinct rules in the supplied order. Each result is recorded; one failed mount does not block independent rules.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "mounts.runtime.startAuto",
+      "permissions": [
+        "mounts.write"
+      ],
+      "params": "{groupId:string,expectedRevision?:string}",
+      "description": "Submit connection and automatic rules for a group.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "mounts.runtime.connectAndStartAuto",
+      "permissions": [
+        "mounts.write"
+      ],
+      "params": "{groupId:string,expectedRevision?:string}",
+      "description": "Submit dedicated connection and ordered startup of a group’s automatic rules.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "mounts.runtime.startAll",
+      "permissions": [
+        "mounts.write"
+      ],
+      "params": "{hostId:string,mode?:all|manual}",
+      "description": "Submit all or only manual rules for one host.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "mounts.runtime.stop",
+      "permissions": [
+        "mounts.write"
+      ],
+      "params": "{id:string,expectedRevision?:string,runtimeId?:string}",
+      "description": "Submit stop and unmount of one rule. An optional runtimeId prevents stopping a replacement instance.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "mounts.runtime.stopMany",
+      "permissions": [
+        "mounts.write"
+      ],
+      "params": "{ids:string[],runtimeIds?:object}",
+      "description": "Submit stop of up to 128 distinct rules with per-item results and optional runtime identity checks.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "mounts.runtime.stopAll",
+      "permissions": [
+        "mounts.write"
+      ],
+      "params": "{hostId:string}",
+      "description": "Submit stop of every saved rule for a host and pause their automatic recovery.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "mounts.runtime.restart",
+      "permissions": [
+        "mounts.write"
+      ],
+      "params": "{id:string,expectedRevision?:string,runtimeId?:string}",
+      "description": "Submit stop then startup of the exact saved rule.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "mounts.runtime.retry",
+      "permissions": [
+        "mounts.write"
+      ],
+      "params": "{id:string,expectedRevision?:string}",
+      "description": "Submit another attempt for a failed or stopped rule.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "mounts.runtime.requestForceUnmount",
+      "permissions": [
+        "mounts.write"
+      ],
+      "params": "{id:string,runtimeId:string}",
+      "description": "Ask native confirmation for force-unmount of an exact managed runtime. Decline has no effect; changed instances are rejected.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "mounts.runtime.open",
+      "permissions": [
+        "mounts.write"
+      ],
+      "params": "{id:string,runtimeId:string}",
+      "description": "Open an exact live managed mount in the system file manager, rechecking filesystem and transport identity.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "mounts.runtime.reveal",
+      "permissions": [
+        "mounts.write"
+      ],
+      "params": "{id:string,runtimeId:string,path:string}",
+      "description": "Reveal a remote path inside an exact live managed mount. Canonical containment prevents symlink escapes and changed mount identities are rejected.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "mounts.operations.list",
+      "permissions": [
+        "mounts.read"
+      ],
+      "params": "{offset?:number}",
+      "description": "Read bounded shared operation summaries, including pending, batch and completed work.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "mounts.operations.get",
+      "permissions": [
+        "mounts.read"
+      ],
+      "params": "{id:string}",
+      "description": "Read a mount operation receipt with per-item states and categorized errors.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "mounts.operations.observe",
+      "permissions": [
+        "mounts.read"
+      ],
+      "params": "{id:string,revision?:string}",
+      "description": "Read current operation progress; wait up to five seconds when the supplied revision is unchanged.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "mounts.operations.cancel",
+      "permissions": [
+        "mounts.write"
+      ],
+      "params": "{id:string}",
+      "description": "Cancel pending subsequent batch steps. Already committed operations are not rolled back.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "mounts.paths.remote.browse",
+      "permissions": [
+        "mounts.read"
+      ],
+      "params": "{groupId:string,path?:string,offset?:number}",
+      "description": "Browse up to 128 remote directories using a connected mount group’s authenticated SSH session.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "mounts.paths.remote.resolve",
+      "permissions": [
+        "mounts.read"
+      ],
+      "params": "{groupId:string,path?:string}",
+      "description": "Resolve and verify a remote directory through the mount group’s SFTP subsystem.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "mounts.paths.local.pick",
+      "permissions": [
+        "mounts.write"
+      ],
+      "params": "{drive?:string}",
+      "description": "Choose a local empty mount directory, or confirm a Windows drive letter. Does not start a mount.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "mounts.paths.local.validate",
+      "permissions": [
+        "mounts.read"
+      ],
+      "params": "{path:string}",
+      "description": "Check a local empty mount directory or unused Windows drive with bounded filesystem workers.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "mounts.paths.conflicts",
+      "permissions": [
+        "mounts.read"
+      ],
+      "params": "{path:string,excludeRuleId?:string}",
+      "description": "Check configured and active mounts for overlapping local mount points.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "mounts.dependencies.get",
+      "permissions": [
+        "mounts.read"
+      ],
+      "params": "{}",
+      "description": "Read SSHFS/FUSE executable, driver and supported transport capability.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "mounts.dependencies.refresh",
+      "permissions": [
+        "mounts.read"
+      ],
+      "params": "{}",
+      "description": "Re-detect platform SSHFS/FUSE dependencies without installing drivers or software.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "mounts.dependencies.documentation",
+      "permissions": [
+        "mounts.read"
+      ],
+      "params": "{}",
+      "description": "Open the platform dependency documentation.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
       "name": "mounts.browse",
       "permissions": [
         "mounts.read"
@@ -2150,6 +2768,28 @@
       "deprecated": null
     },
     {
+      "name": "forwards.automation.list",
+      "permissions": [
+        "forwards.read"
+      ],
+      "params": "{}",
+      "description": "Read revisioned saved rules, runtime identities, per-rule autoStart/autoRetry options and recovery status. These are the same settings displayed by the native forwarding panel; legacy forwards.list is unchanged.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "forwards.automation.save",
+      "permissions": [
+        "forwards.write"
+      ],
+      "params": "{id:string,expectedRevision:string,automation:{autoStart:boolean,autoRetry:boolean}}",
+      "description": "Save automation options against an existing rule's exact revision. Stale edits fail without changing the rule. These host-owned preferences persist across plugin stop/revocation, like a native settings edit. Enabling autoStart takes effect on the next application start; it does not connect immediately.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
       "name": "forwards.list",
       "permissions": [
         "forwards.read"
@@ -2189,6 +2829,17 @@
       ],
       "params": "{id:string,sessionId:string}",
       "description": "Start a saved forward through its host's active authenticated session; stopped on plugin revocation.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "forwards.startMany",
+      "permissions": [
+        "forwards.write"
+      ],
+      "params": "{sessionId:string,items:{id:string,expectedRevision:string}[]}",
+      "description": "Start up to 16 distinct saved rules in input order through an existing authenticated session for their host. Recheck each revision and authorization before admitting its listener. Return ordered started, failed or notStarted outcomes; failures do not roll back earlier starts. The batch has a 90-second budget and never creates SSH sessions. Listeners remain owned by the plugin runtime.",
       "stability": "experimental",
       "since": null,
       "deprecated": null
@@ -2474,6 +3125,138 @@
           "description": "Host-supplied identity and runtime generation. Advisory payload, no permission grant or replay. A recipient must reject a retired generation; concurrent calls need not complete in order."
         }
       }
+    },
+    {
+      "name": "bus.advertise",
+      "permissions": [
+        "bus.communicate"
+      ],
+      "params": "{capability:string,version?:number}",
+      "description": "Advertise an online runtime capability and its positive protocol version. Omit version to withdraw.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "bus.discover",
+      "permissions": [
+        "bus.communicate"
+      ],
+      "params": "{capability:string}",
+      "description": "Read online providers of a capability as {pluginId,version} entries.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "bus.create",
+      "permissions": [
+        "bus.communicate"
+      ],
+      "params": "{}",
+      "description": "Create a runtime-owned private bus and return its opaque ID.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "bus.invite",
+      "permissions": [
+        "bus.communicate"
+      ],
+      "params": "{busId:string,pluginId:string}",
+      "description": "Invite a currently registered runtime to an owner-controlled bus for sixty seconds. Return an invitation ID.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "bus.invitations",
+      "permissions": [
+        "bus.communicate"
+      ],
+      "params": "{}",
+      "description": "List pending {invitationId,fromPluginId} entries for the caller's runtime.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "bus.join",
+      "permissions": [
+        "bus.communicate"
+      ],
+      "params": "{invitationId:string}",
+      "description": "Accept and consume an invitation bound to the caller's runtime. Return the private bus ID.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "bus.leave",
+      "permissions": [
+        "bus.communicate"
+      ],
+      "params": "{busId:string}",
+      "description": "Leave a private bus and discard its pending messages for the caller. Owner departure closes the bus.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "bus.close",
+      "permissions": [
+        "bus.communicate"
+      ],
+      "params": "{busId:string}",
+      "description": "Close an owned private bus and discard pending private traffic.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "bus.subscribe",
+      "permissions": [
+        "bus.communicate"
+      ],
+      "params": "{busId?:string,topic:string}",
+      "description": "Subscribe the calling runtime to an exact topic. The bus defaults to public.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "bus.unsubscribe",
+      "permissions": [
+        "bus.communicate"
+      ],
+      "params": "{busId?:string,topic:string}",
+      "description": "Stop enqueueing new messages for an exact runtime topic.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "bus.publish",
+      "permissions": [
+        "bus.communicate"
+      ],
+      "params": "{busId?:string,topic:string,payload?:JSON}",
+      "description": "Enqueue a message to matching subscribers and return {recipients}. Payload limit is 16 KiB; bus.* topics are reserved.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "bus.receive",
+      "permissions": [
+        "bus.communicate"
+      ],
+      "params": "{}",
+      "description": "Wait up to fifteen seconds for a batch of up to 32 {busId,topic,sender,payload} messages and a lost-count. Only one outstanding read per runtime.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
     },
     {
       "name": "storage.recovery.observe",
@@ -3655,6 +4438,30 @@
       ],
       "params": "{paneId:string,revision:string,action:refresh|navigate|select|open,path?:string,paths?:string[],mode?:open|preview}",
       "description": "Dispatch existing host browser behavior on an exact live revision. Selection at most 256 visible entries; open must target a visible entry. Suspended, busy and stale browsers reject actions. Returns {accepted:true}, not IO completion; observe subsequent state. Never replay actions automatically. No file contents, writes or private preview handles. Experimental schemaVersion 1.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "fileList.setHighlights",
+      "permissions": [
+        "fileBrowser.read",
+        "workspace.write"
+      ],
+      "params": "{id:string,priority?:number,source?:string,directory?:string,highlights:{match:{name?:string,extension?:string,pathPrefix?:string},tooltip?:string,tone?:neutral|info|success|warning|error}[]}",
+      "description": "Replace a runtime-owned file-list highlight collection. Exactly one plain-name, extension or path-prefix matcher is required per highlight; source is local, an active remote session ID (optionally remote:<id>), or empty for all sources; optional directory scopes rules to one listing path. Colors are semantic and rendered by the host. At most 256 rules and 256KiB per collection, 8 collections per plugin and 128 total. Empty highlights clears the collection. Removed on stop, crash, revocation or restart; never modifies files.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "fileList.removeHighlights",
+      "permissions": [
+        "fileBrowser.read",
+        "workspace.write"
+      ],
+      "params": "{id:string}",
+      "description": "Remove only this plugin runtime's file-list highlight collection; returns false if absent.",
       "stability": "experimental",
       "since": null,
       "deprecated": null

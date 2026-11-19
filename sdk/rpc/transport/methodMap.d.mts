@@ -1,5 +1,6 @@
 import type { RuntimeResourcesMethodMap } from "../runtime/resources/methods.mjs";
 import type { ApplicationMethodMap } from "../application/methods.mjs";
+import type { BusMethodMap } from "../bus/methods.mjs";
 import type { ClipboardMethodMap } from "../clipboard/methods.mjs";
 import type { ConnectionsMethodMap } from "../connections/methods.mjs";
 import type { DiscoveryMethodMap } from "../discovery/methods.mjs";
@@ -22,4 +23,4 @@ import type { TerminalMethodMap } from "../terminal/methods.mjs";
 import type { ToolsMethodMap } from "../tools/methods.mjs";
 import type { WorkbenchMethodMap } from "../workbench/methods.mjs";
 
-export interface HostMethodMap extends RuntimeResourcesMethodMap, HostsMethodMap, DiscoveryMethodMap, WorkbenchMethodMap, ForwardingMethodMap, MountsMethodMap, EditorMethodMap, EventsMethodMap, StorageMethodMap, ExecutionMethodMap, ToolsMethodMap, FilesMethodMap, MonitorMethodMap, HistoryMethodMap, ApplicationMethodMap, SettingsMethodMap, PreferencesMethodMap, ProfilesMethodMap, ConfigurationMethodMap, ConnectionsMethodMap, TerminalMethodMap, ClipboardMethodMap, LoggingMethodMap {}
+export interface HostMethodMap extends BusMethodMap, RuntimeResourcesMethodMap, HostsMethodMap, DiscoveryMethodMap, WorkbenchMethodMap, ForwardingMethodMap, MountsMethodMap, EditorMethodMap, EventsMethodMap, StorageMethodMap, ExecutionMethodMap, ToolsMethodMap, FilesMethodMap, MonitorMethodMap, HistoryMethodMap, ApplicationMethodMap, SettingsMethodMap, PreferencesMethodMap, ProfilesMethodMap, ConfigurationMethodMap, ConnectionsMethodMap, TerminalMethodMap, ClipboardMethodMap, LoggingMethodMap {}
