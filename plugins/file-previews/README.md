@@ -8,7 +8,7 @@ The same action opens local or connected SSH files. No session IDs or runtime se
 - Video: MP4, M4V, WebM and MOV with native playback controls. Encoding support depends on the OS.
 - PDF: local bundled PDF.js, page navigation, zoom and bounded range loading. Password-protected
   documents should be opened in a PDF application. Interactive scripts/forms are not executed.
-- Markdown and text: bounded UTF-8 read-only content; Markdown includes a source toggle.
+- Markdown and text: bounded UTF-8 read-only content; Markdown includes a source toggle. Logs (`.jsonl`, `.ndjson`), patches (`.diff`, `.patch`) and subtitles (`.srt`, `.vtt`) open as plain text.
 
 Install the ZIP or folder with Tunnelde **0.28.0-beta.5 or later**. Preview providers become
 available immediately. Removing this package restores the built-in bounded text preview.

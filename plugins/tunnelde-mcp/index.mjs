@@ -175,9 +175,10 @@ export function createController(host) {
               ? "请先创建并限制一个客户端。"
               : "Create a scoped client before starting the listener.",
           );
-        const port = Number(input.port ?? state.port);
-        if (!Number.isInteger(port) || port < 1024 || port > 65535)
-          throw new Error("Port must be between 1024 and 65535.");
+        const raw = String(input.port ?? state.port).trim();
+        const port = Number(raw);
+        if (!/^\d{1,5}$/.test(raw) || port < 1024 || port > 65535)
+          throw new Error(zh ? "请输入 1024–65535 之间的十进制端口。" : "Enter a decimal port between 1024 and 65535.");
         await persist({ ...state, port });
         const instance = createMcpServer({
           clients: () => state.clients,
@@ -371,13 +372,19 @@ export function createController(host) {
           form("reset", [], [action("reset", label("Reset invalid settings", "重置无效设置"))]),
         ],
       };
-    blocks.push(
+    if (server?.url) {
+      blocks.push(form("listener", [], [action("stop", label("Stop and cancel active work", "停止并取消活动工作"))]));
+    } else if (!state.clients.length) {
+      blocks.push({ type: "text", text: label(
+        "Create a scoped client below, then refresh this view to start the listener.",
+        "先在下方创建受限客户端，再刷新此页面以开启监听。",
+      ) });
+    } else blocks.push(
       form(
         "listener",
         [field("port", label("Loopback port", "本地端口"), String(state.port))],
         [
           action("start", label("Start listener", "开启监听")),
-          action("stop", label("Stop and cancel active work", "停止并取消活动工作")),
         ],
       ),
     );

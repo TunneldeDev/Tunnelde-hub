@@ -1,6 +1,8 @@
 import readline from "node:readline";
 import { pathToFileURL } from "node:url";
-export const renderView = () => ({
+import { readFileSync } from "node:fs";
+const guide = JSON.parse(readFileSync(new URL("./guide.json", import.meta.url), "utf8"));
+export const renderView = (id = "main") => id === "guide" ? guide : ({
   title: "SSHFS",
   blocks: [{ type: "sharedMounts" }],
 });
@@ -15,15 +17,15 @@ if (
     } catch {
       return;
     }
-    if (message.id === undefined) return;
+    if (!message || typeof message !== "object" || Array.isArray(message) || message.id === undefined) return;
     const { id, method } = message;
     const write = (payload) =>
       process.stdout.write(
         `${JSON.stringify({ jsonrpc: "2.0", id, ...payload })}\n`,
       );
     if (method === "initialize") write({ result: { ok: true } });
-    else if (method === "view.render" && message.params?.view === "main")
-      write({ result: renderView() });
+    else if (method === "view.render" && ["main", "guide"].includes(message.params?.view))
+      write({ result: renderView(message.params.view) });
     else if (method === "shutdown") {
       write({ result: null });
       process.exit(0);

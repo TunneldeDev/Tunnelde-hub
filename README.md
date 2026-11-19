@@ -29,7 +29,7 @@ the desktop installer.
 | CSV to JSON           | Preview CSV/TSV as JSON arrays without coercing cell values           | Node 22+                            |
 | Unicode Inspector     | Inspect graphemes, code points, controls and UTF-8 byte counts        | Node 22+                            |
 | JSONL Log Viewer      | Preview structured logs or convert the active editor buffer           | Node 22+                            |
-| Studio Themes        | Cobalt Dusk and Porcelain, two coordinated workbench themes          | None                                |
+| Studio Themes        | Cobalt Dusk, Porcelain and Cobalt Contrast workbench themes          | None                                |
 | Common File Previews | Pictures, music, video, PDF, Markdown and text Quick Look            | None, preview-capable Tunnelde Beta |
 | Common File Icons    | Familiar file-type glyphs and language badges for local/remote files | None, icon-capable Tunnelde Beta    |
 | Tunnelde AI          | API assistant running locally or on a selected SSH host              | Node 22+, Tunnelde 0.25+            |

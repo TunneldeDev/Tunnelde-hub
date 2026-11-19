@@ -1,6 +1,6 @@
 # UUID Generator
 
-Generate batches of cryptographically random UUID v4 values.
+Generate batches of cryptographically random UUID v4 values in lowercase (default) or uppercase.
 
 An independent official Tunnelde plugin. Requires Node.js 22 or later. No npm installation, network access, filesystem access or clipboard permission is required. Install the folder or its release ZIP in Tunnelde, then open the plugin view.
 

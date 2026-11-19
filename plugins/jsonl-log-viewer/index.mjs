@@ -56,9 +56,11 @@ export function runCommand(command, input = {}) {
   const zh = String(input._locale ?? "").startsWith("zh");
   try {
     const result = formatJSONL(String(input.source ?? ""));
+    const shown = result.invalidLines.slice(0, 8).join(", ");
+    const invalid = result.invalidLines.length > 8 ? `${shown}… (${result.invalidLines.length})` : shown;
     if (result.invalidLines.length && input.document) return { error: true, text: zh
-      ? `第 ${result.invalidLines.join(", ")} 行不是 JSON 对象，原文未修改。请先修复这些行，或在插件页面预览。`
-      : `Lines ${result.invalidLines.join(", ")} are not JSON objects. The document was not changed. Fix them or preview in the plugin page.` };
+      ? `第 ${invalid} 行不是 JSON 对象，原文未修改。请先修复这些行，或在插件页面预览。`
+      : `Lines ${invalid} are not JSON objects. The document was not changed. Fix them or preview in the plugin page.` };
     let text = result.text;
     if (input.document && String(input.source).includes("\r\n")) text = text.replaceAll("\n", "\r\n");
     return { text, title: zh ? `已解析 ${result.parsed} 条，异常 ${result.invalidLines.length} 行` : `${result.parsed} records, ${result.invalidLines.length} invalid lines` };
@@ -68,7 +70,7 @@ export function renderView(locale = "en") {
   const zh = locale.startsWith("zh");
   return { title: "JSONL Log Viewer", blocks: [
     { type: "text", text: zh ? "直接在打开的 .jsonl 或 .ndjson 编辑器中使用格式化快捷键（Windows/Linux: Ctrl+Shift+F，macOS: Cmd+Shift+F），或在 F1 中选择 JSONL 命令。仅替换编辑缓冲区，可撤销，不自动保存；原始文件保持不变直到你保存。下方也可预览单独的日志片段。" : "In an open .jsonl or .ndjson editor, use Ctrl+Shift+F (Cmd+Shift+F on macOS), or choose the JSONL command in F1. Conversion updates the undoable buffer without saving. You can also preview a log excerpt below." },
-    { type: "form", id: "log", fields: [{ id: "source", type: "textarea", label: zh ? "JSONL 日志片段" : "JSONL log excerpt" }], actions: [{ id: "to-log", command: "to-log", label: zh ? "预览易读日志" : "Preview readable log" }] }
+    { type: "form", id: "log", fields: [{ id: "source", type: "textarea", label: zh ? "JSONL 日志片段" : "JSONL log excerpt", placeholder: '{"level":"INFO","message":"ready"}' }], actions: [{ id: "to-log", command: "to-log", label: zh ? "预览易读日志" : "Preview readable log" }] }
   ] };
 }
 

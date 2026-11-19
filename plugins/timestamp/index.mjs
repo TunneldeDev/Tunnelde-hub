@@ -58,10 +58,10 @@ export function renderView(locale = "en") {
 
 function parseDate(raw, zone) {
   const match =
-    /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{1,3}))?)?(Z|[+-]\d{2}:\d{2})?$/.exec(
+    /^(\d{4}|[+-]\d{6})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{1,3}))?)?(Z|[+-]\d{2}:\d{2})?$/.exec(
       raw.trim(),
     );
-  if (!match) throw new Error("date");
+  if (!match || match[1] === "-000000") throw new Error("date");
   const [, y, m, d, h, min, s = "0", fraction = "", offset] = match;
   const [year, month, day, hour, minute, second] = [y, m, d, h, min, s].map(Number);
   const days = [
@@ -91,14 +91,13 @@ function parseDate(raw, zone) {
   const ms = Number(fraction.padEnd(3, "0"));
   const date = new Date(0);
   if (offset || zone === "utc") {
-    date.setUTCFullYear(year, month - 1, day);
-    date.setUTCHours(hour, minute, second, ms);
     if (offset && offset !== "Z") {
       const oh = Number(offset.slice(1, 3)),
         om = Number(offset.slice(4, 6));
       if (oh > 14 || om > 59 || (oh === 14 && om !== 0)) throw new Error("date");
-      date.setTime(date.getTime() - (offset[0] === "+" ? 1 : -1) * (oh * 60 + om) * 60000);
     }
+    // Apply the offset before clipping to the JS date range, including at both endpoints.
+    return new Date(`${y}-${m}-${d}T${h}:${min}:${String(second).padStart(2, "0")}.${fraction.padEnd(3, "0")}${offset || "Z"}`);
   } else {
     date.setFullYear(year, month - 1, day);
     date.setHours(hour, minute, second, ms);
@@ -162,13 +161,12 @@ export function runCommand(command, input = {}) {
     if (!Number.isFinite(date.getTime())) throw new Error("date");
     const milliseconds = date.getTime();
     return {
+      title: zh ? "转换结果" : "Converted time",
       text: [
         (zh ? "Unix 秒: " : "Unix seconds: ") + secondsText(milliseconds),
         (zh ? "Unix 毫秒: " : "Unix milliseconds: ") + milliseconds,
         "UTC: " + date.toISOString(),
         (zh ? "本地: " : "Local: ") + localISO(date),
-        (zh ? "所选时区: " : "Selected zone: ") +
-          (input.zone === "utc" ? date.toISOString() : localISO(date)),
       ].join("\n"),
     };
   } catch {
