@@ -3,6 +3,7 @@ import { test } from "node:test";
 import { PassThrough } from "node:stream";
 import { createInterface } from "node:readline";
 import { createPlugin } from "../sdk/tunnelde-plugin.mjs";
+import { watchBus } from "../sdk/bus/client.mjs";
 
 function transport(handlers = {}, options = {}) {
   const input = new PassThrough(),
@@ -33,6 +34,71 @@ function transport(handlers = {}, options = {}) {
     },
   };
 }
+
+test("Bus observers multiplex one receive per transport and cancel independently", { timeout: 2000 }, async () => {
+  const a = transport();
+  const b = transport();
+  const owner = new AbortController();
+  const published = { busId: "private-id", topic: "updates", payload: { revision: 2 } };
+  try {
+    const failing = watchBus(a.plugin.host, batch => {
+      batch.messages[0].payload.revision = 99;
+      throw new Error("callback failure");
+    }, owner);
+    let delivered;
+    const batchReceived = new Promise(resolve => { delivered = resolve; });
+    const observer = watchBus(a.plugin.host, delivered, owner);
+    const inbox = await a.next();
+    assert.equal(inbox.method, "bus.receive");
+
+    const publish = b.plugin.host.call("bus.publish", published);
+    const request = await b.next();
+    assert.equal(request.method, "bus.publish");
+    assert.deepEqual(request.params, published);
+    b.send({ jsonrpc: "2.0", id: request.id, result: { recipients: 1 } });
+    assert.deepEqual(await publish, { recipients: 1 });
+
+    const batch = { messages: [{ ...published, sender: { pluginId: "b", generation: 2 } }], lost: 3 };
+    a.send({ jsonrpc: "2.0", id: inbox.id, result: batch });
+    assert.deepEqual(await batchReceived, batch);
+    assert.equal((await failing.done).reason, "failed");
+    assert.equal(observer.closed, false);
+    const next = await a.next();
+    assert.equal(next.method, "bus.receive");
+    assert.notEqual(next.id, inbox.id);
+    owner.abort();
+    assert.deepEqual(await a.next(), { jsonrpc: "2.0", method: "$/cancelRequest", params: { id: next.id } });
+    assert.deepEqual(await observer.done, { reason: "aborted" });
+  } finally {
+    a.close();
+    b.close();
+  }
+});
+
+test("Bus can resubscribe before the native receive lease finishes cancelling", { timeout: 2000 }, async () => {
+  const t = transport();
+  const owner = new AbortController();
+  try {
+    const first = watchBus(t.plugin.host, () => assert.fail("stopped observer"), owner);
+    const original = await t.next();
+    first.stop();
+    assert.equal((await t.next()).params.id, original.id);
+    let delivered;
+    const received = new Promise(resolve => { delivered = resolve; });
+    const observer = watchBus(t.plugin.host, delivered, owner);
+    const busy = await t.next();
+    t.send({ jsonrpc: "2.0", id: busy.id, error: { code: -32000, message: "plugin.bus.receiveBusy" } });
+    const next = await t.next();
+    assert.equal(next.method, "bus.receive");
+    assert.notEqual(next.id, busy.id);
+    t.send({ jsonrpc: "2.0", id: next.id, result: { messages: [], lost: 2 } });
+    assert.equal((await received).lost, 2);
+    owner.abort();
+    assert.deepEqual(await observer.done, { reason: "aborted" });
+  } finally {
+    t.close();
+  }
+});
 test("SDK handles a nested host API call without blocking command replies", async () => {
   const t = transport({
     run: async (_, __, host) => ({

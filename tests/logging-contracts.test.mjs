@@ -25,6 +25,12 @@ test("log DTO/schema drift is detected without modifying check-mode artifacts", 
     );
     await syncLoggingContracts(app, sdk, false);
     await syncLoggingContracts(app, sdk, true);
+    const currentSchema = join(app, "src-tauri/src/logs/read/schema.json");
+    await write(currentSchema, '{"version":1}');
+    await assert.rejects(syncLoggingContracts(app, sdk, true), /Log schema differs/);
+    await rm(join(app, "src-tauri/src/plugins/api/domains/logging/schema.json"));
+    await syncLoggingContracts(app, sdk, false);
+    await syncLoggingContracts(app, sdk, true);
     const dto = join(sdk, "rpc/logging/data/entry.d.mts"),
       initial = await readFile(dto, "utf8");
     await write(dto, "stale");
