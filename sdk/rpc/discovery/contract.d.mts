@@ -8,7 +8,7 @@ export interface ExtensionDirectory {
     permission: "bus.communicate";
     publicBus: "public";
     privateAdmission: "invitation-and-runtime-generation";
-    events: ("bus.discovery" | "bus.invitation" | "bus.closed")[];
+    events: ("bus.discovery" | "bus.invitation" | "bus.closed" | "bus.membersChanged")[];
     payloadBytes: number;
     queueSize: number;
   };

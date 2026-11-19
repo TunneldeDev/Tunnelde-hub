@@ -38,3 +38,5 @@ await host.call("bus.unsubscribe", { busId, topic });
 ```
 
 `watchBus` multiplexes a single cancellable `bus.receive` call per SDK host. Do not also call `bus.receive` directly. Keep handlers short: the next batch is read after handlers settle. A failed handler closes only its own subscription, with the error in `subscription.done`. The queue is bounded; `lost` indicates that some messages could not be delivered. Use revisions and recover from the source of truth rather than assuming messages are durable.
+
+Use `host.describe()` to check for `bus.snapshot` and `bus.decline` on the running host. Subscribe to `bus.membersChanged` on a joined **private** channel before taking a snapshot. It is a hint to reread state, not a list of changes. `snapshot.channels` includes only channels the caller belongs to; `members` are plugin IDs and `topics` are the caller's subscriptions. On `lost > 0`, refresh snapshots, pending invitations, and the relevant application data. An old invitation notification may already have expired or been consumed. To reject a pending invitation without joining, pass its `invitationId` to `bus.decline`.

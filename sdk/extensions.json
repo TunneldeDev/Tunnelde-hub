@@ -651,7 +651,8 @@
     "events": [
       "bus.discovery",
       "bus.invitation",
-      "bus.closed"
+      "bus.closed",
+      "bus.membersChanged"
     ],
     "payloadBytes": 16384,
     "queueSize": 128

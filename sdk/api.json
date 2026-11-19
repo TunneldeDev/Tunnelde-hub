@@ -220,6 +220,49 @@
       }
     },
     {
+      "name": "hosts.transfer.export",
+      "permissions": [
+        "hosts.read",
+        "forwards.read",
+        "mounts.read",
+        "settings.read"
+      ],
+      "params": "{ids:string[]}",
+      "description": "Export selected saved hosts and dependency closure as a version-1 tunnelde-hosts document. Includes host folders, explicit effective proxy selections, jump hosts, forward groups/rules and mount groups/rules. Excludes passwords, key paths/content, tokens, runtime sessions and arbitrary plugin data. Subject to ordinary RPC response limits; use smaller batches for large configurations. No file dialog.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "hosts.transfer.preview",
+      "permissions": [
+        "hosts.read",
+        "forwards.read",
+        "mounts.read",
+        "settings.read"
+      ],
+      "params": "{document:object}",
+      "description": "Validate a portable host document and return revision, dependency IDs and name/address conflicts. Does not write or connect. Local mount points must be reviewed for the destination device.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "hosts.transfer.apply",
+      "permissions": [
+        "hosts.read",
+        "hosts.write",
+        "forwards.write",
+        "mounts.write",
+        "settings.write"
+      ],
+      "params": "{request:{document:object,revision:string,selected:string[],copies?:boolean,mountPoints?:object}}",
+      "description": "Atomically create selected hosts and required dependencies with fresh IDs and remap all relationships. Reject stale previews and conflicts unless copies is explicitly true. Never overwrites existing configurations or credentials; does not connect or start rules. Optional mountPoints maps exported rule IDs to destination paths. Configure credentials/key files separately. Request remains subject to the normal RPC size limit.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
       "name": "hostList.setDecorations",
       "permissions": [
         "hosts.read",
@@ -2768,6 +2811,72 @@
       "deprecated": null
     },
     {
+      "name": "forwards.groups.list",
+      "permissions": [
+        "forwards.read"
+      ],
+      "params": "{hostId?:string}",
+      "description": "Read host-owned forwarding groups. A group shares one dedicated SSH transport; different groups and ungrouped rules are isolated.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "forwards.groups.save",
+      "permissions": [
+        "forwards.write"
+      ],
+      "params": "{hostId:string,name:string,id?:string,expectedRevision?:string}",
+      "description": "Create or rename a host-scoped forwarding group with revision protection. Does not connect.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "forwards.groups.remove",
+      "permissions": [
+        "forwards.write"
+      ],
+      "params": "{id:string,expectedRevision:string}",
+      "description": "Remove an empty group. Move its rules first; running rules cannot be moved.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "forwards.move",
+      "permissions": [
+        "forwards.write"
+      ],
+      "params": "{id:string,expectedRevision:string,groupId?:string}",
+      "description": "Move an inactive rule into a group on its own host, or clear membership. Changes the rule revision and preserves automation options.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "forwards.startManaged",
+      "permissions": [
+        "forwards.write"
+      ],
+      "params": "{id:string,expectedRevision:string}",
+      "description": "Start through the host-owned group/rule connection pool using saved credentials and trusted host keys. Shares transport with native and automatic starts only in the same host/group and reviewed route. Listener ownership and revocation remain per-plugin. Prompts are not opened; missing credentials/trust return an error.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "forwards.startManyManaged",
+      "permissions": [
+        "forwards.write"
+      ],
+      "params": "{items:{id:string,expectedRevision:string}[]}",
+      "description": "Start up to 16 distinct rules in input order with a 90-second budget through isolated group/rule transports. Return ordered per-item outcomes and continue after individual failures. No caller-supplied SSH session.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
       "name": "forwards.automation.list",
       "permissions": [
         "forwards.read"
@@ -2828,7 +2937,7 @@
         "forwards.write"
       ],
       "params": "{id:string,sessionId:string}",
-      "description": "Start a saved forward through its host's active authenticated session; stopped on plugin revocation.",
+      "description": "Start only through an existing host-managed connection belonging to this exact host/group/rule and current reviewed route. Terminal, other-group and plugin-created sessions return forward.sessionScope. Prefer forwards.startManaged. Stopped on plugin revocation.",
       "stability": "experimental",
       "since": null,
       "deprecated": null
@@ -2839,7 +2948,7 @@
         "forwards.write"
       ],
       "params": "{sessionId:string,items:{id:string,expectedRevision:string}[]}",
-      "description": "Start up to 16 distinct saved rules in input order through an existing authenticated session for their host. Recheck each revision and authorization before admitting its listener. Return ordered started, failed or notStarted outcomes; failures do not roll back earlier starts. The batch has a 90-second budget and never creates SSH sessions. Listeners remain owned by the plugin runtime.",
+      "description": "Start up to 16 distinct saved rules in input order through an existing host-managed connection for their exact group/rule. Other sessions return forward.sessionScope; use forwards.startManyManaged for multiple isolation scopes. Recheck each revision and authorization before admitting its listener. Return ordered started, failed or notStarted outcomes; failures do not roll back earlier starts. The batch has a 90-second budget and never creates SSH sessions. Listeners remain owned by the plugin runtime.",
       "stability": "experimental",
       "since": null,
       "deprecated": null
@@ -3177,6 +3286,28 @@
       ],
       "params": "{}",
       "description": "List pending {invitationId,fromPluginId} entries for the caller's runtime.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "bus.snapshot",
+      "permissions": [
+        "bus.communicate"
+      ],
+      "params": "{}",
+      "description": "Read the calling runtime's {publicTopics,channels:[{busId,ownerPluginId,members,topics}]} snapshot. Members are plugin IDs; topics are the caller's subscriptions.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "bus.decline",
+      "permissions": [
+        "bus.communicate"
+      ],
+      "params": "{invitationId:string}",
+      "description": "Consume a pending invitation for the calling runtime without joining its channel.",
       "stability": "experimental",
       "since": null,
       "deprecated": null
