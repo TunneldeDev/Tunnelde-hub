@@ -38,10 +38,21 @@ export async function syncLoggingContracts(
       await writeFile(path, expected);
     }
   }
-  const schema = JSON.parse(await readFile(join(applicationDirectory, "src-tauri/src/logs/read/schema.json"), "utf8").catch(error => {
-    if (error.code !== "ENOENT") throw error;
-    return readFile(join(applicationDirectory, "src-tauri/src/plugins/api/domains/logging/schema.json"), "utf8");
-  }));
+  const schema = JSON.parse(
+    await readFile(
+      join(applicationDirectory, "src-tauri/src/logs/read/schema.json"),
+      "utf8",
+    ).catch((error) => {
+      if (error.code !== "ENOENT") throw error;
+      return readFile(
+        join(
+          applicationDirectory,
+          "src-tauri/src/plugins/api/domains/logging/schema.json",
+        ),
+        "utf8",
+      );
+    }),
+  );
   const expected = JSON.stringify(schema, null, 2) + "\n",
     path = join(sdkDirectory, "logging/schema.json");
   if (check)
