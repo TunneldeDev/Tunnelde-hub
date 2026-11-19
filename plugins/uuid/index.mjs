@@ -16,6 +16,13 @@ export function renderView(locale = "en") {
         id: "uuid",
         fields: [
           { id: "count", type: "text", label: zh ? "数量（1–100）" : "Count (1–100)", value: "1" },
+          {
+            id: "letterCase", type: "select", label: zh ? "字母大小写" : "Letter case", value: "lower",
+            options: [
+              { value: "lower", label: zh ? "小写" : "Lowercase" },
+              { value: "upper", label: zh ? "大写" : "Uppercase" },
+            ],
+          },
         ],
         actions: [
           { id: "generate", command: "generate", label: zh ? "生成 UUID" : "Generate UUIDs" },
@@ -36,7 +43,11 @@ export function runCommand(command, input = {}) {
         : "Count must be an integer between 1 and 100.",
     };
   }
-  return { text: Array.from({ length: count }, () => randomUUID()).join("\n") };
+  const text = Array.from({ length: count }, () => randomUUID()).join("\n");
+  return {
+    title: String(input._locale ?? "").startsWith("zh") ? `已生成 ${count} 个 UUID` : `Generated ${count} UUID${count === 1 ? "" : "s"}`,
+    text: input.letterCase === "upper" ? text.toUpperCase() : text,
+  };
 }
 
 import process from "node:process";

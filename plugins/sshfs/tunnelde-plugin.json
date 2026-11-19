@@ -1,7 +1,7 @@
 {
   "id": "sshfs",
   "name": "SSHFS",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "apiVersion": 1,
   "runtime": "node",
   "main": "index.mjs",
@@ -20,9 +20,21 @@
       "location": "workspace",
       "kind": "sharedMounts",
       "icon": "folder"
+    },
+    {
+      "id": "guide",
+      "title": "Mount setup · 挂载指南",
+      "location": "workspace"
     }
   ],
-  "hostDetails": [{ "id": "mounts", "title": "Mounts", "viewId": "main", "kind": "mounts" }],
+  "hostDetails": [
+    {
+      "id": "mounts",
+      "title": "Mounts",
+      "viewId": "main",
+      "kind": "mounts"
+    }
+  ],
   "mountedFileReveal": true,
   "permissions": [
     "hosts.read",

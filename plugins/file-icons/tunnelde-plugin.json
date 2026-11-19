@@ -1,7 +1,7 @@
 {
   "id": "file-icons",
   "name": "Common File Icons",
-  "version": "1.6.0",
+  "version": "1.21.0",
   "apiVersion": 1,
   "runtime": "theme",
   "author": "TunneldeDev",
@@ -350,7 +350,16 @@
         "package-lock.json": "lock",
         "pnpm-lock.yaml": "lock",
         "yarn.lock": "lock",
-        "Cargo.lock": "lock"
+        "Cargo.lock": "lock",
+        "uv.lock": "lock",
+        "bun.lock": "lock",
+        "compose.yaml": "docker",
+        "compose.yml": "docker",
+        "docker-compose.yml": "docker",
+        ".env.example": "config",
+        ".env.local": "config",
+        ".bash_profile": "shell",
+        ".zshenv": "shell"
       }
     }
   ]

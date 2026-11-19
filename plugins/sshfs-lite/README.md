@@ -1,5 +1,7 @@
 # SSHFS Lite
 
+Open **Mount setup · 挂载指南** in the plugin details for a short platform checklist. Both variants use the same host-managed rules; the guide never connects or runs a command.
+
 Requires Tunnelde 1.5.0-beta.5 or later.
 
 Install this folder or its release ZIP in Tunnelde, approve the mount and host permissions, and open its view from the command palette. This data-only plugin requires no Node.js runtime or trusted JavaScript.

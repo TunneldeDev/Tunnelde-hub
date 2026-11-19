@@ -721,8 +721,14 @@ export class AiPlugin {
       session.history.push({ id: randomUUID(), role: "user", content: message });
     }
     if (!recover && session.untitled) {
-      session.title = message.slice(0, 60);
-      session.untitled = false;
+      // Derive a one-line label without splitting emoji or combining characters.
+      let title = "";
+      for (const { segment } of new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(message.replace(/\s+/gu, " ").trim())) {
+        if (title.length + segment.length > 60) break;
+        title += segment;
+      }
+      session.title = title.trimEnd();
+      session.untitled = !session.title;
     }
     session.updatedAt = Date.now();
     session.run = {

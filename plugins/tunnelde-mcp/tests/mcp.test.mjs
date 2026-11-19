@@ -802,3 +802,16 @@ test("installed plugin entry point supports real bidirectional host RPC and neve
   assert.equal(await new Promise((resolve) => child.on("exit", resolve)), 0);
   assert.equal(stderr, "");
 });
+
+test("listener setup only offers actionable controls and validates decimal ports", async () => {
+  const controller = createController(fakeHost());
+  await controller.initialize();
+  const render = () => controller.render("main", "zh-CN");
+  const listener = view => view.blocks.find(block => block.id === "listener");
+  assert.equal(listener(await render()), undefined);
+  await controller.run("client.create", { name: "Test", mode: "ask", sessionId: "ssh-a" });
+  assert.deepEqual(listener(await render()).actions.map(a => a.command), ["start"]);
+  for (const port of ["1e4", "0x1234", "1023", "65536"]) {
+    await assert.rejects(controller.run("start", { port, _locale: "zh-CN" }), /十进制端口/);
+  }
+});

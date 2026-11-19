@@ -71,7 +71,7 @@ test("editor formatting honors all indentation widths and preserves CRLF, termin
   );
   assert.equal(
     runCommand("minify", { source, document: {} }).text,
-    '{"n":9007199254740993,"n":1e+200}',
+    '{"n":9007199254740993,"n":1e+200}\r\n',
   );
   assert.equal(runCommand("pretty", { source: "invalid", document: {} }).error, true);
 });

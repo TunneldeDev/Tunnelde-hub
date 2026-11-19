@@ -522,3 +522,15 @@ test("config rejects insecure endpoints, duplicate profile IDs and implicit CLI 
     /executable/,
   );
 });
+
+test("automatic titles collapse whitespace without splitting the next grapheme or changing history", async () => {
+  const { engine } = await prepared({ completion: async () => ({ text: "Ready", calls: [] }) });
+  const session = engine.newSession();
+  const prefix = `Test ${"a".repeat(50)}`;
+  const message = `${prefix.replace(" ", "\n\n")} 👩‍💻 done`;
+  await engine.command("ai.send", { sessionId: session.id, message });
+  await engine.runs.get(session.id).done;
+  assert.equal(session.title, prefix);
+  assert.equal(session.history.find(item => item.role === "user").content, message);
+  await engine.shutdown();
+});

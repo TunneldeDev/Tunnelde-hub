@@ -74,7 +74,10 @@ export function runCommand(command, input = {}) {
     };
   }
   const tokens = source.match(/"(?:\\[\s\S]|[^"\\])*"|[^\s"{}[\]:,]+|[{}[\]:,]/g) ?? [];
-  if (command === "minify") return { text: tokens.join("") };
+  if (command === "minify") {
+    const ending = input.document ? (source.match(/(?:\r\n|\n|\r)$/)?.[0] ?? "") : "";
+    return { text: tokens.join("") + ending };
+  }
   const width = String(input.indent ?? "2");
   const indent = width === "tab" ? "\t" : " ".repeat(/^[1-8]$/.test(width) ? Number(width) : 2);
   let depth = 0;

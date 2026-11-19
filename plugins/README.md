@@ -1,13 +1,23 @@
 # Official plugins
 
-Each directory is a separate installable plugin. Utility plugins require Node.js 22 or later, have no npm dependencies and request no host permissions. Assistant plugins require Tunnelde 0.22.2 or later; MCP requires 0.22.0 or later and explicit host permissions. The Studio Themes pack is pure color data and needs no Node or process.
+Each directory is a separate installable plugin. The five standalone conversion and inspection tools below (`text-checksum` through `unicode-inspector`) use Node.js 22 or later, have no npm dependencies and request no host permissions. For editor, assistant and mount integrations, see the host version and permissions declared by each package. The Studio Themes pack is pure color data and needs no Node or process.
 
 | Package                | Tools                                                                                                 |
 | ---------------------- | ----------------------------------------------------------------------------------------------------- |
+| `text-checksum`        | Compute SHA-256 or SHA-512 for UTF-8 text |
+| `byte-units`           | Convert decimal and binary byte units without floating-point rounding |
+| `unix-permissions`     | Convert octal and symbolic file modes, including special bits |
+| `csv-to-json`          | Convert quoted CSV into JSON arrays without changing cell values |
+| `unicode-inspector`    | Inspect graphemes, code points and UTF-8 length |
+| `sshfs`                | Shared host mount rules, connection management and setup guide |
+| `sshfs-lite`           | Same native mount controls and guide without a Node runtime |
+| `file-icons`           | File browser icons for common names and extensions |
+| `file-previews`        | Native read-only media, document and text previews |
+| `jsonl-log-viewer`     | Preview JSONL records or convert an open log buffer |
 | `json-formatter`       | Pretty print, minify, JSON errors with line/column/position; preserves original numbers and key order |
 | `timestamp`            | Unix seconds/milliseconds, date conversion with UTC/local time and explicit offsets, current time     |
 | `uuid`                 | Cryptographically random UUID v4, batches of 1–100                                                    |
-| `studio-themes`        | Cobalt Dusk and Porcelain themes, supplied together by one data-only plugin                           |
+| `studio-themes`        | Three workbench palettes, including Cobalt Contrast, in one data-only plugin                           |
 | `tunnelde-ai`          | API-only assistant, explicit model configuration, scoped tools and optional remote runners            |
 | `tunnelde-codex`       | Independent Codex app-server assistant with optional API reviewer                                     |
 | `tunnelde-claude-code` | Independent Claude Code stream-json assistant with optional API reviewer                              |

@@ -68,3 +68,11 @@ test("SSHFS plugins share native mount UI but Lite has no Node dependency", asyn
     /declarative/,
   );
 });
+
+test("both mount guides are read-only and cover the same platform dependencies", async () => {
+  const lite = JSON.parse(await readFile(new URL("../plugins/sshfs-lite/views.json", import.meta.url)));
+  const guide = renderView("guide");
+  assert.deepEqual(guide, lite.views.guide);
+  assert.ok(guide.blocks.every(block => ["heading", "text", "kv"].includes(block.type)));
+  assert.deepEqual(guide.blocks.find(block => block.type === "kv").items.map(row => row.label), ["macOS", "Windows", "Linux"]);
+});

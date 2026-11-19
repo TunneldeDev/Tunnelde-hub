@@ -1,5 +1,7 @@
 # Common File Icons
 
+Compose manifests, shell startup files, environment templates and package lockfiles are recognized by filename as well as by extension.
+
 Recognize source code, documents, archives, media and configuration files at a glance.
 Language badges use familiar abbreviations and colors; format glyphs are rendered by Tunnelde.
 These are identification aids, not official company logos.

@@ -1,7 +1,7 @@
 {
   "id": "uuid",
   "name": "UUID Generator",
-  "version": "1.0.0",
+  "version": "1.21.0",
   "apiVersion": 1,
   "runtime": "node",
   "main": "index.mjs",

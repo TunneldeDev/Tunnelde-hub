@@ -1,7 +1,7 @@
 {
   "id": "file-previews",
   "name": "Common File Previews",
-  "version": "1.7.0",
+  "version": "1.21.0",
   "apiVersion": 1,
   "runtime": "theme",
   "author": "TunneldeDev",
@@ -16,6 +16,6 @@
     {"id":"video","name":"Video","renderer":"video","extensions":["mp4","m4v","webm","mov"]},
     {"id":"pdf","name":"PDF documents","renderer":"pdf","extensions":["pdf"]},
     {"id":"markdown","name":"Markdown","renderer":"markdown","extensions":["md","markdown"]},
-    {"id":"text","name":"Text","renderer":"text","extensions":["txt","log","csv","tsv","json","jsonc","yaml","yml","toml","ini","conf"]}
+    {"id":"text","name":"Text","renderer":"text","extensions":["txt","log","csv","tsv","json","jsonc","yaml","yml","toml","ini","conf","jsonl","ndjson","properties","diff","patch","srt","vtt"]}
   ]
 }
