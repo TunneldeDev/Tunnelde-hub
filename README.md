@@ -23,6 +23,12 @@ the desktop installer.
 | JSON Formatter       | Format/minify JSON while preserving numeric precision and key order  | Node 22+                            |
 | Timestamp Converter  | Unix seconds/milliseconds and local/UTC date conversion              | Node 22+                            |
 | UUID Generator       | Cryptographically random UUID v4, batches of 1–100                   | Node 22+                            |
+| Text Checksum        | Hash exact UTF-8 text using SHA-256 or SHA-512                       | Node 22+                            |
+| Byte Units            | Exact decimal and binary size equivalents, including fractional bytes | Node 22+                           |
+| Unix Permissions      | Inspect octal and symbolic permissions, including special bits       | Node 22+                            |
+| CSV to JSON           | Preview CSV/TSV as JSON arrays without coercing cell values           | Node 22+                            |
+| Unicode Inspector     | Inspect graphemes, code points, controls and UTF-8 byte counts        | Node 22+                            |
+| JSONL Log Viewer      | Preview structured logs or convert the active editor buffer           | Node 22+                            |
 | Studio Themes        | Cobalt Dusk and Porcelain, two coordinated workbench themes          | None                                |
 | Common File Previews | Pictures, music, video, PDF, Markdown and text Quick Look            | None, preview-capable Tunnelde Beta |
 | Common File Icons    | Familiar file-type glyphs and language badges for local/remote files | None, icon-capable Tunnelde Beta    |
@@ -30,8 +36,8 @@ the desktop installer.
 | Codex                | Independent Codex app-server assistant, local or SSH                 | Node 22+, Tunnelde 0.25+            |
 | Claude Code          | Independent Claude Code stream-json assistant, local or SSH          | Node 22+, Tunnelde 0.25+            |
 | Pi                   | Independent Pi RPC assistant and permission extension, local or SSH  | Node 22+, Tunnelde 0.25+            |
-| SSHFS                | Mount remote directories through authenticated SSH sessions          | Node 22+, Tunnelde 0.27+            |
-| SSHFS Lite           | The same native mount interface, without JavaScript or Node          | None, Tunnelde 0.27+                |
+| SSHFS                | Mount remote directories through authenticated SSH sessions          | Node 22+, Tunnelde 1.5.0-beta.5+            |
+| SSHFS Lite           | The same native mount interface, without JavaScript or Node          | None, Tunnelde 1.5.0-beta.5+                |
 | Tunnelde MCP         | Local authenticated MCP endpoint and revocable scoped clients        | Node 22+, Tunnelde 0.22+            |
 
 These are independent packages, each installable from its folder or versioned ZIP. Tunnelde
@@ -40,7 +46,7 @@ theme pack contains color data and never starts code. Executable plugins run wit
 user permissions; API permissions are not an operating-system sandbox. Use restricted mode
 when testing unknown extensions or recovering from extension problems.
 
-SSHFS plugins require a compatible SSHFS/FUSE driver and support 0.27 Nightly builds.
+SSHFS plugins require a compatible SSHFS/FUSE driver and Tunnelde 1.5.0-beta.5 or later.
 Mounts default to read only. See [SSHFS setup and API](docs/en-us/development/sshfs.md) for dependencies,
 permissions and cleanup behavior.
 

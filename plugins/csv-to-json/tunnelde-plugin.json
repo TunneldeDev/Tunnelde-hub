@@ -1,0 +1,32 @@
+{
+  "id": "csv-to-json",
+  "name": "CSV to JSON",
+  "version": "1.0.1",
+  "apiVersion": 1,
+  "runtime": "node",
+  "main": "index.mjs",
+  "author": "TunneldeDev",
+  "readme": "README.md",
+  "engines": {
+    "node": ">=22"
+  },
+  "description": "Preview delimited records as JSON arrays. All cells stay strings, including headers, leading zeros and duplicate names.",
+  "tags": [
+    "csv",
+    "json",
+    "conversion"
+  ],
+  "commands": [
+    {
+      "id": "convert",
+      "title": "Convert records"
+    }
+  ],
+  "views": [
+    {
+      "id": "main",
+      "title": "CSV to JSON"
+    }
+  ],
+  "permissions": []
+}
