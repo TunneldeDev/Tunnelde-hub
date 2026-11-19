@@ -1,3 +1,4 @@
+import type { HostTransferDocument, HostTransferPreview, HostTransferImport } from "./transfer.mjs";
 import type { HostColumn } from "./columns.mjs";
 import type { Group, HostInput, SavedHost } from "./contract.mjs";
 import type { HostDecorationCollection } from "./decorations.mjs";
@@ -5,10 +6,14 @@ import type { HostFieldsSnapshot, HostFieldsUpdate } from "./fields.mjs";
 import type { HostSource, HostSourcesPage } from "./sources.mjs";
 import type { SshConfigPreviewPage } from "./sshConfig.mjs";
 
-export interface HostRoute { proxy: string; jumpHosts: string[] }
+export type * from "./routes.mjs";
+import type { HostRoute } from "./routes.mjs";
 export interface HostRouteSnapshot { hostId: string; revision: string; route: HostRoute }
 
 export interface HostsMethodMap {
+  "hosts.transfer.export": [{ ids: string[] }, HostTransferDocument];
+  "hosts.transfer.preview": [{ document: HostTransferDocument }, HostTransferPreview];
+  "hosts.transfer.apply": [{ request: HostTransferImport }, SavedHost[]];
   "hosts.routes.get": [{ hostId: string }, HostRouteSnapshot];
   "hosts.routes.observe": [{ hostId: string; revision?: string },
     { revision: string; changed: boolean; snapshot: HostRouteSnapshot | null }];

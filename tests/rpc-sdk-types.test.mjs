@@ -78,11 +78,12 @@ test("all legacy RPC SDK imports and domain types retain their historical contra
   assert.deepEqual(widenedMethods.sort(), ["extensions.describe", "runners.poll", "runners.status"]);
   const newNames = newMap.getProperties().map(p => p.name).filter(name => !oldNames.has(name)).sort();
   const sharedMountAndBus = [
-    "bus.advertise", "bus.close", "bus.create", "bus.discover", "bus.invitations", "bus.invite",
-    "bus.join", "bus.leave", "bus.publish", "bus.receive", "bus.subscribe", "bus.unsubscribe",
+    "bus.advertise", "bus.close", "bus.create", "bus.decline", "bus.discover", "bus.invitations", "bus.invite",
+    "bus.join", "bus.leave", "bus.publish", "bus.receive", "bus.snapshot", "bus.subscribe", "bus.unsubscribe",
     "fileList.removeHighlights", "fileList.setHighlights", "forwards.automation.list",
-    "forwards.automation.save", "forwards.startMany", "hosts.routes.get", "hosts.routes.observe",
-    "hosts.routes.save", "hosts.sshConfig.import", "hosts.sshConfig.preview",
+    "forwards.automation.save", "forwards.groups.list", "forwards.groups.remove", "forwards.groups.save",
+    "forwards.move", "forwards.startManaged", "forwards.startMany", "forwards.startManyManaged", "hosts.routes.get", "hosts.routes.observe",
+    "hosts.routes.save", "hosts.sshConfig.import", "hosts.sshConfig.preview", "hosts.transfer.apply", "hosts.transfer.export", "hosts.transfer.preview",
     "mounts.connections.get", "mounts.connections.list", "mounts.connections.observe",
     "mounts.dependencies.documentation", "mounts.dependencies.get", "mounts.dependencies.refresh",
     "mounts.groups.connect", "mounts.groups.disconnect", "mounts.groups.get", "mounts.groups.list",
@@ -107,8 +108,8 @@ test("all legacy RPC SDK imports and domain types retain their historical contra
   assert.equal(hash, "d50bf0fdcdbe2eb0dd6b538981ccd82a93d2eb0d2128b565c56c8b02a16fb309");
 });
 
-test("runner status consumers handle missing runners through both RPC results", () => {
-  const program = ts.createProgram([resolve("tests/fixtures/runner-state/consumer.mts")], {
+test("runner status and private bus / host management consumers compile", () => {
+  const program = ts.createProgram([resolve("tests/fixtures/runner-state/consumer.mts"), resolve("tests/fixtures/bus-membership/consumer.mts")], {
     target: ts.ScriptTarget.ES2022,
     module: ts.ModuleKind.NodeNext,
     moduleResolution: ts.ModuleResolutionKind.NodeNext,

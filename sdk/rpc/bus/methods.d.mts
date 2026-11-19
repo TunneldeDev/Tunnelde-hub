@@ -9,6 +9,14 @@ export interface BusMessage {
   sender: { pluginId: string; generation: number } | null;
   payload: PluginStorageJson;
 }
+export interface BusChannelSnapshot {
+  busId: string;
+  ownerPluginId: string;
+  members: string[];
+  /** Only the caller's exact subscriptions, never other members' subscriptions. */
+  topics: string[];
+}
+export interface BusSnapshot { publicTopics: string[]; channels: BusChannelSnapshot[] }
 export interface BusBatch { messages: BusMessage[]; lost: number }
 
 type BusNoParams = Record<string, never>;
@@ -18,6 +26,8 @@ export interface BusMethodMap {
   "bus.create": [BusNoParams, string];
   "bus.invite": [{ busId: string; pluginId: string }, string];
   "bus.invitations": [BusNoParams, BusInvitation[]];
+  "bus.snapshot": [BusNoParams, BusSnapshot];
+  "bus.decline": [{ invitationId: string }, null];
   "bus.join": [{ invitationId: string }, string];
   "bus.leave": [{ busId: string }, null];
   "bus.close": [{ busId: string }, null];

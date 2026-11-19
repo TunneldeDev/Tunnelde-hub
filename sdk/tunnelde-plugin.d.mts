@@ -57,6 +57,7 @@ export type * from "./rpc/hosts/menu.mjs";
 export type * from "./rpc/hosts/methods.mjs";
 export type * from "./rpc/hosts/sources.mjs";
 export type * from "./rpc/hosts/sshConfig.mjs";
+export type * from "./rpc/hosts/transfer.mjs";
 export type * from "./rpc/logging/contract.mjs";
 export type * from "./rpc/logging/methods.mjs";
 export type * from "./rpc/logging/client.mjs";

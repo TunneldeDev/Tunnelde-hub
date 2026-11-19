@@ -9,7 +9,10 @@ Public preference conditional reads and abortable observation:
 Required installed dependencies, manifest admission v2 and independent approval:
 [English](../docs/en-us/development/plugin-activation.md) · [简体中文](../docs/zh-cn/development/plugin-activation.md).
 
-Experimental [shared mount management and plugin messaging](../docs/en-us/development/mounts-and-bus.md).
+Experimental shared mount management and plugin messaging:
+[English](../docs/en-us/development/mounts-and-bus.md) · [简体中文](../docs/zh-cn/development/mounts-and-bus.md).
+
+Use `hosts.transfer.export` → `hosts.transfer.preview` → `hosts.transfer.apply` for portable host configurations. Review conflicts and destination mount points before applying the preview revision. For forwarding rules use `forwards.startManaged` or `forwards.startManyManaged` with the saved rule revisions; do not supply a terminal session ID. Older hosts may not offer these methods: check `host.describe()` first.
 
 The compatibility entry `tunnelde-plugin.d.mts` re-exports public declarations
 from `rpc/<domain>/`. DTOs, method maps, transport and lifecycle own separate
