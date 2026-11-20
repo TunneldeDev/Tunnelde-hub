@@ -1589,6 +1589,50 @@
       }
     },
     {
+      "name": "workspace.panels.list",
+      "permissions": [
+        "workspace.read"
+      ],
+      "params": "{}",
+      "description": "List host-managed panel identities, availability, visibility, window ownership and supported presentations. Metadata only; excludes drafts, credentials and feature contents. Experimental, separate from frozen workspace.snapshot v1.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "workspace.panels.observe",
+      "permissions": [
+        "workspace.read"
+      ],
+      "params": "{revision?:string}",
+      "description": "Read panel metadata immediately when revision differs, otherwise wait for a layout change or up to ten seconds. Revision is opaque and process-local; no durable replay. Cancellation and runtime revocation release the request. Reauthorize before receiving the reply.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "workspace.panels.setPresentation",
+      "permissions": [
+        "workspace.write"
+      ],
+      "params": "{panelId:string,presentation:sidebar|workspace|floating}",
+      "description": "Move one existing host panel without duplicating its renderer or stopping its resources. File preview requires an existing preview. Plugin views must still be contributed. Returns the current panel metadata.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "workspace.panels.close",
+      "permissions": [
+        "workspace.write"
+      ],
+      "params": "{panelId:string}",
+      "description": "Hide a panel, retaining its layout slot and business resources. Does not disconnect SSH, cancel tasks, stop plugins or discard drafts.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
       "name": "workspace.openPage",
       "permissions": [
         "workspace.write"
@@ -1708,6 +1752,17 @@
       ],
       "params": "{paneId:string,locked:boolean}",
       "description": "Set the destination lock on an existing pane.",
+      "stability": "experimental",
+      "since": null,
+      "deprecated": null
+    },
+    {
+      "name": "workspace.resizeSplits",
+      "permissions": [
+        "workspace.write"
+      ],
+      "params": "{ratios:Record<splitId,number>}",
+      "description": "Resize 1-32 existing splits in one layout transaction. Every ID and finite ratio between 0.1 and 0.9 must validate before mutation. Normal workspace minimum sizes still clamp each ratio. No partial update on invalid input.",
       "stability": "experimental",
       "since": null,
       "deprecated": null

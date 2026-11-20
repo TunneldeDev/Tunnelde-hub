@@ -1,4 +1,5 @@
 import type { PluginWorkspaceSnapshot } from "./layout.mjs";
+import type { PanelMetadata, PanelPresentation, PanelsSnapshot } from "./panels.mjs";
 import type { StatusBarItem } from "./statusBar.mjs";
 import type { TabBarItem } from "./tabBar.mjs";
 
@@ -10,6 +11,14 @@ export interface WorkbenchMethodMap {
   "workspace.showQuickAccess": [{ query?: string }, unknown];
   "workspace.setPaneLocked": [{ paneId: string; locked: boolean }, unknown];
   "workspace.resizeSplit": [{ splitId: string; ratio: number }, unknown];
+  "workspace.resizeSplits": [{ ratios: Record<string, number> }, PluginWorkspaceSnapshot];
+  "workspace.panels.list": [Record<string, never>, PanelsSnapshot];
+  "workspace.panels.observe": [{ revision?: string }, PanelsSnapshot];
+  "workspace.panels.setPresentation": [
+    { panelId: string; presentation: PanelPresentation },
+    PanelMetadata,
+  ];
+  "workspace.panels.close": [{ panelId: string }, PluginWorkspaceSnapshot];
   "workspace.snapshot": [Record<string, never>, PluginWorkspaceSnapshot];
   "workspace.openPage": [
     { kind: "welcome" | "settings" | "about" | "updates" | "knownHosts" },

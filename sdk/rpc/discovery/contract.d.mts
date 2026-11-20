@@ -1,7 +1,10 @@
 import type { RuntimeResourcesDiscovery } from "../runtime/resources/discovery.mjs";
 import type { ActivationDiscovery } from "../runtime/activation/discovery.mjs";
+import type { PanelPresentationsDiscovery } from "../workbench/panels.mjs";
 /** Experimental directory; discovery does not authorize calls or promise complete coverage. */
 export interface ExtensionDirectory {
+  /** Absent on older hosts. Does not advertise native window support. */
+  panelPresentations?: PanelPresentationsDiscovery;
   runtime?: { resources?: RuntimeResourcesDiscovery; activation?: ActivationDiscovery };
   bus?: {
     stability: "experimental";

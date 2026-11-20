@@ -93,6 +93,7 @@ export type * from "./rpc/transport/methodMap.mjs";
 export type * from "./rpc/views/contract.mjs";
 export type * from "./rpc/workbench/layout.mjs";
 export type * from "./rpc/workbench/methods.mjs";
+export type * from "./rpc/workbench/panels.mjs";
 export type * from "./rpc/workbench/statusBar.mjs";
 export type * from "./rpc/workbench/tabBar.mjs";
 export type * from "./rpc/runtime/resources/methods.mjs";

@@ -102,7 +102,7 @@ test("all legacy RPC SDK imports and domain types retain their historical contra
   ];
   assert.deepEqual(newNames.filter(name => sharedMountAndBus.includes(name)), sharedMountAndBus);
   assert.deepEqual(newNames.filter(name => !sharedMountAndBus.includes(name)),
-    ["configuration.backups", "configuration.deleteBackup", "configuration.migrate", "configuration.restore", "configuration.schema", "configuration.snapshot", "configuration.update", "editor.applyEdits", "editor.observe", "editor.readRange", "fileBrowser.action", "fileBrowser.observe", "fileBrowser.read", "filePreview.action", "filePreview.observe", "filePreview.open", "filePreview.providers", "files.content.close", "files.content.observe", "files.content.open", "files.content.prepare", "files.content.read", "logs.read", "preferences.observe", "preferences.schema", "preferences.snapshot", "preferences.update", "profiles.activate", "profiles.catalogue", "profiles.delete", "profiles.drafts.append", "profiles.drafts.discard", "profiles.drafts.prepare", "profiles.observe", "profiles.read", "profiles.rename", "profiles.save", "resources.identify", "resources.release", "resources.snapshot", "runners.review", "runners.startInitialized", "storage.locations.cancel", "storage.locations.observe", "storage.locations.schedule", "storage.observe", "storage.recovery.observe", "storage.recovery.request"]);
+    ["configuration.backups", "configuration.deleteBackup", "configuration.migrate", "configuration.restore", "configuration.schema", "configuration.snapshot", "configuration.update", "editor.applyEdits", "editor.observe", "editor.readRange", "fileBrowser.action", "fileBrowser.observe", "fileBrowser.read", "filePreview.action", "filePreview.observe", "filePreview.open", "filePreview.providers", "files.content.close", "files.content.observe", "files.content.open", "files.content.prepare", "files.content.read", "logs.read", "preferences.observe", "preferences.schema", "preferences.snapshot", "preferences.update", "profiles.activate", "profiles.catalogue", "profiles.delete", "profiles.drafts.append", "profiles.drafts.discard", "profiles.drafts.prepare", "profiles.observe", "profiles.read", "profiles.rename", "profiles.save", "resources.identify", "resources.release", "resources.snapshot", "runners.review", "runners.startInitialized", "storage.locations.cancel", "storage.locations.observe", "storage.locations.schedule", "storage.observe", "storage.recovery.observe", "storage.recovery.request", "workspace.panels.close", "workspace.panels.list", "workspace.panels.observe", "workspace.panels.setPresentation", "workspace.resizeSplits"]);
   // Freeze normalized text so fixture changes cannot silently make compatibility pass.
   const hash = createHash("sha256").update(readFileSync(historical, "utf8").replaceAll("\r\n", "\n")).digest("hex");
   assert.equal(hash, "d50bf0fdcdbe2eb0dd6b538981ccd82a93d2eb0d2128b565c56c8b02a16fb309");
@@ -121,6 +121,16 @@ test("runner status and private bus / host management consumers compile", () => 
 
 test("editor buffer facade compiles with generated RPC/UI data and owned cancellation", () => {
   const program = ts.createProgram([resolve("tests/fixtures/editor-buffer/consumer.mts")], {
+    target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.NodeNext,
+    moduleResolution: ts.ModuleResolutionKind.NodeNext, strict: true,
+    noEmit: true, skipLibCheck: false, types: ["node"],
+  });
+  assert.deepEqual(ts.getPreEmitDiagnostics(program).map(diagnostic => ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n")), []);
+});
+
+
+test("experimental panel metadata consumers compile without widening frozen workspace v1", () => {
+  const program = ts.createProgram([resolve("tests/fixtures/panels/consumer.mts")], {
     target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.NodeNext,
     moduleResolution: ts.ModuleResolutionKind.NodeNext, strict: true,
     noEmit: true, skipLibCheck: false, types: ["node"],
