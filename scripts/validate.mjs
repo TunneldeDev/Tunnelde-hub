@@ -125,9 +125,11 @@ export function validateManifest(manifest, id) {
             (extension) => typeof extension === "string" && /^[a-z0-9._-]{1,64}$/i.test(extension),
           ) &&
           (editor.format === undefined || typeof editor.format === "boolean") &&
-          Object.keys(editor).every((key) => ["extensions", "format"].includes(key)) &&
+          (editor.syntax === undefined || typeof editor.syntax === "boolean") &&
+          Object.keys(editor).every((key) => ["extensions", "format", "syntax"].includes(key)) &&
           manifest.permissions.includes("editor.read") &&
-          manifest.permissions.includes("editor.write"),
+          ((editor.syntax === true && editor.format !== true) ||
+            manifest.permissions.includes("editor.write")),
         `${id}: invalid editor contribution or missing permissions`,
       );
     }
