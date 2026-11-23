@@ -1,0 +1,24 @@
+{
+  "repository": "TunneldeDev/Tunnelde-plugin-unicode-inspector",
+  "channel": "stable",
+  "entry": {
+    "id": "unicode-inspector",
+    "name": "Unicode Inspector",
+    "version": "1.0.2",
+    "description": "Inspect grapheme, code point and UTF-8 byte counts, with visible labels for whitespace and controls.",
+    "author": "TunneldeDev",
+    "runtime": "node",
+    "apiVersion": 1,
+    "engines": {
+      "node": ">=22"
+    },
+    "tags": [
+      "unicode",
+      "text",
+      "developer-tools"
+    ],
+    "readme": "# Unicode Inspector · Unicode 字符检查\n\nInspect grapheme, code point and UTF-8 byte counts, with visible labels for whitespace and controls.\n\nOpen **Unicode Inspector**, enter a value (for example `A中🙂`), then choose **Inspect text**. Requires Node.js 22 or later. No network, files, saved input or host permissions. Copying is always explicit.\n\n查看字素、码点和 UTF-8 字节数，标出空白与控制字符。打开插件页面，输入内容后点击「检查文本」。需要 Node.js 22 或更高版本；不读取文件、不联网，也不保存输入。\n\n## Independent development\n\n`npm ci --ignore-scripts` → `npm run build` → `npm run verify` → `npm run package`. Push a matching `vX.Y.Z` tag to publish this plugin independently. The Hub distributes the release URL and SHA-256; it does not build this package.\n",
+    "url": "https://github.com/TunneldeDev/Tunnelde-plugin-unicode-inspector/releases/download/v1.0.2/unicode-inspector-1.0.2.zip",
+    "sha256": "07bd3907e47752dce89ee1ec1deaa5bbbde631bc7c48dfd706fa3b38cf16791e"
+  }
+}

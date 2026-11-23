@@ -1,6 +1,5 @@
-# Tunnelde-hub documentation
+# Tunnelde plugin directory
 
-[简体中文](../zh-cn/README.md)
+Hub maintains reviewed plugin metadata and verified release links. Source, CI/CD and releases belong to each plugin repository listed in [catalogue](../../catalogue).
 
-- [Development](development/README.md)
-- [Historical release notes](releases/README.md)
+[Create a plugin](https://github.com/TunneldeDev/Tunnelde-plugin-template) · [SDK and API documentation](https://github.com/TunneldeDev/Tunnelde-plugin-sdk) · [Contributing](../../CONTRIBUTING.md) · [Migration](../migration.md)

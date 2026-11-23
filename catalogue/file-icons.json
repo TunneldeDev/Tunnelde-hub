@@ -1,0 +1,24 @@
+{
+  "repository": "TunneldeDev/Tunnelde-plugin-file-icons",
+  "channel": "stable",
+  "entry": {
+    "id": "file-icons",
+    "name": "Common File Icons",
+    "version": "1.21.1",
+    "description": "Recognizable file-type icons and language badges for local and remote file browsers, editor tabs and previews.",
+    "author": "TunneldeDev",
+    "runtime": "theme",
+    "apiVersion": 1,
+    "engines": {
+      "tunnelde": ">=0.28.0-beta.4"
+    },
+    "tags": [
+      "icons",
+      "files",
+      "appearance"
+    ],
+    "readme": "# Common File Icons\n\nCompose manifests, shell startup files, environment templates and package lockfiles are recognized by filename as well as by extension.\n\nRecognize source code, documents, archives, media and configuration files at a glance.\nLanguage badges use familiar abbreviations and colors; format glyphs are rendered by Tunnelde.\nThese are identification aids, not official company logos.\n\nRequires Tunnelde with `fileIconThemes` support. Install the ZIP or folder through Plugins;\nAutomatic selects an available icon theme. Choose **Settings → Files → File icon theme**,\nor open this package's details and select **Apply theme** to choose it explicitly.\nChoose **Plain file icons** to turn it off. Removing the package restores ordinary file glyphs.\n\nThe same mapping applies to local files, remote files, every file-browser view, editor tabs\nand Quick Look. Exact filenames take priority, followed by the longest matching extension\n(such as `tar.gz`) and then shorter suffixes. Matching is case-insensitive.\n\nThis is a declarative theme package: no Node, commands, filesystem access or permissions.\nIt never opens or uploads your files and does not download icons. Glyphs and optional short\nlabels are rendered by the application, without scripts, external URLs or arbitrary SVG.\n\nThird-party plugins can contribute one or more themes through `fileIconThemes`; see the\napplication's plugin API documentation for the schema and bounded field validation.\n\n## Independent development\n\n`npm ci --ignore-scripts` → `npm run build` → `npm run verify` → `npm run package`. Push a matching `vX.Y.Z` tag to publish this plugin independently. The Hub distributes the release URL and SHA-256; it does not build this package.\n",
+    "url": "https://github.com/TunneldeDev/Tunnelde-plugin-file-icons/releases/download/v1.21.1/file-icons-1.21.1.zip",
+    "sha256": "472aa4c9a50d3bfe013cb1417360736afd3c4e18f419e019f202605cb5bd2110"
+  }
+}

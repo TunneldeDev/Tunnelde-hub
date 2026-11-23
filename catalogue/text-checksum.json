@@ -1,0 +1,24 @@
+{
+  "repository": "TunneldeDev/Tunnelde-plugin-text-checksum",
+  "channel": "stable",
+  "entry": {
+    "id": "text-checksum",
+    "name": "Text Checksum",
+    "version": "1.0.2",
+    "description": "Calculate SHA-256 or SHA-512 of exactly the UTF-8 text entered, including line endings.",
+    "author": "TunneldeDev",
+    "runtime": "node",
+    "apiVersion": 1,
+    "engines": {
+      "node": ">=22"
+    },
+    "tags": [
+      "checksum",
+      "text",
+      "developer-tools"
+    ],
+    "readme": "# Text Checksum · 文本校验和\n\nCalculate SHA-256 or SHA-512 of exactly the UTF-8 text entered, including line endings.\n\nOpen **Text Checksum**, enter a value (for example `Hello`), then choose **Calculate digest**. Requires Node.js 22 or later. No network, files, saved input or host permissions. Copying is always explicit.\n\n按原样计算所输入 UTF-8 文本的 SHA-256 或 SHA-512，包括换行。打开插件页面，输入内容后点击「计算摘要」。需要 Node.js 22 或更高版本；不读取文件、不联网，也不保存输入。\n\n## Independent development\n\n`npm ci --ignore-scripts` → `npm run build` → `npm run verify` → `npm run package`. Push a matching `vX.Y.Z` tag to publish this plugin independently. The Hub distributes the release URL and SHA-256; it does not build this package.\n",
+    "url": "https://github.com/TunneldeDev/Tunnelde-plugin-text-checksum/releases/download/v1.0.2/text-checksum-1.0.2.zip",
+    "sha256": "b114c175ff1c9ad83ec22e7f26ea904497b80e0c2618aba92464b7f49492235c"
+  }
+}
