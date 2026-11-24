@@ -12,6 +12,8 @@ https://raw.githubusercontent.com/TunneldeDev/Tunnelde-hub/main/registry.json
 
 ## Develop a plugin
 
+Follow the [standard contribution and release workflow](CONTRIBUTING.md) for new plugins and subsequent versions: develop and publish independently, register through a PR, then review discovered updates.
+
 Start with [Tunnelde-plugin-template](https://github.com/TunneldeDev/Tunnelde-plugin-template) → **Use this template**. It includes initialization, a minimal working plugin, pinned SDK, real protocol tests, deterministic packaging and independent CI/CD.
 
 The [versioned SDK and developer guide](https://github.com/TunneldeDev/Tunnelde-plugin-sdk) are maintained separately. AI integration authors can use the [shared assistant runtime](https://github.com/TunneldeDev/Tunnelde-assistant-runtime); each plugin pins its build dependency and ships a self-contained runtime.

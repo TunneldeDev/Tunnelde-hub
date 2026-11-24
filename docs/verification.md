@@ -12,3 +12,5 @@ Verified on 2026-11-24 (Asia/Shanghai).
 - A separately generated template instance initialized its own identity, built, passed its real stdio test and generated an independently installable ZIP and matching marketplace metadata.
 
 Host source was inspected and tested in an isolated `codex/plugin-highlighting-acceptance` checkout. Existing syntax interfaces were sufficient, so no Tunnelde application change is needed. SSH-style buffer acceptance is a protocol test, not a live SSH connection or desktop GUI session. The SDK retains its explicitly pinned contract snapshot; unrelated new experimental APIs on moving Tunnelde/dev are not incorporated by this migration.
+
+For the template-to-release-to-reviewed-catalogue acceptance and ongoing contribution process, see [workflow acceptance](workflow-acceptance.md).

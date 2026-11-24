@@ -12,6 +12,8 @@ https://raw.githubusercontent.com/TunneldeDev/Tunnelde-hub/main/registry.json
 
 ## 开发插件
 
+新插件及后续版本统一遵循[贡献与发布流程](CONTRIBUTING.zh-cn.md)：独立仓库开发和发布，首次通过 PR 收录，后续由更新 PR 审核。
+
 打开 [Tunnelde-plugin-template](https://github.com/TunneldeDev/Tunnelde-plugin-template)，点击 **Use this template** 创建插件仓库。模板包含初始化工具、最小可用插件、固定版本的 SDK、真实协议测试、可复现打包流程和独立 CI/CD。
 
 [版本化 SDK 与开发指南](https://github.com/TunneldeDev/Tunnelde-plugin-sdk) 在独立仓库维护。AI 集成插件可以使用[共享助手运行时](https://github.com/TunneldeDev/Tunnelde-assistant-runtime)；各插件固定构建依赖版本，并在发布包中包含完整运行所需内容。
@@ -48,7 +50,7 @@ npm run updates        # 发现并校验已发布的新版本
 
 每日运行的 **Discover plugin updates** 工作流会创建或更新一个供审核的 PR，并显式触发校验，不会自动合并。仓库的 Actions 设置需要允许 GitHub Actions 创建 PR。稳定版记录忽略预发布版本；预发布记录接受两个通道的版本。新增插件仓库需要手动注册并审核。
 
-已有版本保留原始下载地址和校验值。历史 `plugins-v*` Hub 发布继续可用，插件后续版本由各自仓库发布。插件 ID、配置和密钥命名空间保持一致。详情见[迁移说明](docs/migration.md)和[贡献指南](CONTRIBUTING.md)。
+已有版本保留原始下载地址和校验值。历史 `plugins-v*` Hub 发布继续可用，插件后续版本由各自仓库发布。插件 ID、配置和密钥命名空间保持一致。详情见[迁移说明](docs/migration.md)和[贡献指南](CONTRIBUTING.zh-cn.md)。
 
 ## 许可证
 

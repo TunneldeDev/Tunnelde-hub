@@ -10,6 +10,6 @@ The plugin directory for [Tunnelde](https://github.com/TunneldeDev/Tunnelde), di
 - [插件目录 / Plugin catalogue](catalogue/) · [应用索引 / Application registry](registry.json)
 - [插件模板 / Plugin template](https://github.com/TunneldeDev/Tunnelde-plugin-template)
 - [SDK 与开发文档 / SDK and developer guide](https://github.com/TunneldeDev/Tunnelde-plugin-sdk)
-- [贡献指南 / Contributing](CONTRIBUTING.md) · [迁移说明 / Migration notes](docs/migration.md)
+- [贡献指南](CONTRIBUTING.zh-cn.md) · [Contributing](CONTRIBUTING.md) · [迁移说明 / Migration notes](docs/migration.md)
 
 GPL-3.0-only. See [LICENSE](LICENSE).
