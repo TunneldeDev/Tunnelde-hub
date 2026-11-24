@@ -1,5 +1,3 @@
-# Documentation moved
+# Documentation moved / 文档已迁移
 
-This compatibility entry preserves links embedded in published plugin packages.
-
-Read the [remote deployment and recovery guide](en-us/development/assistant-deployments.md).
+[Open the maintained documentation / 查看最新文档](https://github.com/TunneldeDev/Tunnelde-plugin-sdk/blob/main/docs/assistant-deployments.en-us.md)

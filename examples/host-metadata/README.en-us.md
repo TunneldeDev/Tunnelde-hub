@@ -1,9 +1,5 @@
-# Host metadata example
+# Documentation moved / 文档已迁移
 
-Install this folder as a local plugin on a host implementing the experimental `hosts.fields` extension. Open a saved host’s details and expand **Plugin host fields → Host metadata example**. Edit values and Save without starting the plugin or granting its runtime any permissions. No Node is required.
+[Open the maintained documentation / 查看最新文档](https://github.com/TunneldeDev/Tunnelde-plugin-sdk/blob/main/examples/host-metadata/README.en-us.md)
 
-The host menu command **Toggle managed flag** is executable trusted frontend code. Running it requires explicit approval for `ui.trusted`, `hosts.read` and `hosts.write`. Trusted code runs in the application context, without a sandbox. The command reads this plugin’s current document and replaces it against the observed revision and schema digest. Concurrent changes or an incompatible schema fail visibly, without blind retries. Existing values are retained on stop or uninstall and deleted when the host is removed. Do not put secrets in metadata.
-
-See [the field contract](../../docs/en-us/development/host-fields.md). This example is development material and is not a marketplace package.
-
-**Show budget column** additionally requires `workspace.write` and the experimental `hostList.columns` extension. It publishes the selected host’s numeric budget, including zero, or an empty column if unset. Switch the Hosts panel to table view; stop the plugin to remove the contribution. See [host columns](../../docs/en-us/development/host-columns.md).
+Plugin development sources and examples are maintained in the independent SDK repository.
