@@ -1,0 +1,25 @@
+{
+  "repository": "TunneldeDev/Tunnelde-plugin-sshfs-lite",
+  "channel": "stable",
+  "entry": {
+    "id": "sshfs-lite",
+    "name": "SSHFS Lite",
+    "version": "2.0.2",
+    "description": "Manage shared SSHFS mount rules and dedicated connections without Node.js.",
+    "author": "TunneldeDev",
+    "runtime": "declarative",
+    "apiVersion": 1,
+    "engines": {
+      "tunnelde": ">=1.5.0-beta.5"
+    },
+    "tags": [
+      "sshfs",
+      "files",
+      "remote",
+      "no-node"
+    ],
+    "readme": "# SSHFS Lite\n\nOpen **Mount setup · 挂载指南** in the plugin details for a short platform checklist. Both variants use the same host-managed rules; the guide never connects or runs a command.\n\nRequires Tunnelde 1.5.0-beta.5 or later.\n\nInstall this folder or its release ZIP in Tunnelde, approve the mount and host permissions, and open its view from the command palette. This data-only plugin requires no Node.js runtime or trusted JavaScript.\n\nSelect a saved host and add one or more mount groups. Each group owns a dedicated SSH connection. Save rules with a remote directory and an empty local directory or unused Windows drive. Mounts default to read only. Connect and mount automatic rules starts the marked rules for that group; nothing connects at application startup. Enable reconnect to restore previously running rules after a connection loss.\n\nSystem dependencies are required: WinFsp + SSHFS-Win on Windows, compatible FUSE + SSHFS on macOS, or FUSE + SSHFS on Linux. The panel detects the executable and links installation instructions; it never installs drivers automatically. Use Unmount before disconnecting or exiting. Close open files and retry if the operating system reports that a mount is busy.\n\nSSHFS and SSHFS Lite share rules, groups, and runtime state. Use Settings to select which variant appears in host details. Switching variants does not interrupt running mounts. Adopt mount converts a live one-off mount into a shared rule without restarting it.\n\nPermissions: `hosts.read` lists saved hosts; `mounts.read` reads state and dependencies; `mounts.write` edits, starts, and stops shared mounts; `mounts.hostDetails` registers the native host-details section. No plugin receives SSH credentials. Legacy mounts retain their original file-manager action until adopted.\n\nGPL-3.0-only.\n\n## Independent development\n\n`npm ci --ignore-scripts` → `npm run build` → `npm run verify` → `npm run package`. Push a matching `vX.Y.Z` tag to publish this plugin independently. The Hub distributes the release URL and SHA-256; it does not build this package.\n",
+    "url": "https://github.com/TunneldeDev/Tunnelde-plugin-sshfs-lite/releases/download/v2.0.2/sshfs-lite-2.0.2.zip",
+    "sha256": "e936e2ac88c48fccdf9595a1c0fc294119214a985783e161a36c25b4b41bd1ed"
+  }
+}

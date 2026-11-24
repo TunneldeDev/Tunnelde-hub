@@ -1,7 +1,5 @@
-# Trusted UI SDK example
+# Documentation moved / 文档已迁移
 
-[English](README.en-us.md) · [简体中文](README.zh-cn.md)
+[Open the maintained documentation / 查看最新文档](https://github.com/TunneldeDev/Tunnelde-plugin-sdk/blob/main/examples/trusted-ui/README.md)
 
-This development example uses the experimental frontend loader and is not a
-marketplace entry. It requires a host whose extension directory advertises UI SDK
-0.1.0. It is not supported by older released hosts that lack this loader.
+Plugin development sources and examples are maintained in the independent SDK repository.
