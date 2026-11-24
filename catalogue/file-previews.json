@@ -1,0 +1,26 @@
+{
+  "repository": "TunneldeDev/Tunnelde-plugin-file-previews",
+  "channel": "stable",
+  "entry": {
+    "id": "file-previews",
+    "name": "Common File Previews",
+    "version": "1.21.1",
+    "description": "Quick Look for pictures, music, video, PDF, Markdown and text over local files or SSH.",
+    "author": "TunneldeDev",
+    "runtime": "theme",
+    "apiVersion": 1,
+    "engines": {
+      "tunnelde": ">=0.28.0-beta.5"
+    },
+    "tags": [
+      "preview",
+      "files",
+      "media",
+      "pdf",
+      "markdown"
+    ],
+    "readme": "# Common File Previews\n\nSelect a file and press **Space**, or use **Preview** from the file browser or Quick Access.\nThe same action opens local or connected SSH files. No session IDs or runtime setup are needed.\n\n- Images: PNG, JPEG, GIF, WebP, BMP, ICO and AVIF, when supported by the operating system.\n- Audio: MP3, WAV, Ogg, Opus, M4A and FLAC with native playback controls.\n- Video: MP4, M4V, WebM and MOV with native playback controls. Encoding support depends on the OS.\n- PDF: local bundled PDF.js, page navigation, zoom and bounded range loading. Password-protected\n  documents should be opened in a PDF application. Interactive scripts/forms are not executed.\n- Markdown and text: bounded UTF-8 read-only content; Markdown includes a source toggle. Logs (`.jsonl`, `.ndjson`), patches (`.diff`, `.patch`) and subtitles (`.srt`, `.vtt`) open as plain text.\n\nInstall the ZIP or folder with Tunnelde **0.28.0-beta.5 or later**. Preview providers become\navailable immediately. Removing this package restores the built-in bounded text preview.\nIf several installed providers support a file, choose one in the preview selector.\n\nThis package is declarative and runs no code. It does not require Node, file permissions,\nnetwork requests or uploading files. The host reads directly through the selected local file\nor authenticated SSH connection. It creates no remote preview copies or home-directory files.\n\nImages are limited to 32 MiB, PDFs to 128 MiB, and text/Markdown to 2 MiB. Media is read in\nbounded ranges rather than copied whole into JavaScript memory. Closing a preview revokes\nits ticket, cancels pending reads and releases its file/SFTP channel. Source files are read only.\n\nThird-party packages can declare one or more `filePreviews` providers. Renderers are selected\nfrom the host's `image`, `audio`, `video`, `pdf`, `markdown` and `text` implementations; custom\nHTML, scripts, URLs, styles and external viewers are not accepted by this contribution point.\n\n## Independent development\n\n`npm ci --ignore-scripts` → `npm run build` → `npm run verify` → `npm run package`. Push a matching `vX.Y.Z` tag to publish this plugin independently. The Hub distributes the release URL and SHA-256; it does not build this package.\n",
+    "url": "https://github.com/TunneldeDev/Tunnelde-plugin-file-previews/releases/download/v1.21.1/file-previews-1.21.1.zip",
+    "sha256": "73f1390b13c906fa68f0b37c024fb0757e89487433ef5089db902aa7e350bc2a"
+  }
+}

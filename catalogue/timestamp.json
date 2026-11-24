@@ -1,0 +1,24 @@
+{
+  "repository": "TunneldeDev/Tunnelde-plugin-timestamp",
+  "channel": "stable",
+  "entry": {
+    "id": "timestamp",
+    "name": "Timestamp Converter",
+    "version": "1.21.1",
+    "description": "Convert Unix seconds/milliseconds and local or UTC dates.",
+    "author": "TunneldeDev",
+    "runtime": "node",
+    "apiVersion": 1,
+    "engines": {
+      "node": ">=22"
+    },
+    "tags": [
+      "time",
+      "conversion",
+      "developer-tools"
+    ],
+    "readme": "# Timestamp Converter\n\nConvert Unix seconds/milliseconds and local or UTC dates.\n\nAn independent official Tunnelde plugin. Requires Node.js 22 or later. No npm installation, network access, filesystem access or clipboard permission is required. Install the folder or its release ZIP in Tunnelde, then open the plugin view.\n\nAll fields and results remain local. Results are copied only when you click the host's Copy result button. Switching workspace tabs preserves unfinished input and the last result; closing the tab discards that draft.\n\n## Commands\n\n- `decode`: Timestamp to date\n- `encode`: Date to timestamp\n- `now`: Current time\n\n## Runtime protocol\n\nJSON-RPC 2.0 over newline-delimited stdin/stdout. Supports initialize, view.render (main, optional locale), command.run (command, optional input), and shutdown. UI is declarative JSON rendered by the host; this plugin never sends HTML.\n\n## License\n\nGPL-3.0-only. Copyright (C) 2026 TunneldeDev.\n\n## Independent development\n\n`npm ci --ignore-scripts` → `npm run build` → `npm run verify` → `npm run package`. Push a matching `vX.Y.Z` tag to publish this plugin independently. The Hub distributes the release URL and SHA-256; it does not build this package.\n",
+    "url": "https://github.com/TunneldeDev/Tunnelde-plugin-timestamp/releases/download/v1.21.1/timestamp-1.21.1.zip",
+    "sha256": "c66ac374c1a23264e0ec77a73e16723a09476ff474dc43f70baf2843e4ec4af3"
+  }
+}
