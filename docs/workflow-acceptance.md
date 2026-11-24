@@ -18,11 +18,14 @@ The acceptance uses two isolated public repositories: a plugin created with GitH
 | Repeating the same immutable release verifies existing assets without replacing them | [Repeated release run](https://github.com/TunneldeDev/Tunnelde-plugin-workflow-acceptance/actions/runs/45308561877) |
 | Actual update discovery creates a review PR and explicitly dispatches validation | [Discovery run](https://github.com/TunneldeDev/Tunnelde-hub-workflow-acceptance/actions/runs/45308566610) · [Update PR #4](https://github.com/TunneldeDev/Tunnelde-hub-workflow-acceptance/pull/4) |
 | Tag/package version mismatch is rejected before publishing (expected failure) | [Negative release test](https://github.com/TunneldeDev/Tunnelde-plugin-workflow-acceptance/actions/runs/45308635840) |
+| Re-running discovery updates the same review PR rather than creating duplicates | [Repeated discovery](https://github.com/TunneldeDev/Tunnelde-hub-workflow-acceptance/actions/runs/45308727085) |
+| Protected update PR validation after first-run approval | [PR validation](https://github.com/TunneldeDev/Tunnelde-hub-workflow-acceptance/actions/runs/45308628971) |
+| After merging, discovery finds no updates and creates no review PR | [No-update run](https://github.com/TunneldeDev/Tunnelde-hub-workflow-acceptance/actions/runs/45309226909) |
 | Template regression acceptance on Node 22/24 | [Template PR #1](https://github.com/TunneldeDev/Tunnelde-plugin-template/pull/1) |
 
 Both actual published ZIPs were downloaded and checked against marketplace SHA-256 and SHA256SUMS. Their verified contents were installed in temporary directories and exercised over real stdio outside the source repository, without node_modules. A deliberately changed archive byte was rejected by the verifier.
 
-两个真实发布 ZIP 均已下载并核对市场元数据和校验文件，校验后在独立临时目录启动真实协议进程；损坏包被正确拒绝。模板的 `npm run verify:template` 将初始化、构建、协议测试、重复打包一致性、包校验及独立安装运行纳入 Node 22/24 CI。
+两个真实发布 ZIP 均已下载并核对市场元数据和校验文件，校验后在独立临时目录启动真实协议进程；损坏包被正确拒绝。模板的 `npm run verify:template` 将初始化、构建、协议测试、重复打包一致性、包校验及独立安装运行纳入 Node 22/24 CI，并验证开发者初始化插件后，继承的 CI 不会重复初始化。
 
 ## First-run approval / 首次运行审批
 
