@@ -1,3 +1,5 @@
-# Documentation moved / 文档已迁移
+# Documentation moved
 
-[Open the maintained documentation / 查看最新文档](https://github.com/TunneldeDev/Tunnelde-plugin-sdk/blob/main/docs/assistant-plugins-1.4.md)
+This compatibility entry preserves links embedded in published plugin packages.
+
+Read the [assistant 1.4 initialization guide](en-us/releases/assistant-plugins-1.4.md).

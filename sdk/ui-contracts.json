@@ -1,0 +1,310 @@
+{
+  "version": 1,
+  "entry": "tunnelde-ui.d.mts",
+  "dependencies": {
+    "tunnelde-ui.d.mts": [
+      "ui/backgroundTasks/entry.d.mts",
+      "ui/backgroundTasks/execution.d.mts",
+      "ui/backgroundTasks/provider.d.mts",
+      "ui/components/controls.d.mts",
+      "ui/components/emptyState.d.mts",
+      "ui/components/sdk.d.mts",
+      "ui/configuration/document.d.mts",
+      "ui/configuration/migration.d.mts",
+      "ui/configuration/schema.d.mts",
+      "ui/editor/data/edits.d.mts",
+      "ui/editor/data/identity.d.mts",
+      "ui/editor/data/observation.d.mts",
+      "ui/editor/data/range.d.mts",
+      "ui/files/browser.d.mts",
+      "ui/files/content.d.mts",
+      "ui/files/preview/actions.d.mts",
+      "ui/files/preview/data.d.mts",
+      "ui/files/preview/provider.d.mts",
+      "ui/forwarding/batch.d.mts",
+      "ui/forwarding/entry.d.mts",
+      "ui/forwarding/provider.d.mts",
+      "ui/frontend/lifecycle.d.mts",
+      "ui/frontend/providers.d.mts",
+      "ui/frontend/views.d.mts",
+      "ui/history/provider.d.mts",
+      "ui/hosts/routes.d.mts",
+      "ui/hosts/sshConfig.d.mts",
+      "ui/logging/entry.d.mts",
+      "ui/logging/page.d.mts",
+      "ui/logging/query.d.mts",
+      "ui/monitor/processes/entry.d.mts",
+      "ui/monitor/processes/provider.d.mts",
+      "ui/monitor/processes/query.d.mts",
+      "ui/monitor/provider.d.mts",
+      "ui/monitor/reading.d.mts",
+      "ui/monitor/sample.d.mts",
+      "ui/mounts/configuration.d.mts",
+      "ui/mounts/runtime.d.mts",
+      "ui/preferences/data/index.d.mts",
+      "ui/preferences/provider.d.mts",
+      "ui/profiles/data/content/catalogue.d.mts",
+      "ui/profiles/data/content/read.d.mts",
+      "ui/profiles/data/metadata.d.mts",
+      "ui/profiles/data/mutations/drafts.d.mts",
+      "ui/profiles/data/mutations/writes.d.mts",
+      "ui/profiles/data/observation.d.mts",
+      "ui/profiles/data/snapshot.d.mts",
+      "ui/runtime/lifecycle/identify.d.mts",
+      "ui/runtime/lifecycle/release.d.mts",
+      "ui/runtime/lifecycle/resource.d.mts",
+      "ui/runtime/lifecycle/snapshot.d.mts",
+      "ui/runtime/resources.d.mts",
+      "ui/search/field.d.mts",
+      "ui/search/quickAccess/entry.d.mts",
+      "ui/search/quickAccess/provider.d.mts",
+      "ui/storage/locations/location.d.mts",
+      "ui/storage/locations/mutation.d.mts",
+      "ui/storage/locations/observation.d.mts",
+      "ui/storage/locations/snapshot.d.mts",
+      "ui/storage/pluginData/json.d.mts",
+      "ui/storage/pluginData/observation.d.mts",
+      "ui/storage/pluginData/snapshot.d.mts",
+      "ui/storage/recovery/observation.d.mts",
+      "ui/storage/recovery/request.d.mts",
+      "ui/storage/recovery/snapshot.d.mts",
+      "ui/terminal/surface.d.mts",
+      "ui/workbench/slots.d.mts"
+    ],
+    "ui/backgroundTasks/entry.d.mts": [],
+    "ui/backgroundTasks/execution.d.mts": [
+      "ui/backgroundTasks/entry.d.mts"
+    ],
+    "ui/backgroundTasks/provider.d.mts": [
+      "react",
+      "ui/backgroundTasks/entry.d.mts"
+    ],
+    "ui/components/controls.d.mts": [
+      "react"
+    ],
+    "ui/components/emptyState.d.mts": [
+      "react"
+    ],
+    "ui/components/sdk.d.mts": [
+      "react",
+      "ui/components/controls.d.mts",
+      "ui/components/emptyState.d.mts",
+      "ui/search/field.d.mts"
+    ],
+    "ui/configuration/document.d.mts": [
+      "ui/configuration/schema.d.mts"
+    ],
+    "ui/configuration/migration.d.mts": [],
+    "ui/configuration/schema.d.mts": [
+      "ui/configuration/migration.d.mts"
+    ],
+    "ui/editor/data/edits.d.mts": [
+      "ui/editor/data/identity.d.mts"
+    ],
+    "ui/editor/data/identity.d.mts": [],
+    "ui/editor/data/observation.d.mts": [
+      "ui/editor/data/identity.d.mts"
+    ],
+    "ui/editor/data/range.d.mts": [
+      "ui/editor/data/identity.d.mts"
+    ],
+    "ui/files/browser.d.mts": [
+      "react",
+      "ui/files/browser/actions.d.mts",
+      "ui/files/browser/data.d.mts"
+    ],
+    "ui/files/browser/actions.d.mts": [],
+    "ui/files/browser/data.d.mts": [],
+    "ui/files/content.d.mts": [],
+    "ui/files/preview/actions.d.mts": [
+      "ui/files/preview/data.d.mts"
+    ],
+    "ui/files/preview/data.d.mts": [],
+    "ui/files/preview/provider.d.mts": [
+      "react",
+      "ui/files/preview/data.d.mts"
+    ],
+    "ui/forwarding/batch.d.mts": [],
+    "ui/forwarding/entry.d.mts": [],
+    "ui/forwarding/provider.d.mts": [
+      "react",
+      "ui/forwarding/entry.d.mts"
+    ],
+    "ui/frontend/lifecycle.d.mts": [
+      "react",
+      "ui/backgroundTasks/execution.d.mts",
+      "ui/components/sdk.d.mts",
+      "ui/frontend/views.d.mts",
+      "ui/runtime/resources.d.mts"
+    ],
+    "ui/frontend/providers.d.mts": [],
+    "ui/frontend/views.d.mts": [
+      "ui/backgroundTasks/provider.d.mts",
+      "ui/files/browser.d.mts",
+      "ui/files/preview/provider.d.mts",
+      "ui/forwarding/provider.d.mts",
+      "ui/history/provider.d.mts",
+      "ui/monitor/processes/provider.d.mts",
+      "ui/monitor/provider.d.mts",
+      "ui/preferences/provider.d.mts",
+      "ui/runtime/resources.d.mts",
+      "ui/search/quickAccess/provider.d.mts",
+      "ui/terminal/surface.d.mts",
+      "ui/workbench/slots.d.mts"
+    ],
+    "ui/history/provider.d.mts": [
+      "react"
+    ],
+    "ui/hosts/routes.d.mts": [],
+    "ui/hosts/sshConfig.d.mts": [],
+    "ui/logging/entry.d.mts": [],
+    "ui/logging/page.d.mts": [
+      "ui/logging/entry.d.mts",
+      "ui/logging/query.d.mts"
+    ],
+    "ui/logging/query.d.mts": [
+      "ui/logging/entry.d.mts"
+    ],
+    "ui/monitor/processes/entry.d.mts": [],
+    "ui/monitor/processes/provider.d.mts": [
+      "react",
+      "ui/monitor/processes/entry.d.mts",
+      "ui/monitor/processes/query.d.mts"
+    ],
+    "ui/monitor/processes/query.d.mts": [],
+    "ui/monitor/provider.d.mts": [
+      "react",
+      "ui/monitor/reading.d.mts",
+      "ui/monitor/sample.d.mts"
+    ],
+    "ui/monitor/reading.d.mts": [],
+    "ui/monitor/sample.d.mts": [],
+    "ui/mounts/configuration.d.mts": [],
+    "ui/mounts/runtime.d.mts": [
+      "ui/mounts/configuration.d.mts"
+    ],
+    "ui/preferences/data/groups/appearance.d.mts": [],
+    "ui/preferences/data/groups/editor.d.mts": [],
+    "ui/preferences/data/groups/files.d.mts": [],
+    "ui/preferences/data/groups/general.d.mts": [],
+    "ui/preferences/data/groups/monitoring.d.mts": [],
+    "ui/preferences/data/groups/network.d.mts": [],
+    "ui/preferences/data/groups/shortcuts.d.mts": [],
+    "ui/preferences/data/groups/terminal.d.mts": [],
+    "ui/preferences/data/groups/transfers.d.mts": [],
+    "ui/preferences/data/groups/updates.d.mts": [],
+    "ui/preferences/data/groups/workspace.d.mts": [],
+    "ui/preferences/data/index.d.mts": [
+      "ui/preferences/data/groups/appearance.d.mts",
+      "ui/preferences/data/groups/editor.d.mts",
+      "ui/preferences/data/groups/files.d.mts",
+      "ui/preferences/data/groups/general.d.mts",
+      "ui/preferences/data/groups/monitoring.d.mts",
+      "ui/preferences/data/groups/network.d.mts",
+      "ui/preferences/data/groups/shortcuts.d.mts",
+      "ui/preferences/data/groups/terminal.d.mts",
+      "ui/preferences/data/groups/transfers.d.mts",
+      "ui/preferences/data/groups/updates.d.mts",
+      "ui/preferences/data/groups/workspace.d.mts",
+      "ui/preferences/data/observation.d.mts",
+      "ui/preferences/data/schema.d.mts",
+      "ui/preferences/data/snapshot.d.mts",
+      "ui/preferences/data/update.d.mts",
+      "ui/preferences/data/values.d.mts"
+    ],
+    "ui/preferences/data/observation.d.mts": [
+      "ui/preferences/data/snapshot.d.mts"
+    ],
+    "ui/preferences/data/schema.d.mts": [
+      "ui/preferences/data/values.d.mts"
+    ],
+    "ui/preferences/data/snapshot.d.mts": [
+      "ui/preferences/data/values.d.mts"
+    ],
+    "ui/preferences/data/update.d.mts": [
+      "ui/preferences/data/values.d.mts"
+    ],
+    "ui/preferences/data/values.d.mts": [
+      "ui/preferences/data/groups/appearance.d.mts",
+      "ui/preferences/data/groups/editor.d.mts",
+      "ui/preferences/data/groups/files.d.mts",
+      "ui/preferences/data/groups/general.d.mts",
+      "ui/preferences/data/groups/monitoring.d.mts",
+      "ui/preferences/data/groups/network.d.mts",
+      "ui/preferences/data/groups/shortcuts.d.mts",
+      "ui/preferences/data/groups/terminal.d.mts",
+      "ui/preferences/data/groups/transfers.d.mts",
+      "ui/preferences/data/groups/updates.d.mts",
+      "ui/preferences/data/groups/workspace.d.mts"
+    ],
+    "ui/preferences/provider.d.mts": [
+      "react",
+      "ui/preferences/data/schema.d.mts",
+      "ui/preferences/data/snapshot.d.mts",
+      "ui/preferences/data/update.d.mts"
+    ],
+    "ui/profiles/data/content/catalogue.d.mts": [
+      "ui/profiles/data/metadata.d.mts"
+    ],
+    "ui/profiles/data/content/read.d.mts": [],
+    "ui/profiles/data/metadata.d.mts": [],
+    "ui/profiles/data/mutations/drafts.d.mts": [],
+    "ui/profiles/data/mutations/writes.d.mts": [],
+    "ui/profiles/data/observation.d.mts": [
+      "ui/profiles/data/snapshot.d.mts"
+    ],
+    "ui/profiles/data/snapshot.d.mts": [
+      "ui/profiles/data/metadata.d.mts"
+    ],
+    "ui/runtime/lifecycle/identify.d.mts": [
+      "ui/runtime/lifecycle/resource.d.mts"
+    ],
+    "ui/runtime/lifecycle/release.d.mts": [],
+    "ui/runtime/lifecycle/resource.d.mts": [],
+    "ui/runtime/lifecycle/snapshot.d.mts": [
+      "ui/runtime/lifecycle/resource.d.mts"
+    ],
+    "ui/runtime/resources.d.mts": [],
+    "ui/search/field.d.mts": [
+      "react"
+    ],
+    "ui/search/quickAccess/entry.d.mts": [],
+    "ui/search/quickAccess/provider.d.mts": [
+      "react",
+      "ui/search/quickAccess/entry.d.mts"
+    ],
+    "ui/storage/locations/location.d.mts": [],
+    "ui/storage/locations/mutation.d.mts": [
+      "ui/storage/locations/location.d.mts",
+      "ui/storage/locations/snapshot.d.mts"
+    ],
+    "ui/storage/locations/observation.d.mts": [
+      "ui/storage/locations/snapshot.d.mts"
+    ],
+    "ui/storage/locations/snapshot.d.mts": [
+      "ui/storage/locations/location.d.mts"
+    ],
+    "ui/storage/pluginData/json.d.mts": [],
+    "ui/storage/pluginData/observation.d.mts": [
+      "ui/storage/pluginData/snapshot.d.mts"
+    ],
+    "ui/storage/pluginData/snapshot.d.mts": [
+      "ui/storage/pluginData/json.d.mts"
+    ],
+    "ui/storage/recovery/observation.d.mts": [
+      "ui/storage/recovery/snapshot.d.mts"
+    ],
+    "ui/storage/recovery/request.d.mts": [
+      "ui/storage/recovery/snapshot.d.mts"
+    ],
+    "ui/storage/recovery/snapshot.d.mts": [
+      "ui/storage/locations/location.d.mts"
+    ],
+    "ui/terminal/surface.d.mts": [
+      "react"
+    ],
+    "ui/workbench/slots.d.mts": [
+      "react"
+    ]
+  }
+}

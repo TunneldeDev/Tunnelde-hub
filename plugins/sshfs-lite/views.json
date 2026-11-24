@@ -1,0 +1,46 @@
+{
+  "views": {
+    "main": {
+      "title": "SSHFS Lite",
+      "blocks": [
+        {
+          "type": "sharedMounts"
+        }
+      ]
+    },
+    "guide": {
+      "title": "Mount setup · 挂载指南",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "Before mounting · 挂载前检查"
+        },
+        {
+          "type": "kv",
+          "items": [
+            {
+              "label": "macOS",
+              "value": "macFUSE + SSHFS"
+            },
+            {
+              "label": "Windows",
+              "value": "WinFsp + SSHFS-Win"
+            },
+            {
+              "label": "Linux",
+              "value": "FUSE + SSHFS"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "text": "Choose a saved host, create a group, then add a rule with a remote directory and an empty local mount point. Start read-only. Close open files before unmounting."
+        },
+        {
+          "type": "text",
+          "text": "选择已保存的主机，新建组并添加规则。首次挂载建议只读，使用空的本地目录或空闲盘符。卸载前先关闭打开的文件。"
+        }
+      ]
+    }
+  }
+}

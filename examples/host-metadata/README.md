@@ -1,5 +1,4 @@
-# Documentation moved / 文档已迁移
+# Host metadata example / 主机元数据示例
 
-[Open the maintained documentation / 查看最新文档](https://github.com/TunneldeDev/Tunnelde-plugin-sdk/blob/main/examples/host-metadata/README.md)
-
-Plugin development sources and examples are maintained in the independent SDK repository.
+- [English](README.en-us.md)
+- [简体中文](README.zh-cn.md)

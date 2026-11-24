@@ -1,3 +1,4 @@
-<!-- Conventional Commit title: feat(catalogue): add ... / chore(catalogue): update ... -->
-<!-- Name the independently published plugin repository and describe behavior, permissions and data access. -->
-<!-- New entries must reference real immutable release assets; include validation and download audit results. -->
+<!-- Use a Conventional Commit title: feat(plugins): add ... / fix(uuid): ... -->
+<!-- Write 1–3 sentences about the final behavior, permissions/data changes and validation. -->
+<!-- Squash uses the title and body as the merge message. -->
+<!-- Publish and verify new versioned archives before merging catalogue entries. -->

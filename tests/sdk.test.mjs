@@ -1,0 +1,457 @@
+import assert from "node:assert/strict";
+import { test } from "node:test";
+import { PassThrough } from "node:stream";
+import { createInterface } from "node:readline";
+import { createPlugin } from "../sdk/tunnelde-plugin.mjs";
+import { watchBus } from "../sdk/bus/client.mjs";
+
+function transport(handlers = {}, options = {}) {
+  const input = new PassThrough(),
+    output = new PassThrough();
+  const frames = [],
+    waiters = [];
+  const lines = createInterface({ input: output });
+  lines.on("error", () => {});
+  lines.on("line", (line) => {
+    const value = JSON.parse(line);
+    const waiter = waiters.shift();
+    waiter ? waiter(value) : frames.push(value);
+  });
+  const plugin = createPlugin(handlers, { input, output, ...options });
+  return {
+    plugin,
+    output,
+    send: (value) => input.write(JSON.stringify(value) + "\n"),
+    next: () =>
+      frames.length
+        ? Promise.resolve(frames.shift())
+        : new Promise((resolve) => waiters.push(resolve)),
+    close: () => {
+      plugin.close();
+      lines.close();
+      input.destroy();
+      output.destroy();
+    },
+  };
+}
+
+test("Bus observers multiplex one receive per transport and cancel independently", { timeout: 2000 }, async () => {
+  const a = transport();
+  const b = transport();
+  const owner = new AbortController();
+  const published = { busId: "private-id", topic: "updates", payload: { revision: 2 } };
+  try {
+    const failing = watchBus(a.plugin.host, batch => {
+      batch.messages[0].payload.revision = 99;
+      throw new Error("callback failure");
+    }, owner);
+    let delivered;
+    const batchReceived = new Promise(resolve => { delivered = resolve; });
+    const observer = watchBus(a.plugin.host, delivered, owner);
+    const inbox = await a.next();
+    assert.equal(inbox.method, "bus.receive");
+
+    const publish = b.plugin.host.call("bus.publish", published);
+    const request = await b.next();
+    assert.equal(request.method, "bus.publish");
+    assert.deepEqual(request.params, published);
+    b.send({ jsonrpc: "2.0", id: request.id, result: { recipients: 1 } });
+    assert.deepEqual(await publish, { recipients: 1 });
+
+    const batch = { messages: [{ ...published, sender: { pluginId: "b", generation: 2 } }], lost: 3 };
+    a.send({ jsonrpc: "2.0", id: inbox.id, result: batch });
+    assert.deepEqual(await batchReceived, batch);
+    assert.equal((await failing.done).reason, "failed");
+    assert.equal(observer.closed, false);
+    const next = await a.next();
+    assert.equal(next.method, "bus.receive");
+    assert.notEqual(next.id, inbox.id);
+    owner.abort();
+    assert.deepEqual(await a.next(), { jsonrpc: "2.0", method: "$/cancelRequest", params: { id: next.id } });
+    assert.deepEqual(await observer.done, { reason: "aborted" });
+  } finally {
+    a.close();
+    b.close();
+  }
+});
+
+test("Bus can resubscribe before the native receive lease finishes cancelling", { timeout: 2000 }, async () => {
+  const t = transport();
+  const owner = new AbortController();
+  try {
+    const first = watchBus(t.plugin.host, () => assert.fail("stopped observer"), owner);
+    const original = await t.next();
+    first.stop();
+    assert.equal((await t.next()).params.id, original.id);
+    let delivered;
+    const received = new Promise(resolve => { delivered = resolve; });
+    const observer = watchBus(t.plugin.host, delivered, owner);
+    const busy = await t.next();
+    t.send({ jsonrpc: "2.0", id: busy.id, error: { code: -32000, message: "plugin.bus.receiveBusy" } });
+    const next = await t.next();
+    assert.equal(next.method, "bus.receive");
+    assert.notEqual(next.id, busy.id);
+    t.send({ jsonrpc: "2.0", id: next.id, result: { messages: [], lost: 2 } });
+    assert.equal((await received).lost, 2);
+    owner.abort();
+    assert.deepEqual(await observer.done, { reason: "aborted" });
+  } finally {
+    t.close();
+  }
+});
+test("SDK handles a nested host API call without blocking command replies", async () => {
+  const t = transport({
+    run: async (_, __, host) => ({
+      text: (await host.call("hosts.snapshot")).hosts[0].name,
+    }),
+  });
+  try {
+    t.send({
+      jsonrpc: "2.0",
+      id: 1,
+      method: "command.run",
+      params: { command: "report" },
+    });
+    const request = await t.next();
+    assert.equal(request.method, "hosts.snapshot");
+    t.send({
+      jsonrpc: "2.0",
+      id: request.id,
+      result: { hosts: [{ name: "Example" }] },
+    });
+    assert.deepEqual(await t.next(), {
+      jsonrpc: "2.0",
+      id: 1,
+      result: { text: "Example" },
+    });
+  } finally {
+    t.close();
+  }
+});
+
+test("SDK source helpers preserve host payloads and explicit page revisions", async () => {
+  const t = transport();
+  try {
+    const source = { id: "inventory", label: "Nodes", entries: [] };
+    const set = t.plugin.host.sources.set(source);
+    let request = await t.next();
+    assert.equal(request.method, "hosts.setSource");
+    assert.deepEqual(request.params, source);
+    t.send({ jsonrpc: "2.0", id: request.id, result: null });
+    assert.equal(await set, null);
+    const page = t.plugin.host.sources.snapshot({ offset: 1, revision: 7 });
+    request = await t.next();
+    assert.equal(request.method, "hosts.sourcesSnapshot");
+    assert.deepEqual(request.params, { offset: 1, revision: 7 });
+    t.send({ jsonrpc: "2.0", id: request.id, result: { revision: 7, total: 2, nextOffset: null, items: [] } });
+    assert.equal((await page).nextOffset, null);
+    const remove = t.plugin.host.sources.remove("inventory");
+    request = await t.next();
+    assert.equal(request.method, "hosts.removeSource");
+    assert.deepEqual(request.params, { id: "inventory" });
+    t.send({ jsonrpc: "2.0", id: request.id, result: true });
+    assert.equal(await remove, true);
+  } finally { t.close(); }
+});
+
+test("SDK preserves Unicode separators and split UTF-8 across LF frames", async () => {
+  const input = new PassThrough(), output = new PassThrough();
+  const frames = [];
+  const lines = createInterface({ input: output });
+  lines.on("line", line => frames.push(JSON.parse(line)));
+  const plugin = createPlugin({}, { input, output });
+  try {
+    const text = "first\u2028第二\u2029😀\nlast";
+    const pending = plugin.host.call("events.publish", { event: "chat", payload: text });
+    assert.equal(frames.length, 1);
+    assert.equal(frames[0].params.payload, text);
+    const reply = Buffer.from(JSON.stringify({ jsonrpc: "2.0", id: frames[0].id, result: text }) + "\r\n");
+    // One byte per chunk splits both Unicode delimiters and multi-byte text.
+    for (const byte of reply) input.write(Buffer.from([byte]));
+    assert.equal(await pending, text);
+    const a = plugin.host.call("storage.get", { key: "a" });
+    const b = plugin.host.call("storage.get", { key: "b" });
+    input.write(Buffer.from(frames.slice(1).map(frame => JSON.stringify({ jsonrpc: "2.0", id: frame.id, result: text })).join("\n") + "\n"));
+    assert.deepEqual(await Promise.all([a,b]), [text,text]);
+  } finally { plugin.close(); lines.close(); input.destroy(); output.destroy(); }
+});
+
+test("SDK bounds unterminated frames and detaches stream listeners on close", async () => {
+  const input = new PassThrough(), output = new PassThrough();
+  const plugin = createPlugin({}, { input, output });
+  const pending = plugin.host.call("api.describe");
+  const settled = assert.rejects(pending, /closed/);
+  input.write(Buffer.alloc(1024 * 1024, 120));
+  input.write(Buffer.from("x"));
+  await settled;
+  for (const name of ["data", "end", "error"]) assert.equal(input.listenerCount(name), 0);
+  assert.equal(output.listenerCount("error"), 0);
+  plugin.close(); input.destroy(); output.destroy();
+});
+test("SDK propagates permission denial with RPC code", async () => {
+  const t = transport();
+  try {
+    const pending = t.plugin.host.call("clipboard.readText");
+    const request = await t.next();
+    t.send({
+      jsonrpc: "2.0",
+      id: request.id,
+      error: { code: -32003, message: "Permission denied" },
+    });
+    await assert.rejects(pending, {
+      message: "Permission denied",
+      code: -32003,
+    });
+  } finally {
+    t.close();
+  }
+});
+test("SDK preserves JSON null returned by host mutation methods", async () => {
+  const t = transport();
+  try {
+    const pending = t.plugin.host.log("hello");
+    const request = await t.next();
+    assert.equal(request.method, "log");
+    t.send({ jsonrpc: "2.0", id: request.id, result: null });
+    assert.equal(await pending, null);
+  } finally {
+    t.close();
+  }
+});
+
+test("SDK logging preserves legacy levels and structured correlation fields", async () => {
+  const t = transport();
+  try {
+    for (const options of ["error", { level: "warn", domain: "connection", operation: "connect", requestId: "req-1", fields: { status: 403 } }]) {
+      const pending = t.plugin.host.log("Failed", options);
+      const request = await t.next();
+      assert.equal(request.method, "log");
+      assert.deepEqual(request.params, typeof options === "string" ? { message: "Failed", level: options } : { ...options, message: "Failed" });
+      t.send({ jsonrpc: "2.0", id: request.id, result: null });
+      assert.equal(await pending, null);
+    }
+  } finally {
+    t.close();
+  }
+});
+test("SDK abort, timeout and disposal settle outstanding requests", async () => {
+  const t = transport({}, { timeout: 20 });
+  try {
+    await assert.rejects(t.plugin.host.call("settings.get"), /timed out/);
+    const controller = new AbortController();
+    const pending = t.plugin.host.call(
+      "api.describe",
+      {},
+      { signal: controller.signal },
+    );
+    controller.abort(new Error("Cancelled"));
+    await assert.rejects(pending, /Cancelled/);
+    const closing = t.plugin.host.call("api.describe");
+    t.plugin.close();
+    await assert.rejects(closing, /closed/);
+  } finally {
+    t.close();
+  }
+});
+
+test("SDK validates API bounds without sending frames and recovers slots", async () => {
+  const t = transport();
+  try {
+    await assert.rejects(
+      t.plugin.host.call("storage.set", { value: "x".repeat(256 * 1024) }),
+      /256 KiB/,
+    );
+    await assert.rejects(t.plugin.host.call("storage.set", []), /object/);
+    await assert.rejects(
+      t.plugin.host.call("api.describe", {}, { timeoutMs: 120001 }),
+      /120000/,
+    );
+    const controllers = Array.from({ length: 32 }, () => new AbortController());
+    const pending = controllers.map((controller) =>
+      t.plugin.host
+        .call("api.describe", {}, { signal: controller.signal })
+        .catch((error) => error),
+    );
+    await assert.rejects(t.plugin.host.call("api.describe"), /Too many/);
+    controllers.forEach((controller) => controller.abort());
+    await Promise.all(pending);
+    const recovered = t.plugin.host.call("api.describe", {}, { timeoutMs: 1 });
+    await assert.rejects(recovered, /timed out/);
+  } finally {
+    t.close();
+  }
+});
+
+test("SDK sends owned cancellation exactly once on abort and deadline, without a request id", async t => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  const wire = transport(), owner = new AbortController();
+  try {
+    const pending = wire.plugin.host.call("ui.confirm", {}, { signal: owner.signal });
+    const request = await wire.next();
+    owner.abort(new Error("cancelled"));
+    await assert.rejects(pending, /cancelled/);
+    assert.deepEqual(await wire.next(), {jsonrpc: "2.0", method: "$/cancelRequest", params: {id: request.id}});
+    wire.send({jsonrpc: "2.0", id: request.id, result: true});
+    const expired = wire.plugin.host.call("ui.confirm", {}, {timeoutMs: 10});
+    const second = await wire.next();
+    t.mock.timers.tick(10);
+    await assert.rejects(expired, /timed out/);
+    assert.deepEqual(await wire.next(), {jsonrpc: "2.0", method: "$/cancelRequest", params: {id: second.id}});
+    const completed = wire.plugin.host.call("api.describe");
+    const third = await wire.next();
+    wire.send({jsonrpc: "2.0", id: third.id, result: {ok: true}});
+    assert.deepEqual(await completed, {ok: true});
+    t.mock.timers.tick(120000);
+    const last = wire.plugin.host.call("api.describe");
+    const lastFrame = await wire.next();
+    assert.equal(lastFrame.method, "api.describe");
+    wire.send({jsonrpc: "2.0", id: lastFrame.id, result: null});
+    await last;
+  } finally { wire.close(); }
+});
+
+test("SDK malformed and pre-aborted signals allocate no requests", async () => {
+  const wire = transport(), owner = new AbortController();
+  try {
+    owner.abort(new Error("before"));
+    await assert.rejects(wire.plugin.host.call("api.describe", {}, {signal: owner.signal}), /before/);
+    for (const signal of [null, {}, {aborted: false}, {aborted: false, addEventListener(){throw new Error("listener");}, removeEventListener(){throw new Error("cleanup");}}])
+      await assert.rejects(wire.plugin.host.call("api.describe", {}, {signal}));
+    const pending = wire.plugin.host.call("api.describe");
+    const only = await wire.next();
+    assert.equal(only.method, "api.describe");
+    wire.send({jsonrpc: "2.0", id: only.id, result: null});
+    await pending;
+  } finally { wire.close(); }
+});
+
+test("SDK explicit disposal cancels each outstanding host request once", async () => {
+  const wire = transport();
+  try {
+    const a=wire.plugin.host.call("ui.confirm"), b=wire.plugin.host.call("storage.observe");
+    const settled=Promise.all([assert.rejects(a,/closed/),assert.rejects(b,/closed/)]);
+    const first=await wire.next(), second=await wire.next();
+    wire.plugin.close(); wire.plugin.close();
+    await settled;
+    for (const id of [first.id,second.id]) assert.deepEqual(await wire.next(),{jsonrpc:"2.0",method:"$/cancelRequest",params:{id}});
+  } finally { wire.close(); }
+});
+
+test("SDK supports per-call deadlines and output failure cancels pending RPC", async () => {
+  const t = transport({}, { timeout: 1 });
+  try {
+    const pending = t.plugin.host.call(
+      "sessions.exec",
+      { sessionId: "fixture", command: "echo ok" },
+      { timeoutMs: 1000 },
+    );
+    const frame = await t.next();
+    await new Promise((resolve) => setTimeout(resolve, 15));
+    t.send({ jsonrpc: "2.0", id: frame.id, result: { stdout: "ok" } });
+    assert.deepEqual(await pending, { stdout: "ok" });
+    const stopped = t.plugin.host.call("api.describe", {}, { timeoutMs: 1000 });
+    t.output.emit("error", new Error("Pipe closed"));
+    await assert.rejects(stopped, /closed/);
+  } finally {
+    t.close();
+  }
+});
+
+test("status bar helpers use versioned host calls without implicit execution", async () => {
+  const t = transport();
+  try {
+    const item = { id: "connection", text: "Ready", alignment: "right", command: "open" };
+    const pending = t.plugin.host.statusBar.set(item);
+    const request = await t.next();
+    assert.equal(request.method, "statusBar.set");
+    assert.deepEqual(request.params, item);
+    t.send({ jsonrpc: "2.0", id: request.id, result: null });
+    assert.equal(await pending, null);
+    const removing = t.plugin.host.statusBar.remove("connection");
+    const removal = await t.next();
+    assert.equal(removal.method, "statusBar.remove");
+    assert.deepEqual(removal.params, { id: "connection" });
+    t.send({ jsonrpc: "2.0", id: removal.id, result: true });
+    assert.equal(await removing, true);
+  } finally { t.close(); }
+});
+
+test("tab bar helpers register declarative controls and remove them through the host", async () => {
+  const t = transport();
+  try {
+    const item = { id: "target", title: "Run", kind: "button", command: "run", when: { tabKind: "editor" }, placement: "leading", group: "execution", tooltip: "Run current file", showLabel: true, checked: false };
+    const pending = t.plugin.host.tabBar.set(item);
+    const frame = await t.next();
+    assert.equal(frame.method, "tabBar.set");
+    assert.deepEqual(frame.params, item);
+    t.send({ jsonrpc: "2.0", id: frame.id, result: null });
+    assert.equal(await pending, null);
+    const pendingRemoval = t.plugin.host.tabBar.remove("target");
+    const removal = await t.next();
+    assert.equal(removal.method, "tabBar.remove");
+    assert.deepEqual(removal.params, { id: "target" });
+    t.send({ jsonrpc: "2.0", id: removal.id, result: true });
+    assert.equal(await pendingRemoval, true);
+  } finally { t.close(); }
+});
+
+test("tab-bar commands preserve nullable and Unicode advisory input without implicit host calls", async () => {
+  const t = transport({ run: (command, input) => ({ command, input }) });
+  try {
+    for (const value of [null, "远端"]) {
+      const input = { _locale: null, _tabBar: { itemId: "run", tabId: "opaque", tabKind: "future", paneId: "p", value } };
+      t.send({ jsonrpc: "2.0", id: 42, method: "command.run", params: { command: "go", input } });
+      assert.deepEqual(await t.next(), { jsonrpc: "2.0", id: 42, result: { command: "go", input } });
+    }
+    const removing = t.plugin.host.tabBar.remove("absent");
+    const request = await t.next();
+    t.send({ jsonrpc: "2.0", id: request.id, result: false });
+    assert.equal(await removing, false);
+  } finally { t.close(); }
+});
+
+test("host decorations and extension discovery use the ordinary authorized RPC transport", async () => {
+  const collection = {
+    id: "health",
+    decorations: [{ hostId: "h", badge: "Ready", tone: "success" }],
+  };
+  const t = transport({
+    run: async (_, __, host) => {
+      const directory = await host.extensions.describe();
+      await host.hostList.setDecorations(collection);
+      return {
+        directory,
+        removed: await host.hostList.removeDecorations("health"),
+      };
+    },
+  });
+  try {
+    t.send({
+      jsonrpc: "2.0",
+      id: 77,
+      method: "command.run",
+      params: { command: "test" },
+    });
+    const discovery = await t.next();
+    assert.equal(discovery.method, "extensions.describe");
+    t.send({
+      jsonrpc: "2.0",
+      id: discovery.id,
+      result: { version: 1, points: [] },
+    });
+    const set = await t.next();
+    assert.equal(set.method, "hostList.setDecorations");
+    assert.deepEqual(set.params, collection);
+    t.send({ jsonrpc: "2.0", id: set.id, result: null });
+    const remove = await t.next();
+    assert.equal(remove.method, "hostList.removeDecorations");
+    assert.deepEqual(remove.params, { id: "health" });
+    t.send({ jsonrpc: "2.0", id: remove.id, result: true });
+    assert.deepEqual((await t.next()).result, {
+      directory: { version: 1, points: [] },
+      removed: true,
+    });
+  } finally {
+    t.close();
+  }
+});

@@ -1,3 +1,7 @@
-# Documentation moved / 文档已迁移
+# Historical release notes
 
-[Open the maintained documentation / 查看最新文档](https://github.com/TunneldeDev/Tunnelde-plugin-sdk/blob/main/docs/en-us/releases/README.md)
+[Documentation](../README.md)
+
+- [Independent assistant plugins, version 1.2.0](assistant-plugins-1.2.md)
+- [Assistant plugins 1.3: execution locations](assistant-plugins-1.3.md)
+- [Assistant plugins 1.4: initialize before sending](assistant-plugins-1.4.md)

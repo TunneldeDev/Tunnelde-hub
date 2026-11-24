@@ -1,23 +1,28 @@
 {
   "name": "tunnelde-hub",
-  "version": "2.0.0",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "license": "GPL-3.0-only",
-  "description": "Link-only independent plugin registry for Tunnelde",
+  "description": "Independent plugin and theme marketplace for Tunnelde",
   "engines": {
     "node": ">=22"
   },
   "scripts": {
-    "registry": "node scripts/validate.mjs --write",
+    "agents:sync": "node scripts/sync-agent-plugins.mjs --write",
+    "registry": "node scripts/sync-agent-plugins.mjs && node scripts/validate.mjs --write",
     "registry:check": "node scripts/validate.mjs",
-    "check": "node scripts/validate.mjs",
-    "test": "node --test tests/*.test.mjs",
-    "verify": "npm run check && npm test",
+    "check": "node scripts/sync-local-tools.mjs && node scripts/sync-agent-plugins.mjs && node scripts/validate.mjs",
+    "test": "node --test plugins/tests/official.test.mjs plugins/*/tests/*.test.mjs tests/*.test.mjs",
+    "package": "node scripts/plugins/package.mjs",
     "audit": "node scripts/audit.mjs",
-    "updates": "node scripts/update.mjs"
+    "verify": "npm run check && npm test",
+    "sdk:sync": "node scripts/sync-sdk.mjs",
+    "sdk:check": "node scripts/sync-sdk.mjs --check"
   },
   "devDependencies": {
-    "@tunnelde/plugin-sdk": "https://github.com/TunneldeDev/Tunnelde-plugin-sdk/releases/download/v1.0.1/tunnelde-plugin-sdk-1.0.1.tgz"
+    "@types/node": "24.19.2",
+    "@types/react": "19.3.0",
+    "typescript": "5.9.3"
   }
 }
