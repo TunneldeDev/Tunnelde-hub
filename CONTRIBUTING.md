@@ -15,6 +15,8 @@ Use this workflow for all new plugins and subsequent releases. The template is t
 
 When maintaining the template itself, run `npm run verify:template`. Its CI initializes a separate plugin on Node 22/24, tests reproducible packaging, verifies the archive and starts the installed plugin without build dependencies.
 
+Record the application/plugin versions, tested archive checksum, permissions, feature results and any untested environments when checking the ZIP in Tunnelde. Include local and SSH usage when the plugin supports both. The [Syntax Highlighting desktop acceptance](docs/gui-acceptance.md) provides a worked example; CI protocol tests alone do not establish UI acceptance.
+
 ## Register a plugin
 
 1. Implement, document and test the plugin in its own repository. Document installation, minimum host/runtime versions, permissions and data handling.
