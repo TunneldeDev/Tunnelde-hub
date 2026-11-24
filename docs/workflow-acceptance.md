@@ -24,6 +24,12 @@ Both actual published ZIPs were downloaded and checked against marketplace SHA-2
 
 两个真实发布 ZIP 均已下载并核对市场元数据和校验文件，校验后在独立临时目录启动真实协议进程；损坏包被正确拒绝。模板的 `npm run verify:template` 将初始化、构建、协议测试、重复打包一致性、包校验及独立安装运行纳入 Node 22/24 CI。
 
+## First-run approval / 首次运行审批
+
+The update bot's first PR produced a `pull_request` run awaiting GitHub workflow approval. Explicit `workflow_dispatch` runs passed on the head commit, but with the same four required checks as production and administrator enforcement enabled, branch protection correctly refused the merge. A maintainer approved the pending PR workflow through GitHub's run-approval endpoint. After approval, the normal PR validation passed and the update was merged without an administrator bypass. The merged registry advertises version 1.0.1. This setup case is part of the contribution guides; do not bypass protection or automatically approve unreviewed contributor code.
+
+更新机器人第一次提交 PR 时，GitHub 要求批准工作流。实际开启正式 Hub 的四项必需检查并对管理员生效后，未审批时合并被正确阻止；维护者审核后批准了待运行的 PR 工作流。批准后，正常 PR 校验全部通过，在未绕过管理员保护的情况下完成合并，合并后的索引提供 v1.0.1。这个首次接入步骤已写入贡献指南。
+
 ## Future contributions / 后续贡献
 
 Follow [the contribution guide](../CONTRIBUTING.md) / [中文贡献指南](../CONTRIBUTING.zh-cn.md). Plugin repositories own their build and release checks. Hub reviews metadata and downloads published archives; it does not build or execute submitted plugins.

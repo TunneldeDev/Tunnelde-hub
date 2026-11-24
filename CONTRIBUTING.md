@@ -31,3 +31,11 @@ Publish from the plugin's own CI/CD. Hub's daily update workflow verifies the re
 Versions must increase. Changing bytes or a download URL requires a new version. Existing Hub releases retain their URLs and hashes after migration; do not copy them to another URL under the same version. Unsafe entries can be removed intentionally.
 
 Use Conventional Commit PR titles and concise descriptions. Merge by squash after required validation and Catalogue policy checks pass. Hub does not publish plugin assets or desktop installers. The SDK and shared runtime have their own independently versioned library releases.
+
+## Maintainer setup and workflow approvals
+
+Enable GitHub Actions and allow it to create pull requests in the Hub repository settings. Keep the required `Validate (Node 22)`, `Validate (Node 24)`, `Catalogue policy` and `PR title` checks enabled on `main`.
+
+GitHub may require **Approve and run workflows** for a first-time contributor, including the update bot in a new repository. A maintainer must review the PR and approve that pending run. Explicitly dispatched checks can succeed while the PR's merge-commit run still awaits approval; do not bypass branch protection. Once approved, the normal PR validation must pass before merging. This approval is separate from reviewing and merging the catalogue update.
+
+See [the workflow acceptance record](docs/workflow-acceptance.md) for actual releases, registration, update PRs and the first-run approval case.

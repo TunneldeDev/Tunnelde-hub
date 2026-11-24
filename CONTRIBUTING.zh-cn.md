@@ -70,6 +70,12 @@ PR 需说明功能、权限与验证结果，标题采用 Conventional Commits �
 
 已有版本的文件内容、下载地址及校验值保持不变。修改插件必须发布更高版本，不得覆盖旧发布。历史 Hub 发布继续保留原地址和校验值。
 
+## Hub 维护者设置与首次 Actions 审批
+
+在 Hub 仓库设置中启用 GitHub Actions，并允许 Actions 创建 PR。`main` 保留 `Validate (Node 22)`、`Validate (Node 24)`、`Catalogue policy` 和 `PR title` 必需检查。
+
+首次贡献者（新仓库中的更新机器人也可能属于此情况）的 PR，可能需要维护者在审核内容后点击 **Approve and run workflows**。本次验收实际遇到了这个状态：手动触发的检查已通过，但 PR 合并提交的工作流仍等待审批，因此分支保护正确阻止合并。批准待运行工作流并通过检查后才能合并，不应使用管理员绕过保护。Actions 运行审批与更新 PR 的审核合并是两个步骤。
+
 ## 维护模板与验收流程
 
 修改模板本身时运行 `npm run verify:template`。模板 CI 在 Node 22/24 上初始化独立插件、安装构建依赖、构建测试、比对重复打包结果，校验 ZIP 后在没有构建依赖的安装目录启动真实协议进程。
