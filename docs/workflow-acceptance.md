@@ -1,6 +1,6 @@
 # Plugin contribution workflow acceptance / 插件贡献流程验收
 
-Run on 2026-11-24 (Asia/Shanghai). The production refactor was merged in [Hub PR #118](https://github.com/TunneldeDev/Tunnelde-hub/pull/118).
+Run on 2026-11-24 (Asia/Shanghai). The production refactor was initially merged in [Hub PR #118](https://github.com/TunneldeDev/Tunnelde-hub/pull/118). After main was reset, the refactor and contribution documentation were restored through [Hub PR #121](https://github.com/TunneldeDev/Tunnelde-hub/pull/121), with all required checks passing.
 
 ## Scope / 范围
 
@@ -22,6 +22,10 @@ The acceptance uses two isolated public repositories: a plugin created with GitH
 | Protected update PR validation after first-run approval | [PR validation](https://github.com/TunneldeDev/Tunnelde-hub-workflow-acceptance/actions/runs/45308628971) |
 | After merging, discovery finds no updates and creates no review PR | [No-update run](https://github.com/TunneldeDev/Tunnelde-hub-workflow-acceptance/actions/runs/45309226909) |
 | Template regression acceptance on Node 22/24 | [Template PR #1](https://github.com/TunneldeDev/Tunnelde-plugin-template/pull/1) |
+| Restored production main passes Node 22/24 validation and published archive audit | [Production validation](https://github.com/TunneldeDev/Tunnelde-hub/actions/runs/45310702856) |
+| Merged template acceptance passes on main | [Template validation](https://github.com/TunneldeDev/Tunnelde-plugin-template/actions/runs/45310860636) |
+| Production discovery succeeds after restoration, with no update PR needed | [Production discovery](https://github.com/TunneldeDev/Tunnelde-hub/actions/runs/45311446329) |
+| Official highlighter ZIP installed and exercised in the desktop UI, locally and over live localhost SSH | [Desktop acceptance](gui-acceptance.md) |
 
 Both actual published ZIPs were downloaded and checked against marketplace SHA-256 and SHA256SUMS. Their verified contents were installed in temporary directories and exercised over real stdio outside the source repository, without node_modules. A deliberately changed archive byte was rejected by the verifier.
 
@@ -40,3 +44,5 @@ Follow [the contribution guide](../CONTRIBUTING.md) / [中文贡献指南](../CO
 This acceptance exercises GitHub workflows, registry consumption and an installed plugin protocol process. It does not replace each plugin's feature tests, permission review or manual installation checks in the Tunnelde UI. Fork-origin PRs and the timed scheduler itself are not exercised here; update discovery is invoked through the workflow's manual dispatch event.
 
 本次验收覆盖 GitHub 工作流、生成索引和安装包协议运行；各插件仍需自己的功能测试、权限审核和 Tunnelde 界面安装验证。本次首次收录通过同仓库分支 PR 测试，更新使用手动触发，未模拟外部 fork PR 或等待每日定时调度。
+
+Syntax Highlighting also passed the separate [desktop acceptance](gui-acceptance.md). 高亮插件已另外完成真实界面安装、本地编辑器和 SSH 编辑器验收；这不代表其他插件已完成同样的界面检查。
